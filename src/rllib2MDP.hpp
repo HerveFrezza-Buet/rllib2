@@ -38,7 +38,7 @@ namespace rl2 {
 
     void operator=(const state_type& s) {current_state = s;}
     observation_type operator*() const  {return {current_state, last_reward};}
-    operator bool() const               {return terminal(current_state);}
+    operator bool() const               {return !terminal(current_state);}
     
     void operator()(command_type command) {
       if(*this) {

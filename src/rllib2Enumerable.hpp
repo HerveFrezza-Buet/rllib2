@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <iterator>
+#include <random>
 
 #include <rllib2Specs.hpp>
 
@@ -16,8 +17,9 @@ namespace rl2 {
     };
   }
   
-  template<typename BASE, std::size_t NB, specs::static_index_conversion<BASE> INDEX_CONVERSION>
-  struct enumerable_common {
+  template<typename BASE, std::size_t NB,
+	   specs::static_index_conversion<BASE> INDEX_CONVERSION = by_default::IndexConversion<BASE>>
+  struct enumerable {
     using base_type = BASE;
     struct iterator {
       using value_type = base_type;
@@ -35,28 +37,39 @@ namespace rl2 {
       constexpr iterator  operator++(int) {auto tmp = *this; (*this)++; return tmp;}
       /* to be done : implement operator for random access iterator */
     };
+    
     base_type value;
-    enumerable_common()                                    = default;
-    enumerable_common(const enumerable_common&)            = default;
-    enumerable_common(enumerable_common&&)                 = default;
-    enumerable_common& operator=(const enumerable_common&) = default;
-    enumerable_common& operator=(enumerable_common&&)      = default;
+    enumerable()                   = default;
+    enumerable(const enumerable&)  = default;
+    enumerable(enumerable&&)       = default;
+    
+    bool operator<=>(const enumerable&) const = default;
+    
+    enumerable& operator=(const enumerable&) = default;
+    enumerable& operator=(enumerable&&)      = default;
 
-    enumerable_common(const base_type& value) : value(value) {}
-    enumerable_common& operator=(const base_type& value) {this->value = value;}
+    enumerable(const base_type& value) : value(value) {}
+    enumerable& operator=(const base_type& value) {this->value = value; return *this;}
+    
+    enumerable(std::size_t index) : value(INDEX_CONVERSION::to(index)) {}
+    enumerable& operator=(std::size_t index) {this->value = INDEX_CONVERSION::to(index); return *this;}
      
-    operator base_type () const {return value;}
+    operator std::size_t () const {return INDEX_CONVERSION::from(this->value);}
+    operator base_type   () const {return value;}
     
     constexpr static iterator begin   = iterator(0);
     constexpr static iterator end     = iterator(NB);
     constexpr static std::size_t size = NB;
   };
 
-  
-  template<typename BASE, std::size_t NB, typename INDEX_CONVERSION = by_default::IndexConversion<BASE>>
-  struct enumerable: public enumerable_common<BASE, NB, INDEX_CONVERSION> {
-    using enumerable_common<BASE, NB, INDEX_CONVERSION>::enumerable_common;
-  };
-  
+  /**
+   * This function returns a function that provides a random value of
+   * type TYPE at each call.
+   */
+  template<specs::enumerable TYPE, typename RANDOM_GENERATOR>
+  auto uniform(RANDOM_GENERATOR& gen) {
+    return [&gen]() -> TYPE {return std::uniform_int_distribution<std::size_t>(0, TYPE::size-1)(gen);};
+  }
+
   
 }

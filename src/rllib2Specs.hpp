@@ -10,8 +10,8 @@ namespace rl2 {
      */
     template<typename TRANSITION, typename STATE, typename ACTION>
     concept transition =
-      requires (TRANSITION const cT, STATE s, STATE const cs, ACTION const ca) {
-      s = cT(cs, ca);
+      requires (TRANSITION const cT, STATE const cs, ACTION const ca) {
+      {cT(cs, ca)} -> std::convertible_to<STATE>;
     };
       
     /**
@@ -49,6 +49,23 @@ namespace rl2 {
       requires (BASE const cbase, std::size_t size){
       {CONVERTOR::from(cbase)} -> std::convertible_to<std::size_t>;
       {CONVERTOR::to(size)} -> std::convertible_to<BASE>;
+    };
+
+    /**
+     * @short Sets whose values can be enumerated.
+     */
+    template<typename ENUMERABLE>
+    concept enumerable =
+      requires {
+      typename ENUMERABLE::base_type;
+      typename ENUMERABLE::iterator;
+      {ENUMERABLE::begin} -> std::convertible_to<typename ENUMERABLE::iterator>;
+      {ENUMERABLE::end} -> std::convertible_to<typename ENUMERABLE::iterator>;
+      {ENUMERABLE::size} -> std::convertible_to<std::size_t>;
+    } &&
+    requires (ENUMERABLE::iterator it) {
+      ++it;
+      {*it} -> std::convertible_to<typename ENUMERABLE::base_type>;
     };
     
   }

@@ -1,7 +1,9 @@
 #include <iostream>
 #include <iomanip>
 #include <array>
+#include <random>
 
+#include <gdyn.hpp>
 #include <rllib2.hpp>
 
 /*
@@ -40,13 +42,26 @@ struct S_index_convertor {
 };
 using S = rl2::enumerable<S_, 10, S_index_convertor>;
 
+void show_index_conversion() {
 
-int main(int argc, char* argv[]) {
+  // Enumerable types have a base type, whose values are associated to
+  // an index. Variables of enumarable types can be initialized and
+  // affected with a base type value as well as an index value.
+  
+  S s1 {'C'};
+  S s2 {std::size_t(5)};
+  
+  std::cout << "State " << static_cast<S::base_type>(s1) << " has index " << static_cast<std::size_t>(s1) << std::endl;
+  std::cout << "State " << static_cast<S::base_type>(s2) << " has index " << static_cast<std::size_t>(s2) << std::endl;
+  s2 = 'H';
+  std::cout << "State " << static_cast<S::base_type>(s2) << " has index " << static_cast<std::size_t>(s2) << std::endl;
+  s2 = std::size_t(0);
+  std::cout << "State " << static_cast<S::base_type>(s2) << " has index " << static_cast<std::size_t>(s2) << std::endl;
+  
+  std::cout << std::endl;
+}
 
-  std::cout << std::boolalpha; // Prints booleans as true/false rather than 1/0.
-
-  S some_state{'A'}
-  std::cout << "State " << std::static_cast<' << " has index "
+void show_SA_enumeration() {
 
   // enumerable spaces can be iterated. The iterator it can be casted
   // to a std::size_t value, providing us with the index of a
@@ -62,10 +77,12 @@ int main(int argc, char* argv[]) {
   for(auto it = A::begin; it != A::end; ++it)
     std::cout << "  " << static_cast<std::size_t>(it) << " : " << *it << std::endl;
   std::cout << std::endl;
+}
 
-
-  // Let us define the reward scales for the game. We can have static
-  // arrays since the state spaces size is known at compiling time.
+template <typename RANDOM_GENERATOR>
+auto build_mdp(RANDOM_GENERATOR& gen, double correct_answer_probability) {
+  // Let us define the reward table for the game. We can have arrays
+  // since the state spaces size is known at compiling time.
   std::array<double, S::size> rewards;
   auto it = rewards.begin();
   *(it++) = 0;
@@ -76,6 +93,66 @@ int main(int argc, char* argv[]) {
   for(auto it = S::begin; it != S::end; ++it)
     std::cout << "  for state " << *it << " : " << rewards[it] << std::endl; 
   std::cout << std::endl;
+
+  // Let us build a Markov Decision Process. It fits the
+  // rl2::specs::MDP<S, A> concept, so it is a gdyn::specs::system
+  // dynamical system.
+  auto T = [&gen, p = correct_answer_probability](const S& s, const A& a) -> S {
+    if(a) return 'A'; // If we bank, go to first question.
+    if(std::bernoulli_distribution(p)(gen)) {             // If we answer correctly
+      if(static_cast<S::base_type>(s) == 'J') return 'A'; // We go back to first question if we were at last question.
+      return static_cast<std::size_t>(s) + 1;             // We go to next question otherwise.
+    }
+    return 'A'; // A bad answer leads us back to first question.
+  };
+
+  auto R = [rewards](const S& s, const A& a, const S& ss) -> double {
+    if(a) return rewards[static_cast<std::size_t>(s)]; // We get a reward if we bank.
+    return 0;                                          // or 0 reward otherwise.
+  };
+
+  auto is_terminal = [](const S& s) {return false;}; // No state is terminal.
+    
+  return rl2::make_mdp<S, A>(T, R, is_terminal);
+}
+
+
+int main(int argc, char* argv[]) {
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  std::cout << std::boolalpha; // Prints booleans as true/false rather than 1/0.
+  
+  show_index_conversion();
+  show_SA_enumeration();
+
+  auto environment = build_mdp(gen, 1.0);
+  environment = 'A';
+  // for(auto [o, a, oo, aa]
+  // 	: gdyn::ranges::tick(rl2::uniform<A>(gen))
+  // 	| gdyn::views::orbit(environment)
+  // 	| gdyn::views::transition
+  // 	| std::views::take(100)) {
+  //   auto [s,  prev_r] = o;
+  //   auto [ss, r     ] = oo;
+  //   std::cout << static_cast<S::base_type>(s) << " : ";
+  //   if(a)
+  //     std::cout << "bank  --> got " << std::setw(3) << r << "$." << std::endl;
+  //   else {
+  //     std::cout << "trying an answer...";
+  //     if(static_cast<S::base_type>(s) == 'J')       std::cout << "answer does not matters !";
+  //     else if(static_cast<S::base_type>(ss) == 'A') std::cout << "bad answer.";
+  //     else                                          std::cout << "correct !";
+  //   }
+  //   std::cout << std::endl;
+  // }
+  for(auto [o, a]
+	: gdyn::ranges::tick(rl2::uniform<A>(gen))
+        | gdyn::views::orbit(environment)) {
+    auto [s, r] = o;
+    std::cout << static_cast<S::base_type>(s) << " : " << r << " --> " << static_cast<A::base_type>(a) std::endl;
+  }
+    
+    
   
   
   return 0;
