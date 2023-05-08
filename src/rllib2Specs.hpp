@@ -1,6 +1,7 @@
 #pragma once
 #include <concepts>
 #include <cstddef>
+#include <tuple>
 
 namespace rl2 {
   namespace specs {
@@ -70,6 +71,18 @@ namespace rl2 {
       ++it;
       {*it} -> std::same_as<typename ENUMERABLE::base_type>;
     };
-    
+
+    /**
+     * @short A MDP system
+     */
+    template<typename MDP>
+    concept mdp =
+      gdyn::specs::system<MDP>
+      && std::same_as<typename MDP::observation_type, std::tuple<typename MDP::state_type, double>>;
+
+
+    /**
+     * @short orbit iterator when the system is a MDP
+     */
   }
 }
