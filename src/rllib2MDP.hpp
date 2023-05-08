@@ -1,6 +1,8 @@
 #pragma once
 
+#include <utility>
 #include <functional>
+#include <iterator>
 
 #include<rllib2Specs.hpp>
 
@@ -10,7 +12,7 @@ namespace rl2 {
   struct MDP {
   public:
     using state_type       = STATE;
-    using observation_type = std::tuple<STATE, double>; 
+    using observation_type = std::pair<STATE, double>; 
     using command_type     = ACTION;
     
     MDP()                      = delete;
