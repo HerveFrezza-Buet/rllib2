@@ -125,32 +125,31 @@ int main(int argc, char* argv[]) {
   show_index_conversion();
   show_SA_enumeration();
 
-  auto environment = build_mdp(gen, 1.0);
+  auto environment = build_mdp(gen, .75);
   environment = 'A';
-  // for(auto [o, a, oo, aa]
-  // 	: gdyn::ranges::tick(rl2::uniform<A>(gen))
-  // 	| gdyn::views::orbit(environment)
-  // 	| gdyn::views::transition
-  // 	| std::views::take(100)) {
-  //   auto [s,  prev_r] = o;
-  //   auto [ss, r     ] = oo;
-  //   std::cout << static_cast<S::base_type>(s) << " : ";
-  //   if(a)
-  //     std::cout << "bank  --> got " << std::setw(3) << r << "$." << std::endl;
-  //   else {
-  //     std::cout << "trying an answer...";
-  //     if(static_cast<S::base_type>(s) == 'J')       std::cout << "answer does not matters !";
-  //     else if(static_cast<S::base_type>(ss) == 'A') std::cout << "bad answer.";
-  //     else                                          std::cout << "correct !";
-  //   }
-  //   std::cout << std::endl;
-  // }
-  for(auto [o, a]
+  double total_gain = 0;
+  for(auto [o, a, oo, aa]
 	: gdyn::ranges::tick(rl2::uniform<A>(gen))
-        | gdyn::views::orbit(environment)) {
-    auto [s, r] = o;
-    std::cout << static_cast<S::base_type>(s) << " : " << r << " --> " << static_cast<A::base_type>(a) std::endl;
+	| gdyn::views::orbit(environment)
+	| gdyn::views::transition
+	| std::views::take(30)) {
+    auto [s,  prev_r] = o;
+    auto [ss, r     ] = oo;
+    total_gain += r;
+    std::cout << static_cast<S::base_type>(s) << " : ";
+    if(a)
+      std::cout << "bank  --> " << r << "$." << std::endl;
+    else {
+      std::cout << "answer... ";
+      if(static_cast<S::base_type>(s) == 'J')       std::cout << "answer does not matters !";
+      else if(static_cast<S::base_type>(ss) == 'A') std::cout << "bad answer.";
+      else                                          std::cout << "correct !";
+      std::cout << std::endl;
+    }
   }
+  std::cout << "--------------------" << std::endl
+	    << "Total gain: " << total_gain << "$." << std::endl
+	    << std::endl;
     
     
   
