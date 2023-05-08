@@ -144,7 +144,7 @@ int main(int argc, char* argv[]) {
   environment = 'A';
   double total_gain = 0;
   for(auto [s, a, r, ss, aa]
-	: gdyn::ranges::tick(rl2::uniform<A>(gen))
+	: gdyn::ranges::tick(rl2::uniform<A>(gen)) // rl2::uniform<A>(gen) generates a random action at each call.
 	| gdyn::views::orbit(environment)
 	| rl2::views::sarsa
 	| std::views::take(30)) {
