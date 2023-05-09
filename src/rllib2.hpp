@@ -3,6 +3,7 @@
 /**
  * @example weakest-link-problem.hpp
  * @example example-001-001-getting-started.cpp
+ * @example example-001-002-functionals.cpp
  */
 
 #include <rllib2Checkings.hpp>
