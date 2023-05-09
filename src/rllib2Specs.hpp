@@ -95,5 +95,13 @@ namespace rl2 {
     concept mdp_orbit_iterator =
       gdyn::specs::orbit_iterator<ORBIT_ITERATOR>
       && mdp_orbit_point<std::iter_value_t<ORBIT_ITERATOR>>;
+
+    /**
+     * @short Specifies a producer (i.e. res = f()) whose result type is enumerable
+     */
+    template<typename F>
+    concept enumerable_producer =
+      std::invocable<F>
+      && enumerable<std::invoke_result_t<F, void>>;
   }
 }

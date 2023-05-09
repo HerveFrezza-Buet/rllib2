@@ -53,6 +53,10 @@ namespace rl2 {
     
     enumerable(std::size_t index) : value(INDEX_CONVERSION::to(index)) {}
     enumerable& operator=(std::size_t index) {this->value = INDEX_CONVERSION::to(index); return *this;}
+
+    enumerable(iterator it) : enumerable(static_cast<std::size_t>(it)) {}
+    enumerable& operator=(iterator it) {return (*this = static_cast<std::size_t>(it));}
+    
      
     operator std::size_t () const {return INDEX_CONVERSION::from(this->value);}
     operator base_type   () const {return value;}
@@ -61,15 +65,6 @@ namespace rl2 {
     constexpr static iterator end     = iterator(NB);
     constexpr static std::size_t size = NB;
   };
-
-  /**
-   * This function returns a function that provides a random value of
-   * type TYPE at each call.
-   */
-  template<specs::enumerable TYPE, typename RANDOM_GENERATOR>
-  auto uniform(RANDOM_GENERATOR& gen) {
-    return [&gen]() -> TYPE {return std::uniform_int_distribution<std::size_t>(0, TYPE::size-1)(gen);};
-  }
 
   
 }
