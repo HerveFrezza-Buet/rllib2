@@ -97,11 +97,14 @@ namespace rl2 {
       && mdp_orbit_point<std::iter_value_t<ORBIT_ITERATOR>>;
 
     /**
-     * @short Specifies a producer (i.e. res = f()) whose result type is enumerable
+     * @short A RL policy
      */
-    template<typename F>
-    concept enumerable_producer =
-      std::invocable<F>
-      && enumerable<std::invoke_result_t<F, void>>;
+    template<typename POLICY, typename S, typename A>
+    concept policy =
+      std::invocable<POLICY, S>
+      && requires(POLICY const cp, S const s){
+      {cp(s)} -> std::convertible_to<A>;
+    };
+    
   }
 }
