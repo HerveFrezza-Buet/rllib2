@@ -24,7 +24,8 @@ int main(int argc, char* argv[]) {
     // Let us defined a tabular function, associating a state to each
     // state... let us implement the identity here.
 
-    auto f = rl2::tabular::function<weakest_link::S, weakest_link::S>;
+    rl2::tabular::function<weakest_link::S, weakest_link::S> f {};
+    
     for(auto it = weakest_link::S::begin; it != weakest_link::S::end; ++it) f(it) = it;
 
     // We can make f epsilon-greedy (taking here epsilon as a
@@ -36,7 +37,7 @@ int main(int argc, char* argv[]) {
     std::size_t nb_trials     = 1000;
     std::size_t nb_mismatches = 0;
     for(auto s
-	  : rl2::discrete::uniform<weakest_link::S>(gen)
+	  : gdyn::ranges::tick(rl2::discrete::uniform<weakest_link::S>(gen))
 	  | std::views::take(nb_trials))
       if(f(s) != epsilon_f(s)) nb_mismatches += 1;
     std::cout << "% mismatch = " << (nb_mismatches/(double)nb_trials)
