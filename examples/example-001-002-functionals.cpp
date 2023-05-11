@@ -34,14 +34,15 @@ using quality = rl2::enumerable::count<std::string, 3, quality_index_convertor>;
 int main(int argc, char* argv[]) {
   std::random_device rd;
   std::mt19937 gen(rd());
-  std::cout << std::boolalpha; // Prints booleans as true/false rather than 1/0.
+  
+  std::cout.precision(2);
+  std::cout << std::boolalpha << std::fixed; 
 
   // Let us initialize an environment.
   auto environment = weakest_link::build_mdp(gen, .75);
   environment = 'A';
 
   
-
   //////
   //
   // Tabular function and epsilon-ization.
@@ -90,50 +91,46 @@ int main(int argc, char* argv[]) {
 			     | std::views::take(nb_trials)
 			     | std::views::filter([&f, &epsilon_f](const auto& s){return f(s) != epsilon_f(s);}))
 	++nb_mismatches;
-      std::cout.precision(2);
-      std::cout << "epsilon = " << std::fixed << epsilon << ", mismatch_ratio = " << 100*(nb_mismatches/(double)nb_trials)
+      std::cout << "epsilon = " << epsilon << ", mismatch_ratio = " << 100*(nb_mismatches/(double)nb_trials)
 		<< "% (should be close to " << 100*epsilon * (quality::size - 1) / (double)(quality::size)
 		<< "%)." << std::endl;
     }
   }
 
-  //////
-  //
-  // Greedy-ness.
-  //
-  //////
   
+  //////
+  //
+  // Tabular table.
+  //
+  //////
+
   {
     std::cout << std::endl
-	      << "Greedy-ness" << std::endl
-	      << "-----------" << std::endl
+	      << "Tabular table" << std::endl
+	      << "-------------" << std::endl
 	      << std::endl;
-    
-    // Let us get an array of random values for each state.
-    std::array<double, weakest_link::S::size> values;
-    
-    // Let us build a tabular value function from it.
-    auto V        = rl2::tabular::make_function<weakest_link::S>(values.begin());
-    auto greedy_V = rl2::discrete::greedy<weakest_link::S>(V);
 
-    // Note that V and greedy_V are created once, beforehand. They
-    // depend on the future content of the values array.
-
-    for(unsigned int i = 0; i< 5; ++i) {
-      // We (re)initialize the values randomly
-      for(auto& value : values) value = std::uniform_real_distribution<double>(0, 1)(gen);
-      // Let us display the new association
-      std::cout << "Value function: [";
-      for(auto it = weakest_link::S::begin; it != weakest_link::S::end; ++it) {
-	weakest_link::S state(it);
-	if(it != weakest_link::S::begin) std::cout << ", ";
-	std::cout << static_cast<weakest_link::S::base_type>(state) << ": " <<  V(state);
-      }
-      weakest_link::S argmax = greedy_V();
-      std::cout << "] : argmax = " << static_cast<weakest_link::S::base_type>(argmax) << std::endl;
+    std::array<double, weakest_link::SA::size> values;
+    for(auto& value : values) value = std::uniform_real_distribution(0., 1.)(gen);
+    
+    auto Q = rl2::tabular::make_table<weakest_link::S, weakest_link::A>(values.begin());
+    std::cout << "Q |";
+    for(auto it = weakest_link::A::begin; it != weakest_link::A::end; ++it) std::cout << ' ' << std::setw(5) << static_cast<weakest_link::A::base_type>(it);
+    std::cout << std::endl;
+    std::cout << "--+";
+    for(auto it = weakest_link::A::begin; it != weakest_link::A::end; ++it) std::cout << std::string(6, '-');
+    std::cout << std::endl;
+    for(auto s_it = weakest_link::S::begin; s_it != weakest_link::S::end; ++s_it) {
+      auto s = *s_it;
+      std::cout << s << " |";
+      auto QS = Q(s); // Q[S] is a function taking actions as arguments and returning values.
+      for(auto a_it = weakest_link::A::begin; a_it != weakest_link::A::end; ++a_it)
+	std::cout << ' ' << std::setw(5) << QS(*a_it);
+      std::cout << std::endl;
     }
+    std::cout << std::endl;
+    
   }
-  
 
   
   return 0;

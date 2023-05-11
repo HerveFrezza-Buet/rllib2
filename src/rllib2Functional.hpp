@@ -8,6 +8,9 @@
 #include <memory>
 #include <type_traits>
 
+#include <rllib2Specs.hpp>
+#include <rllib2Enumerable.hpp>
+
 namespace rl2 {
 
   namespace discrete {
@@ -40,29 +43,29 @@ namespace rl2 {
     }
 
     /**
-     * @return a function g such as g() = argmax_{x in S} f(x).
+     * @return argmax_{x in S} f(x).
      */
     template<specs::enumerable S,
 	     std::invocable<S> F,
 	     typename COMP = std::less<std::invoke_result_t<F, S>>>
-    auto greedy(const F& f) {
-      return [&f, comp=COMP()]() -> S {
-	auto it = S::begin;
-	auto max_value = f(it); // it is implicitly casted into a S.
-	auto argmax    = it++;
-	for(; it != S::end; ++it) 
-	  if(auto value = f(it); comp(max_value, value)) {
-	    max_value = value;
-	    argmax = it;
-	  }
-	return argmax;
-      };
+    S argmax(const F& f) {
+      auto it = S::begin;
+      auto max_value = f(it); // it is implicitly casted into a S.
+      auto res        = it++;
+      for(; it != S::end; ++it) 
+	if(auto value = f(it); comp(max_value, value)) {
+	  max_value = value;
+	  res       = it;
+	}
+      return res;
     }
 	
-
   }
 
   namespace tabular {
+    /**
+     * @short Makes a function from an array of values
+     */
     template<specs::enumerable X, std::random_access_iterator IT>
     struct function {
       using arg_type    = X;
@@ -84,8 +87,24 @@ namespace rl2 {
 
     template<specs::enumerable X, std::random_access_iterator IT>
     auto make_function(IT params_it) {return function<X, IT>(params_it);}
-    
 
+    /**
+     * @short Makes a function taking 2 arguments.
+     */
+    template<specs::enumerable X, specs::enumerable Y, std::random_access_iterator IT>
+    struct table : public function<enumerable::pair<X, Y>, IT> {
+      using first_entry_type  = X;
+      using second_entry_type = Y;
+      using function<enumerable::pair<X, Y>, IT>::function;
+      using function<enumerable::pair<X, Y>, IT>::operator=;
+
+      auto operator()(const X& x, const Y& y) const {return (*this)(std::make_pair(x, y));}
+      auto operator()(const X& x)             const {return make_function<Y, IT>(this->params_it + Y::size * static_cast<std::size_t>(x));}
+    };
+
+    template<specs::enumerable X, specs::enumerable Y, std::random_access_iterator IT>
+    auto make_table(IT params_it) {return table<X, Y, IT>(params_it);}
+    
   }
   
 }
