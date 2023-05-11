@@ -1,10 +1,12 @@
 #pragma once
 
 #include <concepts>
+#include <iterator>
 #include <random>
 #include <functional>
 #include <array>
 #include <memory>
+#include <type_traits>
 
 namespace rl2 {
 
@@ -27,69 +29,63 @@ namespace rl2 {
 	     std::convertible_to<double> PARAM, // PARAM can be eps, std::ref(eps), std::cref(eps).
 	     typename RANDOM_GENERATOR> 
     auto epsilon(const F& f, const PARAM& p, RANDOM_GENERATOR& gen) {
-      return [&f, p, &gen](auto arg) -> decltype(f(arg)) {
+      return [&f, p, &gen](auto arg) -> auto {
+	typename std::remove_const<typename std::remove_reference<decltype(f(arg))>::type>::type res;
 	if(std::bernoulli_distribution(p)(gen))
-	  return std::uniform_int_distribution<std::size_t>(0, decltype(f(arg))::size-1)(gen);
+	  res = std::uniform_int_distribution<std::size_t>(0, decltype(res)::size)(gen);
 	else
-	  return f(arg);
+	  res = f(arg);
+	return res;
       };
     }
 
     /**
-     * @return argmax_{x in S} f(x).
+     * @return a function g such as g() = argmax_{x in S} f(x).
      */
     template<specs::enumerable S,
 	     std::invocable<S> F,
 	     typename COMP = std::less<std::invoke_result_t<F, S>>>
-    S argmax(const F& f) {
-      COMP comp;
-      auto it = S::begin;
-      auto max_value = f(*it);
-      auto argmax    = it++;
-      for(; it != S::end; ++it)
-	if(auto value = f(*it); comp(max_value, value)) {
-	  max_value = value;
-	  argmax = it;
-	}
-      return it;
+    auto greedy(const F& f) {
+      return [&f, comp=COMP()]() -> S {
+	auto it = S::begin;
+	auto max_value = f(it); // it is implicitly casted into a S.
+	auto argmax    = it++;
+	for(; it != S::end; ++it) 
+	  if(auto value = f(it); comp(max_value, value)) {
+	    max_value = value;
+	    argmax = it;
+	  }
+	return argmax;
+      };
     }
+	
 
   }
 
   namespace tabular {
-    template<specs::enumerable X, typename Y>
+    template<specs::enumerable X, std::random_access_iterator IT>
     struct function {
-      using arg_type = X;
-      using return_type = Y;
-      using data_type = std::array<Y, X::size>;
+      using arg_type    = X;
+      using return_type = std::iter_value_t<IT>;
       
-      std::unique_ptr<data_type> data; // We store the content in the heap.
+      IT params_it; 
 
-      function() : data(std::make_unique<data_type>()) {}
+      function()                           = delete;
       function(const function&)            = default;
       function(function&&)                 = default;
       function& operator=(const function&) = default;
       function& operator=(function&&)      = default;
+      function(IT params_it) : params_it(params_it) {}
       
-      const Y& operator()(std::size_t idx) const {return (*data)[idx];}
-      Y& operator()(std::size_t idx) {return (*data)[idx];}
-
-      const Y& operator()(const X& x) const {return (*data)[static_cast<std::size_t>(x)];}
-      Y& operator()(const X& x) {return (*data)[static_cast<std::size_t>(x)];}
-      
-      const Y& operator()(const typename X::iterator& it) const {return (*data)[static_cast<std::size_t>(it)];}
-      Y& operator()(const typename X::iterator& it) {return (*data)[static_cast<std::size_t>(it)];}
-
+      return_type operator()(std::size_t idx)                const {return *(params_it + idx                         );}
+      return_type operator()(const X& x)                     const {return *(params_it + static_cast<std::size_t>(x ));}
+      return_type operator()(const typename X::iterator& it) const {return *(params_it + static_cast<std::size_t>(it));}
     };
 
-      
-    // template <specs::enumerable S, specs::enumerable A>
-    // struct Q : public function<S, function<A, double>> {
-    //   using function<S, function<A, double>>::function;
-    //   using function<S, function<A, double>>::operator=;
-    //   double  operator()(const S& s, const A& a) const {return (*this)(s)(a);}
-    //   double& operator()(const S& s, const A& a)       {return (*this)(s)(a);}
-    // };
+    template<specs::enumerable X, std::random_access_iterator IT>
+    auto make_function(IT params_it) {return function<X, IT>(params_it);}
+    
+
   }
   
 }

@@ -31,7 +31,7 @@ namespace weakest_link {
 
   // For actions, the conversion is obvious, since in C++, bool is
   // mapped naturally on to {0, 1}.
-  using A = rl2::enumerable<A_,  2>; // A::base_type is A_, i.e. bool.
+  using A = rl2::enumerable::count<A_,  2>; // A::base_type is A_, i.e. bool.
 
   // For characters, we need to map {'A', 'B', 'C', ... 'J'} onto {0, 1,
   // ... 9}. This needs a shift (since A is the char value 65). To
@@ -41,7 +41,10 @@ namespace weakest_link {
     static S_          to  (std::size_t index) {return static_cast<S_>(index + 65);         }
     static std::size_t from(S_          value) {return static_cast<std::size_t>(value) - 65;}
   };
-  using S = rl2::enumerable<S_, 10, S_index_convertor>; // S::base_type is S_, i.e. char.
+  using S = rl2::enumerable::count<S_, 10, S_index_convertor>; // S::base_type is S_, i.e. char.
+
+  // We can also enumerate the Cartesian product of 2 enumerable sets.
+  using SA = rl2::enumerable::pair<S, A>;
 
   inline void show_index_conversion() {
 
@@ -89,10 +92,17 @@ namespace weakest_link {
     for(auto it = A::begin; it != A::end; ++it)
       std::cout << "  " << static_cast<std::size_t>(it) << " : " << *it << std::endl;
     std::cout << std::endl;
+    
+    std::cout << "Cartesian product : " << SA::size << " values" << std::endl;
+    for(auto it = SA::begin; it != SA::end; ++it)  {
+      auto [s, a] = *it;
+      std::cout << "  " << static_cast<std::size_t>(it) << " : (" << s << ", " << a << ')' << std::endl;
+    }
+    std::cout << std::endl;
   }
 
   template <typename RANDOM_GENERATOR>
-  auto build_mdp(RANDOM_GENERATOR& gen, double correct_answer_probability) {
+  auto build_mdp(RANDOM_GENERATOR& gen, double correct_answer_probability, bool show_reward_table=false) {
   
     // Let us define the reward table for the game. We can have arrays
     // since the state space size S::size is known at compiling time.
@@ -105,10 +115,12 @@ namespace weakest_link {
     // Let us display the reward table. The value of 'it' can be used
     // for accessing the elements of a tabular storing related to S
     // (here the rewards).
-    std::cout  << "Rewards : " << std::endl;
-    for(auto it = S::begin; it != S::end; ++it)
-      std::cout << "  for state " << *it << " : " << rewards[it] << std::endl; 
-    std::cout << std::endl;
+    if(show_reward_table) {
+      std::cout  << "Rewards : " << std::endl;
+      for(auto it = S::begin; it != S::end; ++it)
+	std::cout << "  for state " << *it << " : " << rewards[it] << std::endl; 
+      std::cout << std::endl;
+    }
 
     // Let us build a Markov Decision Process. It fits the
     // rl2::specs::MDP<S, A> concept, so it is a gdyn::specs::system

@@ -17,7 +17,9 @@ int main(int argc, char* argv[]) {
   weakest_link::show_index_conversion();
   weakest_link::show_SA_enumeration();
 
-  auto environment = weakest_link::build_mdp(gen, .75);
+  auto environment = weakest_link::build_mdp(gen,
+					     .75,   // Probability of answering correctly.
+					     true); // true <=> display the reward table.
   environment = 'A';
   double total_gain = 0;
 

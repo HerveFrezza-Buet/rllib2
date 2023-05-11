@@ -23,7 +23,7 @@ namespace rl2 {
     // Enumerable
     // ----------
     
-    using enumerable_int = enumerable<int, 10>;
+    using enumerable_int = enumerable::count<int, 10>;
     static_assert(specs::enumerable<enumerable_int>);
 
     // MDP
