@@ -14,7 +14,7 @@
 
 // Let us define here some "quality" enumerable type.
 struct quality_index_convertor {
-  static std::string to  (std::size_t          index) {
+  static std::string to(std::size_t index) {
     switch(index) {
     case 0:  return "bad"; 
     case 1:  return "neutral";
@@ -63,25 +63,25 @@ int main(int argc, char* argv[]) {
     std::size_t quality_idx = 0;
     for(auto& value : values) value = (quality_idx++ % quality::size);
     
-    // We can make a tabular function from values.
+    // We can make a tabular function from the values.
     auto f = rl2::tabular::make_function<weakest_link::S>(values.begin());
     
     // Let us display the association
     std::cout << "Tabular quality function:" << std::endl;
     for(auto it = weakest_link::S::begin; it != weakest_link::S::end; ++it) {
       weakest_link::S state(it);
-      std::cout << "  f(" << static_cast<weakest_link::S::base_type>(state)
-		<< ") = " << static_cast<quality::base_type>(f(state))
+      std::cout << "  f(" << static_cast<weakest_link::S::base_type>(state   )
+		<< ") = " << static_cast<quality::base_type>        (f(state))
 		<< std::endl;
     }
       
-    
     // We can make f epsilon-greedy (taking here epsilon as a
-    // reference so that is can be changed afterwards.
+    // reference with std::cref, so that is can be changed afterwards.
     double epsilon; // The values will be set later in the loop.
     auto epsilon_f = rl2::discrete::epsilon(f, std::cref(epsilon), gen);
 
     // Let us count how many times f and epsilon_f differ.
+    
     std::size_t nb_trials = 100000;
     for(auto eps : {.25, .5, .75}) {
       epsilon = eps; // epsilon_f depends on this setting, thanks to std::cref(epsilon).
@@ -119,22 +119,27 @@ int main(int argc, char* argv[]) {
     auto greedy_on_Q = rl2::discrete::greedy(Q); // or rl2::discrete::argmax(Q)
 
     // We can espilon-ize such things to get an epsilon greedy policy.
-    auto epsilon_greedy_on_Q = rl2::discrete::epsilon(rl2::discrete::argmax(Q), .2, gen);
+    double epsilon = .2;
+    auto epsilon_greedy_on_Q = rl2::discrete::epsilon(rl2::discrete::argmax(Q), epsilon, gen);
 
     // Let us display the values.
+    
     std::cout << "Q |";
     for(auto it = weakest_link::A::begin; it != weakest_link::A::end; ++it) std::cout << ' ' << std::setw(5) << static_cast<weakest_link::A::base_type>(it);
     std::cout << std::endl;
+
     std::cout << "--+";
     for(auto it = weakest_link::A::begin; it != weakest_link::A::end; ++it) std::cout << std::string(6, '-');
     std::cout << std::endl;
+    
     for(auto s_it = weakest_link::S::begin; s_it != weakest_link::S::end; ++s_it) {
       weakest_link::S s(s_it);
       std::cout << static_cast<weakest_link::S::base_type>(s) << " |";
-      auto QS = Q(s); // Q[S] is a function taking actions as arguments and returning values.
+      auto QS = Q(s); // Q(S) is a function taking actions (i.e. weakest_link::A) as arguments and returning values.
       for(auto a_it = weakest_link::A::begin; a_it != weakest_link::A::end; ++a_it)
-	std::cout << ' ' << std::setw(5) <<  QS(a_it);
-      std::cout << "  -->  argmax = " << static_cast<weakest_link::A::base_type>(greedy_on_Q(s)) << std::endl;
+	std::cout << ' ' << std::setw(5) <<  QS(a_it); // a_it is implicitly converted into weakest_link::A here.
+      weakest_link::A best = greedy_on_Q(s);
+      std::cout << "  -->  argmax = " << static_cast<weakest_link::A::base_type>(best) << std::endl;
     }
     std::cout << std::endl;
 

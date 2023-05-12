@@ -57,16 +57,19 @@ namespace weakest_link {
   
     std::cout << "State " << static_cast<S::base_type>(s1) << " has index " << static_cast<std::size_t>(s1) << std::endl;
     std::cout << "State " << static_cast<S::base_type>(s2) << " has index " << static_cast<std::size_t>(s2) << std::endl;
+    
     s2 = 'H';
     std::cout << "State " << static_cast<S::base_type>(s2) << " has index " << static_cast<std::size_t>(s2) << std::endl;
+    
     s2 = std::size_t(0);
     std::cout << "State " << static_cast<S::base_type>(s2) << " has index " << static_cast<std::size_t>(s2) << std::endl;
 
     auto it = S::begin;
     ++it;
     ++it;
-    S s3 = it;
+    S s3 {it};
     std::cout << "State " << static_cast<S::base_type>(s3) << " has index " << static_cast<std::size_t>(s3) << std::endl;
+    
     ++it;
     ++it;
     s3 = it;
@@ -110,7 +113,7 @@ namespace weakest_link {
     auto it = rewards.begin();
     *(it++) = 0;
     *(it++) = 1;
-    for(;it != rewards.end(); ++it) *it = *(it -1) * 2;
+    for(;it != rewards.end(); ++it) *it = *(it - 1) * 2;
 
     // Let us display the reward table. The value of 'it' can be used
     // for accessing the elements of a tabular storing related to S
