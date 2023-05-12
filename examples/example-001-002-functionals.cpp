@@ -114,6 +114,14 @@ int main(int argc, char* argv[]) {
     for(auto& value : values) value = std::uniform_real_distribution(0., 1.)(gen);
     
     auto Q = rl2::tabular::make_table<weakest_link::S, weakest_link::A>(values.begin());
+
+    // From this table, we can build up a greedy policy, since weakest_link::A is enumerable (this is mandatory for internal argmax);
+    auto greedy_on_Q = rl2::discrete::greedy(Q); // or rl2::discrete::argmax(Q)
+
+    // We can espilon-ize such things to get an epsilon greedy policy.
+    auto epsilon_greedy_on_Q = rl2::discrete::epsilon(rl2::discrete::argmax(Q), .2, gen);
+
+    // Let us display the values.
     std::cout << "Q |";
     for(auto it = weakest_link::A::begin; it != weakest_link::A::end; ++it) std::cout << ' ' << std::setw(5) << static_cast<weakest_link::A::base_type>(it);
     std::cout << std::endl;
@@ -121,13 +129,23 @@ int main(int argc, char* argv[]) {
     for(auto it = weakest_link::A::begin; it != weakest_link::A::end; ++it) std::cout << std::string(6, '-');
     std::cout << std::endl;
     for(auto s_it = weakest_link::S::begin; s_it != weakest_link::S::end; ++s_it) {
-      auto s = *s_it;
-      std::cout << s << " |";
+      weakest_link::S s(s_it);
+      std::cout << static_cast<weakest_link::S::base_type>(s) << " |";
       auto QS = Q(s); // Q[S] is a function taking actions as arguments and returning values.
       for(auto a_it = weakest_link::A::begin; a_it != weakest_link::A::end; ++a_it)
-	std::cout << ' ' << std::setw(5) << QS(*a_it);
-      std::cout << std::endl;
+	std::cout << ' ' << std::setw(5) <<  QS(a_it);
+      std::cout << "  -->  argmax = " << static_cast<weakest_link::A::base_type>(greedy_on_Q(s)) << std::endl;
     }
+    std::cout << std::endl;
+
+    std::cout << "Epsilon greedy: " << std::endl;
+    weakest_link::S s {'H'};
+    std::cout << static_cast<weakest_link::S::base_type>(s) << ": ";
+    unsigned int nb_trues  = 0;
+    unsigned int nb_trials = 1000;
+    for(unsigned int i = 0; i < nb_trials; ++i)
+      if(static_cast<weakest_link::A::base_type>(epsilon_greedy_on_Q(s))) ++nb_trues;
+    std::cout << 100*nb_trues/(double)nb_trials << "% are the 'true' action." << std::endl;
     std::cout << std::endl;
     
   }

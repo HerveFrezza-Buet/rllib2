@@ -102,8 +102,26 @@ namespace rl2 {
     template<typename POLICY, typename S, typename A>
     concept policy =
       std::invocable<POLICY, S>
-      && requires(POLICY const cp, S const s){
-      {cp(s)} -> std::convertible_to<A>;
+      && requires(POLICY const cp, S const cs){
+      {cp(cs)} -> std::convertible_to<A>;
+    };
+
+    /**
+     * @short A function f(a, b), for which f(a) is a function : f(a,b) = f(a)(b).
+     */
+    template<typename TABLE>
+    concept table =
+      requires {
+      typename TABLE::result_type;
+      typename TABLE::first_entry_type;
+      typename TABLE::second_entry_type;
+    }
+      && std::invocable<TABLE, typename TABLE::first_entry_type, typename TABLE::second_entry_type>
+    && std::invocable<TABLE, typename TABLE::first_entry_type>
+    && requires(TABLE const ct, typename TABLE::first_entry_type const cs) {
+      typename TABLE::first_entry_type;
+      typename TABLE::second_entry_type;
+      {ct(cs)} -> std::invocable<typename TABLE::second_entry_type>;
     };
     
   }

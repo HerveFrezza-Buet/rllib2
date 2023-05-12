@@ -83,6 +83,15 @@ namespace rl2 {
     };
     
     template<specs::enumerable FIRST, specs::enumerable SECOND>
-    using pair = count<std::pair<typename FIRST::base_type, typename SECOND::base_type>, FIRST::size * SECOND::size, pair_index_conversion<FIRST, SECOND>>;
+    struct pair : public count<std::pair<typename FIRST::base_type, typename SECOND::base_type>, FIRST::size * SECOND::size, pair_index_conversion<FIRST, SECOND>> {
+      using super_type = count<std::pair<typename FIRST::base_type, typename SECOND::base_type>, FIRST::size * SECOND::size, pair_index_conversion<FIRST, SECOND>>;
+
+      using super_type::count;
+      using super_type::operator=;
+
+      pair(const FIRST& first, const SECOND& second)
+	: super_type(typename super_type::base_type(static_cast<typename FIRST::base_type>(first),
+						    static_cast<typename SECOND::base_type>(second))) {}
+    };
   }
 }
