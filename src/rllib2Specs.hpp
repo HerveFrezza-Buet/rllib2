@@ -124,5 +124,21 @@ namespace rl2 {
       {ct(cs)} -> std::invocable<typename TABLE::second_entry_type>;
     };
     
+    template<typename TABLE>
+    concept tabular_table =
+      table<TABLE>
+      && requires {
+      typename TABLE::params_iterator_type;
+    }
+      && enumerable<typename TABLE::first_entry_type>
+    && enumerable<typename TABLE::second_entry_type>;
+
+    template<typename Q, typename S, typename A>
+    concept q_function = 
+      std::invocable<Q, S, A>
+      && requires(Q const cq, S const cs, A const ca) {
+      {cq(cs, ca)} -> std::convertible_to<double>;
+    };
+    
   }
 }

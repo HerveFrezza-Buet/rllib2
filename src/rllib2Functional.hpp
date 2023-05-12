@@ -43,7 +43,7 @@ namespace rl2 {
       };
     }
 
-    namespace details {
+    namespace algo {
       /**
        * @return argmax_{x in S} f(x).
        */
@@ -74,6 +74,7 @@ namespace rl2 {
     struct function {
       using arg_type    = X;
       using result_type = std::iter_value_t<IT>;
+      using params_iterator_type = IT;
       
       IT params_it; 
 
@@ -97,8 +98,9 @@ namespace rl2 {
      */
     template<specs::enumerable X, specs::enumerable Y, std::random_access_iterator IT>
     struct table : public function<enumerable::pair<X, Y>, IT> {
-      using arg_type    = typename function<enumerable::pair<X, Y>, IT>::arg_type;
-      using result_type = typename function<enumerable::pair<X, Y>, IT>::result_type;
+      using params_iterator_type = typename function<enumerable::pair<X, Y>, IT>::params_iterator_type;
+      using arg_type             = typename function<enumerable::pair<X, Y>, IT>::arg_type;
+      using result_type          = typename function<enumerable::pair<X, Y>, IT>::result_type;
       using first_entry_type  = X;
       using second_entry_type = Y;
       using function<enumerable::pair<X, Y>, IT>::function;
@@ -114,11 +116,10 @@ namespace rl2 {
   }
 
   namespace discrete {
-    
     template<specs::table TABLE, typename COMP=std::less<typename TABLE::result_type>>
     requires specs::enumerable<typename TABLE::second_entry_type>
     auto argmax(TABLE table) {
-      return [table](const typename TABLE::first_entry_type& arg) {return details::argmax<typename TABLE::second_entry_type, decltype(table(std::declval<typename TABLE::first_entry_type>())), COMP>(table(arg));};
+      return [table](const typename TABLE::first_entry_type& arg) {return algo::argmax<typename TABLE::second_entry_type, decltype(table(std::declval<typename TABLE::first_entry_type>())), COMP>(table(arg));};
     }
 	
     template<specs::table TABLE, typename COMP=std::less<typename TABLE::result_type>>
