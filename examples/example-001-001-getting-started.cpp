@@ -13,9 +13,6 @@ int main(int argc, char* argv[]) {
   std::random_device rd;
   std::mt19937 gen(rd());
   std::cout << std::boolalpha; // Prints booleans as true/false rather than 1/0.
-  
-  weakest_link::show_index_conversion();
-  weakest_link::show_SA_enumeration();
 
   auto environment = weakest_link::build_mdp(gen,
 					     .75,   // Probability of answering correctly.

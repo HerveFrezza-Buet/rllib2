@@ -46,74 +46,13 @@ namespace weakest_link {
   // We can also enumerate the Cartesian product of 2 enumerable sets.
   using SA = rl2::enumerable::pair<S, A>;
 
-  inline void show_index_conversion() {
-
-    // Enumerable types have a base type, whose values are associated to
-    // an index. Variables of enumarable types can be initialized and
-    // affected with a base type value as well as an index value.
-  
-    S s1 {'C'};
-    S s2 {std::size_t(5)};
-  
-    std::cout << "State " << static_cast<S::base_type>(s1) << " has index " << static_cast<std::size_t>(s1) << std::endl;
-    std::cout << "State " << static_cast<S::base_type>(s2) << " has index " << static_cast<std::size_t>(s2) << std::endl;
-    
-    s2 = 'H';
-    std::cout << "State " << static_cast<S::base_type>(s2) << " has index " << static_cast<std::size_t>(s2) << std::endl;
-    
-    s2 = std::size_t(0);
-    std::cout << "State " << static_cast<S::base_type>(s2) << " has index " << static_cast<std::size_t>(s2) << std::endl;
-
-    auto it = S::begin;
-    ++it;
-    ++it;
-    S s3 {it};
-    std::cout << "State " << static_cast<S::base_type>(s3) << " has index " << static_cast<std::size_t>(s3) << std::endl;
-    
-    ++it;
-    ++it;
-    s3 = it;
-    std::cout << "State " << static_cast<S::base_type>(s3) << " has index " << static_cast<std::size_t>(s3) << std::endl;
-  
-    std::cout << std::endl;
-  }
-
-  
-  inline void show_SA_enumeration() {
-
-    // enumerable spaces can be iterated. The iterator 'it' can be
-    // casted to a std::size_t value, providing us with the index of a
-    // particular space value, and *it has the type base_type of the set
-    // that has been intrumented to be enumerable.
-
-    std::cout << "State space : " << S::size << " values" << std::endl;
-    for(auto it = S::begin; it != S::end; ++it)
-      std::cout << "  " << static_cast<std::size_t>(it) << " : " << *it << std::endl;
-    std::cout << std::endl;
-  
-    std::cout << "Action space : " << A::size << " values" << std::endl;
-    for(auto it = A::begin; it != A::end; ++it)
-      std::cout << "  " << static_cast<std::size_t>(it) << " : " << *it << std::endl;
-    std::cout << std::endl;
-    
-    std::cout << "Cartesian product : " << SA::size << " values" << std::endl;
-    for(auto it = SA::begin; it != SA::end; ++it)  {
-      auto [s, a] = *it;
-      std::cout << "  " << static_cast<std::size_t>(it) << " : (" << s << ", " << a << ')' << std::endl;
-    }
-    std::cout << std::endl;
-  }
 
   template <typename RANDOM_GENERATOR>
   auto build_mdp(RANDOM_GENERATOR& gen, double correct_answer_probability, bool show_reward_table=false) {
   
     // Let us define the reward table for the game. We can have arrays
     // since the state space size S::size is known at compiling time.
-    std::array<double, S::size> rewards;
-    auto it = rewards.begin();
-    *(it++) = 0;
-    *(it++) = 1;
-    for(;it != rewards.end(); ++it) *it = *(it - 1) * 2;
+    std::array<double, S::size> rewards = {0, 50, 100, 200, 400, 600, 1000, 1500, 3000, 5000};
 
     // Let us display the reward table. The value of 'it' can be used
     // for accessing the elements of a tabular storing related to S

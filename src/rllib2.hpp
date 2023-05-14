@@ -2,6 +2,7 @@
 
 /**
  * @example weakest-link-problem.hpp
+ * @example example-001-000-understanding-enumerables.cpp
  * @example example-001-001-getting-started.cpp
  * @example example-001-002-functionals.cpp
  * @example example-001-003-sarsa-qlearning.cpp

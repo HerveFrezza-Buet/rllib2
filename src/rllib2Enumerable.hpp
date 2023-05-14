@@ -72,7 +72,7 @@ namespace rl2 {
     template <specs::enumerable FIRST, specs::enumerable SECOND>
     struct pair_index_conversion {
       static std::size_t from(const std::pair<typename FIRST::base_type, typename SECOND::base_type>& base) {
-	return static_cast<std::size_t>(base.first) * SECOND::size + static_cast<std::size_t>(base.second);
+	return static_cast<std::size_t>(FIRST(base.first)) * SECOND::size + static_cast<std::size_t>(SECOND(base.second));
       }
       static std::pair<typename FIRST::base_type, typename SECOND::base_type>  to(std::size_t index)  {
 	return {
