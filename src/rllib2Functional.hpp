@@ -45,6 +45,23 @@ namespace rl2 {
 
     namespace algo {
       /**
+       * @return max_{x in S} f(x).
+       */
+      template<specs::enumerable S,
+	       std::invocable<S> F,
+	       typename COMP = std::less<std::invoke_result_t<F, S>>>
+      auto max(const F& f) {
+	COMP comp;
+	auto it = S::begin;
+	auto max_value = f(it); // it is implicitly casted into a S.
+	for(; it != S::end; ++it) 
+	  if(auto value = f(it); comp(max_value, value))
+	    max_value = value;
+	return max_value;
+      }
+    
+    
+      /**
        * @return argmax_{x in S} f(x).
        */
       template<specs::enumerable S,

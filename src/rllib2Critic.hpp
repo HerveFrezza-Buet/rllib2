@@ -21,14 +21,14 @@ namespace rl2 {
 	requires specs::enumerable<A>
 	double optimal_error(const Q& q, double gamma, const sarsa<S, A>& transition) {
 	  auto [s, a, r, ss, aa] = transition;
-	  return r + gamma * rl2::discrete::algo::argmax<A>(q(ss)) - q(s, a);
+	  return r + gamma * rl2::discrete::algo::max<A>(q(ss)) - q(s, a);
 	}
       }
       
       template<typename S, typename A, specs::q_function<S, A> Q>
       requires specs::tabular_table<Q>
       void update(Q& q, const S& s, const A& a, double alpha, double td_error) {
-	auto it = q.params_it + static_cast<std::size_t>(typename Q::arg_type(typename Q::first_type(s), typename Q::first_type(a)));
+	auto it = q.params_it + static_cast<std::size_t>(typename Q::arg_type(typename Q::first_entry_type(s), typename Q::second_entry_type(a)));
 	*it += alpha * td_error;
       }
       

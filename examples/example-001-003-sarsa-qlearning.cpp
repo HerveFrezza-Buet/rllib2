@@ -49,21 +49,21 @@ int main(int argc, char* argv[]) {
     // Let us initialize the values randomly
     for(auto& value : values) value = std::uniform_real_distribution(0., 1.)(gen);
 
-    // // Let us run episodes and apply the sarsa learning rule. We use
-    // // the epsilon-greedy to explore.
-    // for(auto transition
-    // 	  : gdyn::ranges::controller(environment, epsilon_greedy_policy) 
-    // 	  | gdyn::views::orbit(environment)
-    // 	  | rl2::views::sarsa     
-    // 	  | std::views::take(nb_steps_train))
-    //   rl2::critic::td::update(Q, transition.s, transition.a, learning_rate,
-    // 			      rl2::critic::td::evaluation_error(Q, gamma, transition));
+    // Let us run episodes and apply the sarsa learning rule. We use
+    // the epsilon-greedy to explore.
+    for(auto transition
+	  : rl2::ranges::controller(environment, epsilon_greedy_policy) 
+	  | gdyn::views::orbit(environment)
+	  | rl2::views::sarsa     
+	  | std::views::take(nb_steps_train))
+      rl2::critic::td::update(Q, transition.s, transition.a, learning_rate,
+			      rl2::critic::td::evaluation_error(Q, gamma, transition));
 
     // Let us count the reward, using the greedy policy
     double total_gain = 0;
     environment = 'A';
     for(auto [s, a, r, ss, aa]
-	: gdyn::ranges::controller(environment, greedy_policy) 
+	: rl2::ranges::controller(environment, greedy_policy) 
 	| gdyn::views::orbit(environment)                                 
 	| rl2::views::sarsa                                               
 	| std::views::take(nb_steps_test))                                    
@@ -74,6 +74,33 @@ int main(int argc, char* argv[]) {
 
   // Q-Learning (the same, only the TD-error changes)
   {
+    // Let us initialize an environment.
+    environment = 'A';
+
+    // Let us initialize the values randomly
+    for(auto& value : values) value = std::uniform_real_distribution(0., 1.)(gen);
+
+    // Let us run episodes and apply the sarsa learning rule. We use
+    // the epsilon-greedy to explore.
+    for(auto transition
+	  : rl2::ranges::controller(environment, epsilon_greedy_policy) 
+	  | gdyn::views::orbit(environment)
+	  | rl2::views::sarsa     
+	  | std::views::take(nb_steps_train))
+      rl2::critic::td::update(Q, transition.s, transition.a, learning_rate,
+			      rl2::critic::td::discrete::optimal_error(Q, gamma, transition));
+
+    // Let us count the reward, using the greedy policy
+    double total_gain = 0;
+    environment = 'A';
+    for(auto [s, a, r, ss, aa]
+	: rl2::ranges::controller(environment, greedy_policy) 
+	| gdyn::views::orbit(environment)                                 
+	| rl2::views::sarsa                                               
+	| std::views::take(nb_steps_test))                                    
+      total_gain += r;
+
+    std::cout << "Sarsa : got an average gain of " << total_gain/(double)nb_steps_test << "$." << std::endl;
   }
 
 

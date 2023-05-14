@@ -11,6 +11,8 @@ namespace rl2 {
   namespace iterators {
 
     
+    // transition
+    
     template<specs::mdp_orbit_iterator ORBIT_ITERATOR,
 	     typename ORBIT_SENTINEL>
     struct sarsa {
@@ -60,6 +62,7 @@ namespace rl2 {
       const auto& operator*() const {return *value;} 
       auto  operator++(int)         {auto res = *this; ++(*this); return res;}   
     };
+
 
   }
 }
