@@ -36,12 +36,7 @@ int main(int argc, char* argv[]) {
   std::mt19937 gen(rd());
   
   std::cout.precision(2);
-  std::cout << std::boolalpha << std::fixed; 
-
-  // Let us initialize an environment.
-  auto environment = weakest_link::build_mdp(gen, .75);
-  environment = 'A';
-
+  std::cout << std::boolalpha << std::fixed;
   
   //////
   //

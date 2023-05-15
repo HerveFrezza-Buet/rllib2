@@ -91,7 +91,7 @@ int main(int argc, char* argv[]) {
   auto sa = std::make_pair('G', false); // This is the base_type of SA.
   std::cout << "The pair (" << sa.first << ", " << sa.second << ") has index " << static_cast<std::size_t>(weakest_link::SA(sa)) << '.' << std::endl;
 
-  weakest_link::SA s15 = std::size_t(15);
+  weakest_link::SA s15 {std::size_t(15)};
   std::cout << "Index 15 : (" << static_cast<weakest_link::SA::base_type>(s15).first << ", " << static_cast<weakest_link::SA::base_type>(s15).second << ')' << std::endl;
   
   return 0;
