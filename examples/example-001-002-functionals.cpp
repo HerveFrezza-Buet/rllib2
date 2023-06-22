@@ -70,8 +70,10 @@ int main(int argc, char* argv[]) {
 		<< std::endl;
     }
       
-    // We can make f epsilon-greedy (taking here epsilon as a
-    // reference with std::cref, so that is can be changed afterwards.
+    // We can make f epsilon-noisy (taking here epsilon as a reference
+    // with std::cref, so that is can be changed afterwards). It means
+    // that epsilon_f(x) = f(x) with a ration (1-epsilon) of the
+    // epsilon_f(x) calls, and is a random result otherwise.
     double epsilon; // The values will be set later in the loop.
     auto epsilon_f = rl2::discrete::epsilon(f, std::cref(epsilon), gen);
 

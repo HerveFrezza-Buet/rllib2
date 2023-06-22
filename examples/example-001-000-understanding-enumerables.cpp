@@ -9,7 +9,7 @@
 // Read the type definitions (S, A and SA) in this file.
 #include "weakest-link-problem.hpp"
 
-// This is a foreword examples, illustrating the use of enumerable
+// This is a foreword example, illustrating the use of enumerable
 // states. When a set is discrete, its finite number of values can be
 // indexed continuously by unsigned integers, starting from 0. The
 // index is typically used to set up some tabular function, whose
