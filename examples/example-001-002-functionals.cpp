@@ -59,11 +59,13 @@ int main(int argc, char* argv[]) {
     for(auto& value : values) value = (quality_idx++ % quality::size);
     
     // We can make a tabular function from the values.
+    // TODO donc, f est une fonction de S -> quality
     auto f = rl2::tabular::make_function<weakest_link::S>(values.begin());
     
     // Let us display the association
     std::cout << "Tabular quality function:" << std::endl;
     for(auto it = weakest_link::S::begin; it != weakest_link::S::end; ++it) {
+      // TODO et pourquoi pas state{it} ??
       weakest_link::S state(it);
       std::cout << "  f(" << static_cast<weakest_link::S::base_type>(state   )
 		<< ") = " << static_cast<quality::base_type>        (f(state))
@@ -73,12 +75,15 @@ int main(int argc, char* argv[]) {
     // We can make f epsilon-greedy (taking here epsilon as a
     // reference with std::cref, so that is can be changed afterwards.
     double epsilon; // The values will be set later in the loop.
+    // TODO epsilon_sampler ??
+    // TODO connait pas 'cref'
     auto epsilon_f = rl2::discrete::epsilon(f, std::cref(epsilon), gen);
 
     // Let us count how many times f and epsilon_f differ.
     
     std::size_t nb_trials = 100000;
     for(auto eps : {.25, .5, .75}) {
+      // TODO more explicit ? like f.epsilon = eps OR f.set_epsilon(eps) ??
       epsilon = eps; // epsilon_f depends on this setting, thanks to std::cref(epsilon).
       std::size_t nb_mismatches = 0;
       for([[maybe_unused]] const auto& unused
