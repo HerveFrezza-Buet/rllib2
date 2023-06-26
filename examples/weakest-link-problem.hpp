@@ -1,6 +1,8 @@
 // This is the definition of a Markovian Decision Process modelling
 // the weakest link game (with a single player).
 
+#include <gdyn.hpp>
+#include <rllib2.hpp>
 
 /*
   Let us play the weakest link game (TV show), with a single player.
