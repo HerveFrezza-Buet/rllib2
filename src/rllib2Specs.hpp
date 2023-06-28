@@ -109,29 +109,29 @@ namespace rl2 {
     /**
      * @short A function f(a, b), for which f(a) is a function : f(a,b) = f(a)(b).
      */
-    template<typename TABLE>
-    concept table =
+    template<typename TWO_ARGS_FUNCTION>
+    concept two_args_function =
       requires {
-      typename TABLE::result_type;
-      typename TABLE::first_entry_type;
-      typename TABLE::second_entry_type;
+      typename TWO_ARGS_FUNCTION::result_type;
+      typename TWO_ARGS_FUNCTION::first_entry_type;
+      typename TWO_ARGS_FUNCTION::second_entry_type;
     }
-      && std::invocable<TABLE, typename TABLE::first_entry_type, typename TABLE::second_entry_type>
-    && std::invocable<TABLE, typename TABLE::first_entry_type>
-    && requires(TABLE const ct, typename TABLE::first_entry_type const cs) {
-      typename TABLE::first_entry_type;
-      typename TABLE::second_entry_type;
-      {ct(cs)} -> std::invocable<typename TABLE::second_entry_type>;
+      && std::invocable<TWO_ARGS_FUNCTION, typename TWO_ARGS_FUNCTION::first_entry_type, typename TWO_ARGS_FUNCTION::second_entry_type>
+    && std::invocable<TWO_ARGS_FUNCTION, typename TWO_ARGS_FUNCTION::first_entry_type>
+    && requires(TWO_ARGS_FUNCTION const ct, typename TWO_ARGS_FUNCTION::first_entry_type const cs) {
+      typename TWO_ARGS_FUNCTION::first_entry_type;
+      typename TWO_ARGS_FUNCTION::second_entry_type;
+      {ct(cs)} -> std::invocable<typename TWO_ARGS_FUNCTION::second_entry_type>;
     };
     
-    template<typename TABLE>
-    concept tabular_table =
-      table<TABLE>
+    template<typename TWO_ARGS_FUNCTION>
+    concept tabular_two_args_function =
+      two_args_function<TWO_ARGS_FUNCTION>
       && requires {
-      typename TABLE::params_iterator_type;
+      typename TWO_ARGS_FUNCTION::params_iterator_type;
     }
-      && enumerable<typename TABLE::first_entry_type>
-    && enumerable<typename TABLE::second_entry_type>;
+      && enumerable<typename TWO_ARGS_FUNCTION::first_entry_type>
+    && enumerable<typename TWO_ARGS_FUNCTION::second_entry_type>;
 
     template<typename Q, typename S, typename A>
     concept q_function = 

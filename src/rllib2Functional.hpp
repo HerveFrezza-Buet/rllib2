@@ -20,20 +20,22 @@ namespace rl2 {
      * type TYPE at each call.
      */
     template<specs::enumerable TYPE, typename RANDOM_GENERATOR>
-    auto uniform(RANDOM_GENERATOR& gen) {
+    auto uniform_sampler(RANDOM_GENERATOR& gen) {
       return [&gen]() -> TYPE {return std::uniform_int_distribution<std::size_t>(0, TYPE::size-1)(gen);};
     }
 
 
     /**
      * This makes an epsilon version of a function. It calls f with a
-     * probability 1-epsilon, and return a random result otherwise.
+     * probability 1-epsilon, and return a random result
+     * otherwise. The return type of the function passed as argument
+     * has to beenumerable.
      */
     template<typename F,
 	     std::convertible_to<double> PARAM, // PARAM can be eps, std::ref(eps), std::cref(eps).
 	     typename RANDOM_GENERATOR> 
-    auto epsilon(const F& f, const PARAM& p, RANDOM_GENERATOR& gen) {
-      return [f, p, &gen](auto arg) -> auto {
+    auto epsilon_ify(const F& f, const PARAM& p, RANDOM_GENERATOR& gen) {
+      return [f, p, &gen](auto arg) -> specs::enumerable auto {
 	typename std::remove_const<typename std::remove_reference<decltype(f(arg))>::type>::type res;
 	if(std::bernoulli_distribution(p)(gen))
 	  res = std::uniform_int_distribution<std::size_t>(0, decltype(res)::size)(gen);
@@ -114,7 +116,7 @@ namespace rl2 {
      * @short Makes a function taking 2 arguments.
      */
     template<specs::enumerable X, specs::enumerable Y, std::random_access_iterator IT>
-    struct table : public function<enumerable::pair<X, Y>, IT> {
+    struct two_args_function : public function<enumerable::pair<X, Y>, IT> {
       using params_iterator_type = typename function<enumerable::pair<X, Y>, IT>::params_iterator_type;
       using arg_type             = typename function<enumerable::pair<X, Y>, IT>::arg_type;
       using result_type          = typename function<enumerable::pair<X, Y>, IT>::result_type;
@@ -129,18 +131,18 @@ namespace rl2 {
     };
 
     template<specs::enumerable X, specs::enumerable Y, std::random_access_iterator IT>
-    auto make_table(IT params_it) {return table<X, Y, IT>(params_it);}
+    auto make_two_args_function(IT params_it) {return two_args_function<X, Y, IT>(params_it);}
   }
 
   namespace discrete {
-    template<specs::table TABLE, typename COMP=std::less<typename TABLE::result_type>>
-    requires specs::enumerable<typename TABLE::second_entry_type>
-    auto argmax(TABLE table) {
-      return [table](const typename TABLE::first_entry_type& arg) {return algo::argmax<typename TABLE::second_entry_type, decltype(table(std::declval<typename TABLE::first_entry_type>())), COMP>(table(arg));};
+    template<specs::two_args_function TWO_ARGS_FUNCTION, typename COMP=std::less<typename TWO_ARGS_FUNCTION::result_type>>
+    requires specs::enumerable<typename TWO_ARGS_FUNCTION::second_entry_type>
+    auto argmax_ify(TWO_ARGS_FUNCTION taf) {
+      return [taf](const typename TWO_ARGS_FUNCTION::first_entry_type& arg) {return algo::argmax<typename TWO_ARGS_FUNCTION::second_entry_type, decltype(taf(std::declval<typename TWO_ARGS_FUNCTION::first_entry_type>())), COMP>(taf(arg));};
     }
 	
-    template<specs::table TABLE, typename COMP=std::less<typename TABLE::result_type>>
-    auto greedy(TABLE table) {return argmax<TABLE, COMP>(table);}
+    template<specs::two_args_function TWO_ARGS_FUNCTION, typename COMP=std::less<typename TWO_ARGS_FUNCTION::result_type>>
+    auto greedy_ify(TWO_ARGS_FUNCTION taf) {return argmax_ify<TWO_ARGS_FUNCTION, COMP>(taf);}
   }
   
 }

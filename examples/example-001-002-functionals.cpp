@@ -77,7 +77,7 @@ int main(int argc, char* argv[]) {
     double epsilon; // The values will be set later in the loop.
     // TODO epsilon_sampler ??
     // TODO connait pas 'cref'
-    auto epsilon_f = rl2::discrete::epsilon(f, std::cref(epsilon), gen);
+    auto epsilon_f = rl2::discrete::epsilon_ify(f, std::cref(epsilon), gen);
 
     // Let us count how many times f and epsilon_f differ.
     
@@ -87,7 +87,7 @@ int main(int argc, char* argv[]) {
       epsilon = eps; // epsilon_f depends on this setting, thanks to std::cref(epsilon).
       std::size_t nb_mismatches = 0;
       for([[maybe_unused]] const auto& unused
-			     : gdyn::ranges::tick(rl2::discrete::uniform<weakest_link::S>(gen))
+			     : gdyn::ranges::tick(rl2::discrete::uniform_sampler<weakest_link::S>(gen))
 			     | std::views::take(nb_trials)
 			     | std::views::filter([&f, &epsilon_f](const auto& s){return f(s) != epsilon_f(s);}))
 	++nb_mismatches;
@@ -113,14 +113,14 @@ int main(int argc, char* argv[]) {
     std::array<double, weakest_link::SA::size> values;
     for(auto& value : values) value = std::uniform_real_distribution(0., 1.)(gen);
     
-    auto Q = rl2::tabular::make_table<weakest_link::S, weakest_link::A>(values.begin());
+    auto Q = rl2::tabular::make_two_args_function<weakest_link::S, weakest_link::A>(values.begin());
 
     // From this table, we can build up a greedy policy, since weakest_link::A is enumerable (this is mandatory for internal argmax);
-    auto greedy_on_Q = rl2::discrete::greedy(Q); // or rl2::discrete::argmax(Q)
+    auto greedy_on_Q = rl2::discrete::greedy_ify(Q); // or rl2::discrete::argmax(Q)
 
     // We can espilon-ize such things to get an epsilon greedy policy.
     double epsilon = .2;
-    auto epsilon_greedy_on_Q = rl2::discrete::epsilon(rl2::discrete::argmax(Q), epsilon, gen);
+    auto epsilon_greedy_on_Q = rl2::discrete::epsilon_ify(rl2::discrete::argmax_ify(Q), epsilon, gen);
 
     // Let us display the values.
     

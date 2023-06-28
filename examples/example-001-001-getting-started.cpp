@@ -20,14 +20,14 @@ int main(int argc, char* argv[]) {
   environment = 'A';
   double total_gain = 0;
 
-  // The call rl2::discrete::uniform<weakest_link::A>(gen)
+  // The call rl2::discrete::uniform_sampler<weakest_link::A>(gen)
   // provides a function f such as f() gives a random action.
   for(auto [s, a, r, ss, aa]
         // TODO uniform => uniform_sample ??
-	: gdyn::ranges::tick(rl2::discrete::uniform<weakest_link::A>(gen)) // Feed the pipeline with random actions.
-	| gdyn::views::orbit(environment)                                  // Drive the environment from these actions.
-	| rl2::views::sarsa                                                // Collect (s, a, r, s', [a']) transitions.
-	| std::views::take(30)) {                                          // Stop after 30 steps.
+	: gdyn::ranges::tick(rl2::discrete::uniform_sampler<weakest_link::A>(gen)) // Feed the pipeline with random actions.
+	| gdyn::views::orbit(environment)                                          // Drive the environment from these actions.
+	| rl2::views::sarsa                                                        // Collect (s, a, r, s', [a']) transitions.
+	| std::views::take(30)) {                                                  // Stop after 30 steps.
     total_gain += r;
     // TODO ad_hoc et pas "joli" le cout << ::base_type !
     std::cout << static_cast<weakest_link::S::base_type>(s) << " : ";
