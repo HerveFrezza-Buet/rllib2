@@ -1,6 +1,7 @@
 // This is the definition of a Markovian Decision Process modelling
 // the weakest link game (with a single player).
 
+#include <iostream>
 #include <gdyn.hpp>
 #include <rllib2.hpp>
 
@@ -61,7 +62,9 @@ namespace weakest_link {
     // (here the rewards).
     if(show_reward_table) {
       std::cout  << "Rewards : " << std::endl;
+      // TODO pas moyen de faire S.begin(), S.end() ??
       for(auto it = S::begin; it != S::end; ++it)
+        // TODO c'est pas un peu moche le 'rewards[it]'
 	std::cout << "  for state " << *it << " : " << rewards[it] << std::endl; 
       std::cout << std::endl;
     }
@@ -84,6 +87,7 @@ namespace weakest_link {
     // a lambda function as well, which copies the reward table in its
     // lexical closure.
     auto R = [rewards](const S& s, const A& a, const S& ss) -> double {
+      // TODO la conversion s -> std::size est pas "jolie" non plus
       if(a) return rewards[static_cast<std::size_t>(s)]; // We get a reward if we bank.
       return 0;                                          // or 0 reward otherwise.
     };

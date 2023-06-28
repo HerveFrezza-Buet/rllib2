@@ -35,11 +35,11 @@ namespace rl2 {
     static_assert(gdyn::specs::system<process>);
     static_assert(specs::mdp<process>);
 
-    // Table
-    // -----
+    // Two_Args_Function
+    // -----------------
 
     using params_it_type = double*;
-    using critic = tabular::table<enumerable_char, enumerable_int, params_it_type>;
-    static_assert(specs::table<critic>);
+    using critic = tabular::two_args_function<enumerable_char, enumerable_int, params_it_type>;
+    static_assert(specs::two_args_function<critic>);
   }
 }

@@ -26,7 +26,7 @@ namespace rl2 {
       }
       
       template<typename S, typename A, specs::q_function<S, A> Q>
-      requires specs::tabular_table<Q>
+      requires specs::tabular_two_args_function<Q>
       void update(Q& q, const S& s, const A& a, double alpha, double td_error) {
 	auto it = q.params_it + static_cast<std::size_t>(typename Q::arg_type(typename Q::first_entry_type(s), typename Q::second_entry_type(a)));
 	*it += alpha * td_error;
