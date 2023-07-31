@@ -23,7 +23,6 @@ int main(int argc, char* argv[]) {
   // The call rl2::discrete::uniform_sampler<weakest_link::A>(gen)
   // provides a function f such as f() gives a random action.
   for(auto [s, a, r, ss, aa]
-        // TODO uniform => uniform_sample ??
 	: gdyn::ranges::tick(rl2::discrete::uniform_sampler<weakest_link::A>(gen)) // Feed the pipeline with random actions.
 	| gdyn::views::orbit(environment)                                          // Drive the environment from these actions.
 	| rl2::views::sarsa                                                        // Collect (s, a, r, s', [a']) transitions.
