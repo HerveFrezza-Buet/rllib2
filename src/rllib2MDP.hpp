@@ -12,8 +12,9 @@ namespace rl2 {
   struct MDP {
   public:
     using state_type       = STATE;
-    using observation_type = std::pair<STATE, double>; 
+    using observation_type = STATE; 
     using command_type     = ACTION;
+    using report_type      = double;
     
     MDP()                      = delete;
     MDP(const MDP&)            = default;
@@ -28,7 +29,6 @@ namespace rl2 {
     std::function<bool   (const STATE&)>                              terminal;
     
     state_type current_state;
-    double last_reward;
 
   public:
 
@@ -36,19 +36,23 @@ namespace rl2 {
     template<specs::transition<STATE, ACTION> TRANSITION, specs::reward<STATE, ACTION> REWARD, specs::terminal<STATE> TERMINAL>
     MDP(const TRANSITION& T, const REWARD& R, const TERMINAL& terminal)
       : transition(T), reward(R), terminal(terminal),
-	current_state(), last_reward(0) {}
+	current_state() {}
 
     void operator=(const state_type& s) {current_state = s;}
-    observation_type operator*() const  {return {current_state, last_reward};}
+    observation_type operator*() const  {return current_state;}
     operator bool() const               {return !terminal(current_state);}
     
-    void operator()(command_type command) {
+    report_type operator()(command_type command) {
       if(*this) {
 	auto next_state = transition(current_state, command);
-	last_reward = reward(current_state, command, next_state);
+	double rew = reward(current_state, command, next_state);
 	current_state = next_state;
+	return rew;
       }
+      return 0.; // Transition from a terminal state gives a 0 reward.
     }
+
+    state_type state() const {return current_state;}
   };
 
   template<typename STATE, typename ACTION, specs::transition<STATE, ACTION> TRANSITION, specs::reward<STATE, ACTION> REWARD, specs::terminal<STATE> TERMINAL>

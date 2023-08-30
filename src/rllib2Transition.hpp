@@ -37,9 +37,9 @@ namespace rl2 {
     void operator+=(const ORBIT_POINT& next) {
       s  = ss;
       a  = *aa;
-      r  = next.observation.second;
-      ss = next.observation.first;
-      aa = next.command;
+      r  = *(next.previous_report);
+      ss = next.current_observation;
+      aa = next.next_command;
     }
   };
 
@@ -52,7 +52,7 @@ namespace rl2 {
    */
   template<specs::mdp_orbit_point ORBIT_POINT>
   auto make_sarsa(const ORBIT_POINT& current, const ORBIT_POINT& next) {
-    return sarsa<typename ORBIT_POINT::observation_type::first_type, typename ORBIT_POINT::command_type>(current.observation.first, *current.command, next.observation.second, next.observation.first, next.command);
+    return sarsa<typename ORBIT_POINT::observation_type, typename ORBIT_POINT::command_type>(current.current_observation, *(current.next_command), *(next.previous_report), next.current_observation, next.next_command);
   }
 
 }

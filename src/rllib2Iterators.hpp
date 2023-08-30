@@ -23,7 +23,7 @@ namespace rl2 {
 
     public:
 
-      using value_type = rl2::sarsa<typename gdyn::iterators::observation_t<ORBIT_ITERATOR>::first_type,
+      using value_type = rl2::sarsa<typename gdyn::iterators::observation_t<ORBIT_ITERATOR>,
 				    gdyn::iterators::command_t<ORBIT_ITERATOR>>;
       
     private:

@@ -77,8 +77,8 @@ namespace rl2 {
      */
     template<typename MDP>
     concept mdp =
-      gdyn::specs::system<MDP>
-      && std::same_as<typename MDP::observation_type, std::pair<typename MDP::state_type, double>>;
+      gdyn::specs::transparent_system<MDP>
+      && std::same_as<typename MDP::report_type, double>;
 
     /**
      * @short orbit point when the system is a MDP 
@@ -86,7 +86,7 @@ namespace rl2 {
     template<typename ORBIT_VALUE>
     concept mdp_orbit_point =
       gdyn::specs::orbit_point<ORBIT_VALUE>
-      && std::same_as<typename ORBIT_VALUE::observation_type::second_type, double>;
+      && std::same_as<typename ORBIT_VALUE::report_type, double>;
 
     /**
      * @short orbit iterator when the system is a MDP

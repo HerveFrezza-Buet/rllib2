@@ -33,6 +33,7 @@ namespace rl2 {
     
     using process = MDP<char, int>;
     static_assert(gdyn::specs::system<process>);
+    static_assert(gdyn::specs::transparent_system<process>);
     static_assert(specs::mdp<process>);
 
     // Two_Args_Function

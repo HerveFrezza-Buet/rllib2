@@ -73,7 +73,7 @@ namespace rl2 {
      */
     template<specs::mdp MDP,
 	     specs::policy<typename MDP::state_type, typename MDP::command_type> POLICY>
-    auto controller(MDP& mdp, const POLICY& policy) {return gdyn::ranges::tick([&mdp, policy](){return policy((*mdp).first);});}
+    auto controller(MDP& mdp, const POLICY& policy) {return gdyn::ranges::tick([&mdp, policy](){return policy(*mdp);});}
   
   }
   
