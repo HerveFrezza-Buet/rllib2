@@ -34,6 +34,8 @@ namespace weakest_link {
 
   // For actions, the conversion is obvious, since in C++, bool is
   // mapped naturally on to {0, 1}.
+  // TODO rename enumerable => countable ?
+  // TODO rename count => set (par rapport à pair)
   using A = rl2::enumerable::count<A_,  2>; // A::base_type is A_, i.e. bool.
 
   // For characters, we need to map {'A', 'B', 'C', ... 'J'} onto {0, 1,
@@ -50,6 +52,7 @@ namespace weakest_link {
   using SA = rl2::enumerable::pair<S, A>;
 
 
+  // TODO rename to make_mdp
   template <typename RANDOM_GENERATOR>
   auto build_mdp(RANDOM_GENERATOR& gen, double correct_answer_probability, bool show_reward_table=false) {
   
@@ -63,6 +66,7 @@ namespace weakest_link {
     if(show_reward_table) {
       std::cout  << "Rewards : " << std::endl;
       // TODO pas moyen de faire S.begin(), S.end() ??
+      // par exemple for( auto s: S ) cout << reward[s] ??
       for(auto it = S::begin; it != S::end; ++it)
         // TODO c'est pas un peu moche le 'rewards[it]'
 	std::cout << "  for state " << *it << " : " << rewards[it] << std::endl; 
@@ -88,6 +92,7 @@ namespace weakest_link {
     // lexical closure.
     auto R = [rewards](const S& s, const A& a, const S& ss) -> double {
       // TODO la conversion s -> std::size est pas "jolie" non plus
+      // TODO S.index()
       if(a) return rewards[static_cast<std::size_t>(s)]; // We get a reward if we bank.
       return 0;                                          // or 0 reward otherwise.
     };
@@ -96,6 +101,7 @@ namespace weakest_link {
     auto is_terminal = [](const S& s) {return false;}; // No state is terminal.
 
     // This builds a dynamical system.
+    // TODO could also add the starting_S_distribution as a function of MDP
     return rl2::make_mdp<S, A>(T, R, is_terminal);
   }
 

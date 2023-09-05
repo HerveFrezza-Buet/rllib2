@@ -24,6 +24,7 @@ struct Params {
   std::size_t nb_test_steps = 1000;
 };
 
+// TODO QTYPE => QTABLE
 template<typename QTYPE>
 void display_greedy_policy(const QTYPE& Q) {
   // The questions for which the greedy policy says 'bank' are in upper case.
@@ -46,6 +47,8 @@ void train(MDP& environment, QTABLE& Q, const POLICY& exploration_policy, const 
 	  | gdyn::views::orbit(environment)
 	  | rl2::views::sarsa     
 	  | std::views::take(params.epoch_length)) {
+      // TODO sarsa td::evaluation_error vs QL td::discrete::optimal_error
+      // TODO bellman_op et bellman_eval_op
       if constexpr (is_sarsa) rl2::critic::td::update(Q, transition.s, transition.a, params.learning_rate, rl2::critic::td::evaluation_error       (Q, params.gamma, transition)); // SARSA
       else                    rl2::critic::td::update(Q, transition.s, transition.a, params.learning_rate, rl2::critic::td::discrete::optimal_error(Q, params.gamma, transition)); // Q-Learning
       display_greedy_policy(Q); std::cout << '\r' << std::flush;
@@ -92,7 +95,8 @@ int main(int argc, char* argv[]) {
   auto environment = weakest_link::build_mdp(gen, params.correct_proba);
 
   std::cout << "Player skill : " << int(100 * params.correct_proba) << "% of correct answers." << std::endl;
-  
+
+  // TODO peut-être ajouter un commentaire sur true/false => SARSA/QLearning
   // SARSA
   std::cout << "Sarsa :" << std::endl;
   for(auto& value : values) value = std::uniform_real_distribution(0., 1.)(gen); // Let us initialize the values randomly

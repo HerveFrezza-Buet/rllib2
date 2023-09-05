@@ -20,10 +20,12 @@ int main(int argc, char* argv[]) {
   environment = 'A';
   double total_gain = 0;
 
+  // TODO discrete vs enumerable ?? (enumrable est plus restreint j'imagine)
   // The call rl2::discrete::uniform_sampler<weakest_link::A>(gen)
   // provides a function f such as f() gives a random action.
   for(auto [s, a, r, ss, aa]
 	: gdyn::ranges::tick(rl2::discrete::uniform_sampler<weakest_link::A>(gen)) // Feed the pipeline with random actions.
+        // TODO je cherchais un meilleur nom que 'tick' mais je trouve pas (feed ?)
 	| gdyn::views::orbit(environment)                                          // Drive the environment from these actions.
 	| rl2::views::sarsa                                                        // Collect (s, a, r, s', [a']) transitions.
 	| std::views::take(30)) {                                                  // Stop after 30 steps.

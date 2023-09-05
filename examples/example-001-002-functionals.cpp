@@ -66,6 +66,7 @@ int main(int argc, char* argv[]) {
     std::cout << "Tabular quality function:" << std::endl;
     for(auto it = weakest_link::S::begin; it != weakest_link::S::end; ++it) {
       // TODO et pourquoi pas state{it} ??
+      // TODO et inclure les conversion (=>base_type et =>index) ds enumerable ?
       weakest_link::S state(it);
       std::cout << "  f(" << static_cast<weakest_link::S::base_type>(state   )
 		<< ") = " << static_cast<quality::base_type>        (f(state))
@@ -77,8 +78,6 @@ int main(int argc, char* argv[]) {
     // that epsilon_f(x) = f(x) with a ration (1-epsilon) of the
     // epsilon_f(x) calls, and is a random result otherwise.
     double epsilon; // The values will be set later in the loop.
-    // TODO epsilon_sampler ??
-    // TODO connait pas 'cref'
     auto epsilon_f = rl2::discrete::epsilon_ify(f, std::cref(epsilon), gen);
 
     // Let us count how many times f and epsilon_f differ.
@@ -86,6 +85,7 @@ int main(int argc, char* argv[]) {
     std::size_t nb_trials = 100000;
     for(auto eps : {.25, .5, .75}) {
       // TODO more explicit ? like f.epsilon = eps OR f.set_epsilon(eps) ??
+      // TODO plus j'y réfléchis, moins j'aime le côte "effet de bord" de epsilon
       epsilon = eps; // epsilon_f depends on this setting, thanks to std::cref(epsilon).
       std::size_t nb_mismatches = 0;
       for([[maybe_unused]] const auto& unused
@@ -125,6 +125,7 @@ int main(int argc, char* argv[]) {
     auto epsilon_greedy_on_Q = rl2::discrete::epsilon_ify(rl2::discrete::argmax_ify(Q), epsilon, gen);
 
     // Let us display the values.
+    // TODO gérer les conversions est un peu "fatidieux" ou "pénible"
     
     std::cout << "Q |";
     for(auto it = weakest_link::A::begin; it != weakest_link::A::end; ++it) std::cout << ' ' << std::setw(5) << static_cast<weakest_link::A::base_type>(it);
@@ -133,7 +134,10 @@ int main(int argc, char* argv[]) {
     std::cout << "--+";
     for(auto it = weakest_link::A::begin; it != weakest_link::A::end; ++it) std::cout << std::string(6, '-');
     std::cout << std::endl;
-    
+
+    // TODO comment changer la valueur de epsilon dans la boucle ?
+    // TODO QS(a_it, epsilon) avec option de ne pas mettre epsilon pour prendre
+    //      la valeur "courante"
     for(auto s_it = weakest_link::S::begin; s_it != weakest_link::S::end; ++s_it) {
       weakest_link::S s(s_it);
       std::cout << static_cast<weakest_link::S::base_type>(s) << " |";
