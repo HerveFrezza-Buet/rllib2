@@ -64,6 +64,11 @@ def configure( conf ):
                    uselib_store='GDYN',
                    args=['--cflags', '--libs']
     )
+    ## Require Eigen3, using wrapper around pkg-config
+    conf.check_cfg(package='eigen3',
+                   uselib_store='EIGEN3',
+                   args=['--cflags', '--libs']
+    )
 # ******************************************************************** CMD build
 def build( bld ):
     print('→ build from ' + bld.path.abspath())
