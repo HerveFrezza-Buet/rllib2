@@ -280,7 +280,10 @@ void test_LSTDQ()
     std::cout << "  collected " << replay_buffer.size() << " samples" << std::endl;
   }
 
-  std::cout << "  solving for new weigts" << std::endl;
+  // LSTD-Q solves nw = argmin_w SUM( r_j+gamma*Phi_j+1.trans()*nw - Phi_j.trans()*w)
+  //      ie       SUM(Phi_j (Phi_j - gamma*Phi_j+1).trans()) * nw = SUM(Phi_j r_j)
+  // with j the indices in the replay buffer
+  std::cout << "  solving for new weights" << std::endl;
   Eigen::Matrix<double,
                 PHI::SizeAtCompileTime,
                 PHI::SizeAtCompileTime> sum_phiphi;
