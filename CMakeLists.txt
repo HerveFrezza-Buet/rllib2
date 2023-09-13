@@ -14,7 +14,8 @@ find_package(PkgConfig REQUIRED)
 pkg_check_modules(GDYN gdyn REQUIRED)
 set(PKG_CONFIG_DEPENDS "gdyn")
 
-
+find_package (Eigen3 3.3 REQUIRED NO_MODULE)
+message("Eigen is in ${EIGEN3_INCLUDE_DIR}")
 
 FILE(WRITE ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_PROJECT_NAME}.pc
 "
