@@ -4,40 +4,31 @@
 
 #include <numbers>
 #include <random>
+#include <string>
 #include <rllib2.hpp>
-#include "cartpole-system.hpp"
-
-// need an enumerable State space, so discretize the Obs space
-// discretization size in every dimension
-constexpr std::size_t _nb_bin_dim {5};
-// limits for each Obs dimensions
-constexpr std::array<std::array<double, 2>, 4> _limits
-  {{ {-4.8, 4.8},
-    {-10.0, 10.0},
-    {-12.0*std::numbers::pi/180.0, 12.0*std::numbers::pi/180.0},
-    {-5.0, 5.0} }};
 
 
-// Partition in bins, upper bound in last bin
-std::size_t bin(double x, double x_min=0.0, double x_max=1.0,
-                std::size_t nb_bins=10 )
-{
-  if (x == x_max) return nb_bins-1;
-  double reloc = (x - x_min) / (x_max - x_min) * static_cast<double>(nb_bins);
-  return static_cast<std::size_t>(reloc);
-}
-// When converting from bin, give the middle value of the bin
-double val_from_bin(std::size_t index, double x_min=0.0, double x_max=1.0,
-                std::size_t nb_bins=10 )
-{
-  double val = x_min + (static_cast<double>(index) + 0.5)
-                    * (x_max - x_min) / static_cast<double>(nb_bins);
-  return val;
-}
 
 
 struct S_convertor {
-  static cartpole::State to (std::size_t index)
+
+  constexpr std::size_t nb_bins {5};
+  constexpr std::size_t nb_dims {4};
+  constexpr std::size_t size_of() {
+    std::size_t res = 1;
+    for(int i = 0; i < nb_dims; ++i, res *= nb_bins);
+    retirn res;
+  }
+  constexpr std::size_t size = size_of();
+  
+  constexpr std::array<std::tuple<double, double>, nb_dims> limits
+    {{ {-4.8, 4.8},
+       {-10.0, 10.0},
+       {-12.0*std::numbers::pi/180.0, 12.0*std::numbers::pi/180.0},
+       {-5.0, 5.0} }};
+
+  
+  static cartpole::State to(std::size_t index)
   {
     // indexes along each Obs dimensions
     std::array<std::size_t,4> indexes;
@@ -105,6 +96,7 @@ struct A_convertor {
 // TODO un exemple à part ?
 void test_convertor()
 {
+  /*
   // need an environment
   auto env = cartpole::make_environment();
   //auto env = make_mdp()
@@ -155,10 +147,12 @@ void test_convertor()
     std::cout << "__index=" << id << std::endl;
     cartpole::print_context("  =>", obs, 0.0);
   }
+  */
 }
 template<typename RANDOM>
 void test_transition(RANDOM gen)
 {
+  /*
   auto env = cartpole::make_environment();
 
   // Enumerable S and A for MDP
@@ -199,16 +193,12 @@ void test_transition(RANDOM gen)
   print_context("to get", s_next_base, 0);
   std::cout << "  with index=" << static_cast<std::size_t>(s_next) << std::endl;
 
+  */
 }
 
-int main(int argc, char *argv[]) {
-  std::random_device rd;
-  std::mt19937 gen(rd());
-
-  // test_convertor();
-  // test_transition(gen);
-
-  // test MDP
+template<typename RANDOM>
+void test_mdp(RANDOM gen) {
+  /*
   auto env = cartpole::make_environment();
 
   // Enumerable S and A for MDP
@@ -272,6 +262,25 @@ int main(int argc, char *argv[]) {
     total_gain += r;
   }
   std::cout << "  Got a total gain of " << total_gain << std::endl;
+  */
+}
 
+
+int main(int argc, char *argv[]) {
+  std::random_device rd;
+  std::mt19937 gen(rd());
+
+
+  if(argc != 2) {
+    std::cout << "Usage: " << argv[0] << " [convertor | transition | mdp]" << std::endl;
+    return 0;
+  }
+
+  std::string mode {argv[1]};
+
+  if(mode == "convertor")  test_convertor();
+  if(mode == "transition") test_transition(gen);
+  if(mode == "mdp")        test_mdp(gen);
   return 0;
+
 }
