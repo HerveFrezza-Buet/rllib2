@@ -14,9 +14,9 @@
 
 struct S_convertor {
 
-  static constexpr std::size_t nb_bins {5};
+  static constexpr std::size_t nb_bins {6};
   static constexpr std::size_t nb_dims {4};
-  static constexpr std::size_t size    {static_cast<std::size_t>(std::pow(nb_bins, nb_dims))};
+  static constexpr std::size_t size    {nb_bins * nb_bins * nb_bins * nb_bins}; // nb_dims times.
   
   static constexpr std::array<std::tuple<double, double>, nb_dims> limits
     {{ {-4.8, 4.8},
@@ -102,7 +102,7 @@ void test_convertor()
     auto obs = *env;
     auto index = S_convertor::from(obs);
     auto obs_back = S_convertor::to(index);
-    std::cout << "obs: " << obs << "(index = " << index << ")," << std::endl
+    std::cout << "obs: " << obs << " (index = " << index << ")," << std::endl
 	      << "     converted back to " << obs_back << '.' << std::endl;
   }
   
@@ -119,13 +119,13 @@ void test_convertor()
     std::tie(obs_min.theta,     obs_max.theta)     = S_convertor::limits[idd++];
     std::tie(obs_min.theta_dot, obs_max.theta_dot) = S_convertor::limits[idd++];
 
-    std::cout << "Min obs: " << obs_min << "(index = " << S_convertor::from(obs_min) << ")," << std::endl
-	      << "Max obs: " << obs_max << "(index = " << S_convertor::from(obs_max) << ")." << std::endl;
+    std::cout << "Min obs: " << obs_min << " (index = " << S_convertor::from(obs_min) << ")," << std::endl
+	      << "Max obs: " << obs_max << " (index = " << S_convertor::from(obs_max) << ")." << std::endl;
   }
 
   // state for the first indexes
   std::cout << std::endl << std::endl;
-  for (std::size_t id=0; id < 10; ++id)
+  for (std::size_t id=0; id < 50; ++id)
     std::cout << std::setw(3) << id << ": " << S_convertor::to(id) << std::endl;
   std::cout << "..." << std::endl << std::endl;
 }
