@@ -148,7 +148,7 @@ void test_transition(RANDOM& gen)
     sys = obs;
     auto report = sys(act);
     auto next_obs = *sys;
-    std::cout << "Transition from random state (continuous):"
+    std::cout << "Transition from random state (continuous):" << std::endl
 	      << "  s : " << obs << std::endl
 	      << "  a : " << act << std::endl
 	      << "  r : " << report << std::endl
@@ -168,7 +168,7 @@ void test_transition(RANDOM& gen)
 
     S discrete_s      {obs};
     S discrete_next_s {T(obs, act)}; // obs and act are implicitly converted to a S and A discrete instances.
-    std::cout << "Transition from random state (discrete):"
+    std::cout << "Transition from random state (discrete):" << std::endl
 	      << "  s             : " << obs << " (discretized as " << static_cast<gdyn::problem::cartpole::state>(discrete_s) << ", index = " << static_cast<std::size_t>(discrete_s) << ')' << std::endl
 	      << "  a             : " << act << std::endl
 	      << "  s' (discrete) : " << static_cast<gdyn::problem::cartpole::state>(discrete_next_s) << " (index = " << static_cast<std::size_t>(discrete_next_s) << ')'<< std::endl

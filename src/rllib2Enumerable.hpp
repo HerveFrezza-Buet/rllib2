@@ -40,9 +40,15 @@ namespace rl2 {
 	constexpr iterator  operator++(int) {auto tmp = *this; ++(*this); return tmp;}
 	/* to be done : implement operator for random access iterator */
       };
-    
+
+    private:
       base_type value;
-      count()                   = default;
+      static base_type quantize(const base_type& value) {
+	return INDEX_CONVERSION::to(INDEX_CONVERSION::from(value));
+      }
+      
+    public:
+      count()              = default;
       count(const count&)  = default;
       count(count&&)       = default;
     
@@ -51,8 +57,8 @@ namespace rl2 {
       count& operator=(const count&) = default;
       count& operator=(count&&)      = default;
 
-      count(const base_type& value) : value(value) {}
-      count& operator=(const base_type& value) {this->value = value; return *this;}
+      count(const base_type& value) : value(quantize(value)) {}
+      count& operator=(const base_type& value) {this->value = quantize(value); return *this;}
     
       count(std::size_t index) : value(INDEX_CONVERSION::to(index)) {}
       count& operator=(std::size_t index) {this->value = INDEX_CONVERSION::to(index); return *this;}
