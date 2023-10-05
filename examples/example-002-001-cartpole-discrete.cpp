@@ -14,23 +14,18 @@
 
 struct S_convertor {
 
-  constexpr std::size_t nb_bins {5};
-  constexpr std::size_t nb_dims {4};
-  constexpr std::size_t size_of() {
-    std::size_t res = 1;
-    for(int i = 0; i < nb_dims; ++i, res *= nb_bins);
-    retirn res;
-  }
-  constexpr std::size_t size = size_of();
+  static constexpr std::size_t nb_bins {5};
+  static constexpr std::size_t nb_dims {4};
+  static constexpr std::size_t size    {nb_bins * nb_bins * nb_bins * nb_bins}; // nb_dims times.
   
-  constexpr std::array<std::tuple<double, double>, nb_dims> limits
+  static constexpr std::array<std::tuple<double, double>, nb_dims> limits
     {{ {-4.8, 4.8},
        {-10.0, 10.0},
        {-12.0*std::numbers::pi/180.0, 12.0*std::numbers::pi/180.0},
        {-5.0, 5.0} }};
 
   
-  static gdyn::problem::cartpole::State to(std::size_t index)
+  static gdyn::problem::cartpole::state to(std::size_t index)
   {
     // indexes along each Obs dimensions
     std::array<std::size_t, nb_dims> indexes;
@@ -42,7 +37,7 @@ struct S_convertor {
     }
 
     std::size_t idi = 0;
-    gdyn::problem::cartpole::State state;
+    gdyn::problem::cartpole::state state;
     state.x = rl2::enumerable::utils::digitize::to_value(indexes[idi], std::get<0>(limits[idi]), std::get<1>(limits[idi]), nb_bins);
     ++idi;
     state.x_dot = rl2::enumerable::utils::digitize::to_value(indexes[idi], std::get<0>(limits[idi]), std::get<1>(limits[idi]), nb_bins);
@@ -53,7 +48,7 @@ struct S_convertor {
 
     return state;
   }
-  static std::size_t from(const gdyn::problem::cartpole::State& s)
+  static std::size_t from(const gdyn::problem::cartpole::state& s)
   {
     // indexes along each Obs dimensions
     std::array<std::size_t,4> indexes;
@@ -98,7 +93,7 @@ struct A_convertor {
 void test_convertor()
 {
   // need an environment
-  auto env = gdyn::problem::cartpole::make_environment();
+  auto env = gdyn::problem::cartpole::make();
   //auto env = make_mdp()
 
   // teste conversion continuous - discrete
@@ -117,18 +112,18 @@ void test_convertor()
   }
 
   {
-    gsyn::problem::cartpole::system::observation_type obs_min, obs_max;
+    gdyn::problem::cartpole::system::observation_type obs_min, obs_max;
     unsigned int idd = 0;
-    std::tie(obs_min.x,         obs_max.x)         = limits[idd++];
-    std::tie(obs_min.x_dot,     obs_max.x_dot)     = limits[idd++];
-    std::tie(obs_min.theta,     obs_max.theta)     = limits[idd++];
-    std::tie(obs_min.theta_dot, obs_max.theta_dot) = limits[idd++];
+    std::tie(obs_min.x,         obs_max.x)         = S_convertor::limits[idd++];
+    std::tie(obs_min.x_dot,     obs_max.x_dot)     = S_convertor::limits[idd++];
+    std::tie(obs_min.theta,     obs_max.theta)     = S_convertor::limits[idd++];
+    std::tie(obs_min.theta_dot, obs_max.theta_dot) = S_convertor::limits[idd++];
 
     std::cout << "Min obs: " << obs_min << "(index = " << S_convertor::from(obs_min) << ")," << std::endl
 	      << "Max obs: " << obs_max << "(index = " << S_convertor::from(obs_max) << ")." << std::endl;
   }
 
-  // State for the first indexes
+  // state for the first indexes
   std::cout << std::endl << std::endl;
   for (std::size_t id=0; id < 10; ++id)
     std::cout << std::setw(3) << id << ": " << S_convertor::to(id) << std::endl;
@@ -141,7 +136,7 @@ void test_transition(RANDOM gen)
   auto env = gdyn::problem::cartpole::make_environment();
 
   // Enumerable S and A for MDP
-  using S = rl2::enumerable::count<gdyn::problem::cartpole::State,
+  using S = rl2::enumerable::count<gdyn::problem::cartpole::state,
                                    nb_bins^4,
                                    S_convertor>;
   using A = rl2::enumerable::count<gdyn::problem::cartpole::direction, 2, A_convertor>;
@@ -187,7 +182,7 @@ void test_mdp(RANDOM gen) {
   auto env = gdyn::problem::cartpole::make_environment();
 
   // Enumerable S and A for MDP
-  using S = rl2::enumerable::count<gdyn::problem::cartpole::State,
+  using S = rl2::enumerable::count<gdyn::problem::cartpole::state,
                                    nb_bins^4,
                                    S_convertor>;
   using A = rl2::enumerable::count<gdyn::problem::cartpole::direction, 2, A_convertor>;
