@@ -5,6 +5,8 @@
 #include <numbers>
 #include <random>
 #include <string>
+#include <iostream>
+#include <iomanip>
 #include <rllib2.hpp>
 
 
@@ -95,58 +97,42 @@ struct A_convertor {
 
 void test_convertor()
 {
-  /*
   // need an environment
   auto env = gdyn::problem::cartpole::make_environment();
   //auto env = make_mdp()
 
   // teste conversion continuous - discrete
   // for the cartpole observation.
-  auto obs = *env;
-  gdyn::problem::cartpole::print_context("obs", obs, 0.0);
+  {
+    auto obs = *env;
+    auto index = S_convertor::from(obs);
+    auto obs_back = S_convertor::to(index);
+    std::cout << "obs: " << obs << "(index = " << index << ")," << std::endl
+	      << "     converted back to " << obs_back << '.' << std::endl;
+  }
+  
+  {
+    auto obs = S_convertor::to(0);
+    std::cout << "obs: " << obs << " is got from 0 index." << std::endl;
+  }
 
-  auto index = S_convertor::from(obs);
-  std::cout << "  => index=" << index << std::endl;
+  {
+    gsyn::problem::cartpole::system::observation_type obs_min, obs_max;
+    unsigned int idd = 0;
+    std::tie(obs_min.x,         obs_max.x)         = limits[idd++];
+    std::tie(obs_min.x_dot,     obs_max.x_dot)     = limits[idd++];
+    std::tie(obs_min.theta,     obs_max.theta)     = limits[idd++];
+    std::tie(obs_min.theta_dot, obs_max.theta_dot) = limits[idd++];
 
-  auto from_index = S_convertor::to(index);
-  gdyn::problem::cartpole::print_context("  converted back", from_index, 0.0);
-
-  // State from the first index
-  std::cout << "__convert from index=0" << std::endl;
-  from_index = S_convertor::to(0);
-  gdyn::problem::cartpole::print_context("  converted back", from_index, 0.0);
-
-  // index of the limit inf of obs, should be 0
-  unsigned int idp = 0;
-  unsigned int idd = 0;
-  obs.x = _limits[idd++][idp];
-  obs.x_dot = _limits[idd++][idp];
-  obs.theta = _limits[idd++][idp];
-  obs.theta_dot = _limits[idd++][idp];
-  std::cout << "__Limit inf" << std::endl;
-  gdyn::problem::cartpole::print_context("limit inf", obs, 0.0);
-  index = S_convertor::from(obs);
-  std::cout << "  => index=" << index << std::endl;
-
-  // index of the limit sup of obs, should be nb_bins^4-1 = 624
-  idp = 1;
-  idd = 0;
-  obs.x = _limits[idd++][idp];
-  obs.x_dot = _limits[idd++][idp];
-  obs.theta = _limits[idd++][idp];
-  obs.theta_dot = _limits[idd++][idp];
-  std::cout << "__Limit sup" << std::endl;
-  gdyn::problem::cartpole::print_context("limit sup", obs, 0.0);
-  index = S_convertor::from(obs);
-  std::cout << "  => index=" << index << std::endl;
+    std::cout << "Min obs: " << obs_min << "(index = " << S_convertor::from(obs_min) << ")," << std::endl
+	      << "Max obs: " << obs_max << "(index = " << S_convertor::from(obs_max) << ")." << std::endl;
+  }
 
   // State for the first indexes
-  for (int id=0; id<static_cast<int>(2*nb_bins); ++id) {
-    obs = S_convertor::to(id);
-    std::cout << "__index=" << id << std::endl;
-    gdyn::problem::cartpole::print_context("  =>", obs, 0.0);
-  }
-  */
+  std::cout << std::endl << std::endl;
+  for (std::size_t id=0; id < 10; ++id)
+    std::cout << std::setw(3) << id << ": " << S_convertor::to(id) << std::endl;
+  std::cout << "..." << std::endl << std::endl;
 }
 template<typename RANDOM>
 void test_transition(RANDOM gen)
