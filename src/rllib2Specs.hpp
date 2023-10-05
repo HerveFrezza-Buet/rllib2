@@ -123,6 +123,8 @@ namespace rl2 {
       typename TWO_ARGS_FUNCTION::second_entry_type;
       {ct(cs)} -> std::invocable<typename TWO_ARGS_FUNCTION::second_entry_type>;
     };
+
+    // TODO : commenter tous les concepts
     
     template<typename TWO_ARGS_FUNCTION>
     concept tabular_two_args_function =
