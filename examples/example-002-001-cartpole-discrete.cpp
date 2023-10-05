@@ -28,47 +28,47 @@ struct S_convertor {
        {-5.0, 5.0} }};
 
   
-  static cartpole::State to(std::size_t index)
+  static gdyn::problem::cartpole::State to(std::size_t index)
   {
     // indexes along each Obs dimensions
-    std::array<std::size_t,4> indexes;
+    std::array<std::size_t, nb_dims> indexes;
 
     for (int idi=indexes.size()-1; idi >= 0; --idi) {
-      auto tmp_index = index % (_nb_bin_dim);
-      index = (index - tmp_index) / (_nb_bin_dim);
+      auto tmp_index = index % (nb_bins);
+      index = (index - tmp_index) / (nb_bins);
       indexes[idi] = tmp_index;
     }
 
     std::size_t idi = 0;
-    cartpole::State state;
-    state.x = val_from_bin( indexes[idi], _limits[idi][0], _limits[idi][1], _nb_bin_dim);
+    gdyn::problem::cartpole::State state;
+    state.x = rl2::enumerable::utils::digitize::to_value(indexes[idi], std::get<0>(limits[idi]), std::get<1>(limits[idi]), nb_bins);
     ++idi;
-    state.x_dot = val_from_bin( indexes[idi], _limits[idi][0], _limits[idi][1], _nb_bin_dim);
+    state.x_dot = rl2::enumerable::utils::digitize::to_value(indexes[idi], std::get<0>(limits[idi]), std::get<1>(limits[idi]), nb_bins);
     ++idi;
-    state.theta = val_from_bin( indexes[idi], _limits[idi][0], _limits[idi][1], _nb_bin_dim);
+    state.theta = rl2::enumerable::utils::digitize::to_value(indexes[idi], std::get<0>(limits[idi]), std::get<1>(limits[idi]), nb_bins);
     ++idi;
-    state.theta_dot = val_from_bin( indexes[idi], _limits[idi][0], _limits[idi][1], _nb_bin_dim);
+    state.theta_dot = rl2::enumerable::utils::digitize::to_value(indexes[idi], std::get<0>(limits[idi]), std::get<1>(limits[idi]), nb_bins);
 
     return state;
   }
-  static std::size_t from(const cartpole::State& s)
+  static std::size_t from(const gdyn::problem::cartpole::State& s)
   {
     // indexes along each Obs dimensions
     std::array<std::size_t,4> indexes;
 
     std::size_t idi = 0;
-    indexes[idi] = bin(s.x, _limits[idi][0], _limits[idi][1], _nb_bin_dim);
+    indexes[idi] = rl2::enumerable::utils::digitize::to_index(s.x, std::get<0>(limits[idi]), std::get<1>(limits[idi]), nb_bins);
     ++idi;
-    indexes[idi] = bin(s.x_dot, _limits[idi][0], _limits[idi][1], _nb_bin_dim);
+    indexes[idi] = rl2::enumerable::utils::digitize::to_index(s.x_dot, std::get<0>(limits[idi]), std::get<1>(limits[idi]), nb_bins);
     ++idi;
-    indexes[idi] = bin(s.theta, _limits[idi][0], _limits[idi][1], _nb_bin_dim);
+    indexes[idi] = rl2::enumerable::utils::digitize::to_index(s.theta, std::get<0>(limits[idi]), std::get<1>(limits[idi]), nb_bins);
     ++idi;
-    indexes[idi] = bin(s.theta_dot, _limits[idi][0], _limits[idi][1], _nb_bin_dim);
+    indexes[idi] = rl2::enumerable::utils::digitize::to_index(s.theta_dot, std::get<0>(limits[idi]), std::get<1>(limits[idi]), nb_bins);
 
     // then convert array of indexes to one unique index
     std::size_t res = 0;
     for( auto index : indexes ) {
-      res = res * (_nb_bin_dim) + index;
+      res = res * (nb_bins) + index;
     }
 
     return res;
@@ -76,16 +76,16 @@ struct S_convertor {
 }; // struct S_convertor
 
 struct A_convertor {
-  static cartpole::Dir to (std::size_t index)
+  static gdyn::problem::cartpole::direction to (std::size_t index)
   {
     switch(index) {
     case 0:
-        return cartpole::Dir::L;
+        return gdyn::problem::cartpole::direction::Left;
     default:
-      return cartpole::Dir::R;
+      return gdyn::problem::cartpole::direction::Right;
     }
   }
-  static std::size_t from(const cartpole::Dir& d)
+  static std::size_t from(const gdyn::problem::cartpole::direction& d)
   {
     return static_cast<std::size_t>(d);
   }
@@ -93,29 +93,28 @@ struct A_convertor {
 
 }; // struct A_convertor
 
-// TODO un exemple à part ?
 void test_convertor()
 {
   /*
   // need an environment
-  auto env = cartpole::make_environment();
+  auto env = gdyn::problem::cartpole::make_environment();
   //auto env = make_mdp()
 
   // teste conversion continuous - discrete
   // for the cartpole observation.
   auto obs = *env;
-  cartpole::print_context("obs", obs, 0.0);
+  gdyn::problem::cartpole::print_context("obs", obs, 0.0);
 
   auto index = S_convertor::from(obs);
   std::cout << "  => index=" << index << std::endl;
 
   auto from_index = S_convertor::to(index);
-  cartpole::print_context("  converted back", from_index, 0.0);
+  gdyn::problem::cartpole::print_context("  converted back", from_index, 0.0);
 
   // State from the first index
   std::cout << "__convert from index=0" << std::endl;
   from_index = S_convertor::to(0);
-  cartpole::print_context("  converted back", from_index, 0.0);
+  gdyn::problem::cartpole::print_context("  converted back", from_index, 0.0);
 
   // index of the limit inf of obs, should be 0
   unsigned int idp = 0;
@@ -125,11 +124,11 @@ void test_convertor()
   obs.theta = _limits[idd++][idp];
   obs.theta_dot = _limits[idd++][idp];
   std::cout << "__Limit inf" << std::endl;
-  cartpole::print_context("limit inf", obs, 0.0);
+  gdyn::problem::cartpole::print_context("limit inf", obs, 0.0);
   index = S_convertor::from(obs);
   std::cout << "  => index=" << index << std::endl;
 
-  // index of the limit sup of obs, should be _nb_bin_dim^4-1 = 624
+  // index of the limit sup of obs, should be nb_bins^4-1 = 624
   idp = 1;
   idd = 0;
   obs.x = _limits[idd++][idp];
@@ -137,15 +136,15 @@ void test_convertor()
   obs.theta = _limits[idd++][idp];
   obs.theta_dot = _limits[idd++][idp];
   std::cout << "__Limit sup" << std::endl;
-  cartpole::print_context("limit sup", obs, 0.0);
+  gdyn::problem::cartpole::print_context("limit sup", obs, 0.0);
   index = S_convertor::from(obs);
   std::cout << "  => index=" << index << std::endl;
 
   // State for the first indexes
-  for (int id=0; id<static_cast<int>(2*_nb_bin_dim); ++id) {
+  for (int id=0; id<static_cast<int>(2*nb_bins); ++id) {
     obs = S_convertor::to(id);
     std::cout << "__index=" << id << std::endl;
-    cartpole::print_context("  =>", obs, 0.0);
+    gdyn::problem::cartpole::print_context("  =>", obs, 0.0);
   }
   */
 }
@@ -153,13 +152,13 @@ template<typename RANDOM>
 void test_transition(RANDOM gen)
 {
   /*
-  auto env = cartpole::make_environment();
+  auto env = gdyn::problem::cartpole::make_environment();
 
   // Enumerable S and A for MDP
-  using S = rl2::enumerable::count<cartpole::State,
-                                   _nb_bin_dim^4,
+  using S = rl2::enumerable::count<gdyn::problem::cartpole::State,
+                                   nb_bins^4,
                                    S_convertor>;
-  using A = rl2::enumerable::count<cartpole::Dir, 2, A_convertor>;
+  using A = rl2::enumerable::count<gdyn::problem::cartpole::direction, 2, A_convertor>;
 
   // to make an MDP we need
   // - TRANSITION type with function t(s,a) -> s
@@ -170,9 +169,9 @@ void test_transition(RANDOM gen)
   };
 
   // test transition from a random state
-  env = cartpole::random_state(gen, env.param);
+  env = gdyn::problem::cartpole::random_state(gen, env.param);
   auto obs = *env;
-  auto act = cartpole::random_command(gen);
+  auto act = gdyn::problem::cartpole::random_command(gen);
   auto report = env(act);
   auto next_obs = *env;
   print_context("starting from", obs, 0);
@@ -199,13 +198,13 @@ void test_transition(RANDOM gen)
 template<typename RANDOM>
 void test_mdp(RANDOM gen) {
   /*
-  auto env = cartpole::make_environment();
+  auto env = gdyn::problem::cartpole::make_environment();
 
   // Enumerable S and A for MDP
-  using S = rl2::enumerable::count<cartpole::State,
-                                   _nb_bin_dim^4,
+  using S = rl2::enumerable::count<gdyn::problem::cartpole::State,
+                                   nb_bins^4,
                                    S_convertor>;
-  using A = rl2::enumerable::count<cartpole::Dir, 2, A_convertor>;
+  using A = rl2::enumerable::count<gdyn::problem::cartpole::direction, 2, A_convertor>;
   using SA = rl2::enumerable::pair<S, A>;
 
   // to make an MDP we need
