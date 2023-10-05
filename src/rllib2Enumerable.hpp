@@ -100,6 +100,29 @@ namespace rl2 {
 						    static_cast<typename SECOND::base_type>(second))) {}
     };
 
+    template<specs::enumerable STATE, specs::enumerable OBSERVATION, specs::enumerable COMMAND,
+      gdyn::specs::system SYSTEM>
+    requires
+    std::same_as<typename STATE::base_type, typename SYSTEM::state_type>
+    && std::same_as<typename OBSERVATION::base_type, typename SYSTEM::observation_type>
+    && std::same_as<typename COMMAND::base_type, typename SYSTEM::command_type>
+    struct system {
+      using state_type = STATE;
+      using observation_type = OBSERVATION;
+      using command_type = COMMAND;
+      using report_type = typename SYSTEM::report_type;
+      
+      SYSTEM& borrowed_system;
+      system(SYSTEM& borrowed_system) : borrowed_system(borrowed_system) {}
+      system() = delete;
+      system(system&&) = delete;
+      system& operator=(system&&) = delete;
+      
+      void operator=(const state_type& state)             {borrowed_system = static_cast<STATE::base_type>(state);}
+      report_type operator()(const command_type& command) {return borrowed_system(static_cast<COMMAND::base_type>(command));}
+      observation_type operator*() const                  {return *borrowed_system;}
+      operator bool() const                               {return borrowed_system;}
+    };
 
     namespace utils {
       namespace digitize {

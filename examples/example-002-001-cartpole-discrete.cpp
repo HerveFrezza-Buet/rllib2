@@ -91,6 +91,12 @@ struct A_convertor {
 
 }; // struct A_convertor
 
+
+// Enumerable S and A for MDP
+using S  = rl2::enumerable::count<gdyn::problem::cartpole::state,     S_convertor::size, S_convertor>;
+using A  = rl2::enumerable::count<gdyn::problem::cartpole::direction, A_convertor::size, A_convertor>;
+using SA = rl2::enumerable::pair<S, A>;
+
 void test_convertor()
 {
   // need an environment
@@ -133,13 +139,6 @@ void test_convertor()
 template<typename RANDOM>
 void test_transition(RANDOM& gen)
 {
-
-  // Enumerable S and A for MDP
-  using S = rl2::enumerable::count<gdyn::problem::cartpole::state,     S_convertor::size, S_convertor>;
-  using A = rl2::enumerable::count<gdyn::problem::cartpole::direction, A_convertor::size, A_convertor>;
-
-  
-    
   auto obs = gdyn::problem::cartpole::random_state(gen, gdyn::problem::cartpole::parameters());
   auto act = gdyn::problem::cartpole::random_command(gen);
 
@@ -179,23 +178,14 @@ void test_transition(RANDOM& gen)
 
 template<typename RANDOM>
 void test_mdp(RANDOM& gen) {
-  /*
-  auto sys = gdyn::problem::cartpole::make_environment();
 
-  // Enumerable S and A for MDP
-  using S = rl2::enumerable::count<gdyn::problem::cartpole::state,
-                                   nb_bins^4,
-                                   S_convertor>;
-  using A = rl2::enumerable::count<gdyn::problem::cartpole::direction, 2, A_convertor>;
-  using SA = rl2::enumerable::pair<S, A>;
-
-  // to make an MDP we need
-  // - TRANSITION type with function t(s,a) -> s
-  auto T = [&env] (const S& s, const A& a) -> S {
-    env = static_cast<S::base_type>(s);
-    env(static_cast<A::base_type>(a));
-    return S{*env};
+  auto T = [sys = gdyn::problem::cartpole::make()] (const S& s, const A& a) mutable -> S {
+    sys = static_cast<S::base_type>(s); // We init sys with s
+    sys(static_cast<A::base_type>(a));  // We ask the continuous system to perform a transition.
+    return *sys;                        // implicit conversion from gdyn::problem::cartpole::state to discrete S.
   };
+
+  
 
   // - REWARD type with function r(s,a,s) -> double
   auto R = [] (const S&, const A&, const S&) -> double {
