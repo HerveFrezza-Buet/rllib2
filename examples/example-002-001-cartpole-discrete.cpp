@@ -16,7 +16,7 @@ struct S_convertor {
 
   static constexpr std::size_t nb_bins {5};
   static constexpr std::size_t nb_dims {4};
-  static constexpr std::size_t size    {nb_bins * nb_bins * nb_bins * nb_bins}; // nb_dims times.
+  static constexpr std::size_t size    {static_cast<std::size_t>(std::pow(nb_bins, nb_dims))};
   
   static constexpr std::array<std::tuple<double, double>, nb_dims> limits
     {{ {-4.8, 4.8},
