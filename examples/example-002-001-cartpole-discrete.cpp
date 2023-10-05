@@ -131,55 +131,56 @@ void test_convertor()
   std::cout << "..." << std::endl << std::endl;
 }
 template<typename RANDOM>
-void test_transition(RANDOM gen)
+void test_transition(RANDOM& gen)
 {
 
   // Enumerable S and A for MDP
   using S = rl2::enumerable::count<gdyn::problem::cartpole::state,     S_convertor::size, S_convertor>;
   using A = rl2::enumerable::count<gdyn::problem::cartpole::direction, A_convertor::size, A_convertor>;
 
-  // Let us build a transition function from the continuous
-  // cartpole. This transition functions is the one for a discretized
-  // cartpole.
-  auto T = [sys = gdyn::problem::cartpole::make()] (const S& s, const A& a) mutable -> S {
-    sys = static_cast<S::base_type>(s); // We init sys with s
-    sys(static_cast<A::base_type>(a));  // We ask the continuous system to perform a transition.
-    return *sys;                        // implicit conversion from gdyn::problem::cartpole::state to discrete S.
-  };
-
   
-  auto sys = gdyn::problem::cartpole::make();
     
-  // // test transition from a random state
-  // env = gdyn::problem::cartpole::random_state(gen, env.param);
-  // auto obs = *env;
-  // auto act = gdyn::problem::cartpole::random_command(gen);
-  // auto report = env(act);
-  // auto next_obs = *env;
-  // print_context("starting from", obs, 0);
-  // std::cout << "we apply " << act << std::endl;
-  // print_context("to get", next_obs, report);
+  auto obs = gdyn::problem::cartpole::random_state(gen, gdyn::problem::cartpole::parameters());
+  auto act = gdyn::problem::cartpole::random_command(gen);
 
-  // // same with TRANSITION ?
-  // auto s = S{obs};
-  // auto a = A{act};
-  // auto s_next = T(s, a);
-  // std::cout << "Using TRANSITION" << std::endl;
-  // // TODO pk je peux pas directement écrire print_context("starting from", static_cast<S::base_type>(s), 0);
-  // auto s_base = static_cast<S::base_type>(s);
-  // print_context("starting from", s_base, 0);
-  // std::cout << "  with index=" << static_cast<std::size_t>(s) << std::endl;
-  // std::cout << "we apply " << static_cast<A::base_type>(a) << ", index=" << std::endl;
-  // auto s_next_base = static_cast<S::base_type>(s_next);
-  // print_context("to get", s_next_base, 0);
-  // std::cout << "  with index=" << static_cast<std::size_t>(s_next) << std::endl;
+  {
+    auto sys = gdyn::problem::cartpole::make();
+    sys = obs;
+    auto report = sys(act);
+    auto next_obs = *sys;
+    std::cout << "Transition from random state (continuous):"
+	      << "  s : " << obs << std::endl
+	      << "  a : " << act << std::endl
+	      << "  r : " << report << std::endl
+	      << "  s': " << next_obs << std::endl
+	      << std::endl;
+  }
+  
+  {
+    // Let us build a transition function from the continuous
+    // cartpole. This transition functions is the one for a discretized
+    // cartpole.
+    auto T = [sys = gdyn::problem::cartpole::make()] (const S& s, const A& a) mutable -> S {
+      sys = static_cast<S::base_type>(s); // We init sys with s
+      sys(static_cast<A::base_type>(a));  // We ask the continuous system to perform a transition.
+      return *sys;                        // implicit conversion from gdyn::problem::cartpole::state to discrete S.
+    };
+
+    S discrete_s      {obs};
+    S discrete_next_s {T(obs, act)}; // obs and act are implicitly converted to a S and A discrete instances.
+    std::cout << "Transition from random state (discrete):"
+	      << "  s             : " << obs << " (discretized as " << static_cast<gdyn::problem::cartpole::state>(discrete_s) << ", index = " << static_cast<std::size_t>(discrete_s) << ')' << std::endl
+	      << "  a             : " << act << std::endl
+	      << "  s' (discrete) : " << static_cast<gdyn::problem::cartpole::state>(discrete_next_s) << " (index = " << static_cast<std::size_t>(discrete_next_s) << ')'<< std::endl
+	      << std::endl;
+  }
 
 }
 
 template<typename RANDOM>
-void test_mdp(RANDOM gen) {
+void test_mdp(RANDOM& gen) {
   /*
-  auto env = gdyn::problem::cartpole::make_environment();
+  auto sys = gdyn::problem::cartpole::make_environment();
 
   // Enumerable S and A for MDP
   using S = rl2::enumerable::count<gdyn::problem::cartpole::state,
