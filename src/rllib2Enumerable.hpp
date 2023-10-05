@@ -122,6 +122,8 @@ namespace rl2 {
       report_type operator()(const command_type& command) {return borrowed_system(static_cast<COMMAND::base_type>(command));}
       observation_type operator*() const                  {return *borrowed_system;}
       operator bool() const                               {return borrowed_system;}
+
+      state_type state() const requires(gdyn::specs::transparent_system<SYSTEM>) {return borrowed_system.state();}
     };
 
     namespace utils {
