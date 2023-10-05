@@ -73,6 +73,7 @@ struct S_convertor {
 }; // struct S_convertor
 
 struct A_convertor {
+  static constexpr std::size_t size {2}; 
   static gdyn::problem::cartpole::direction to (std::size_t index)
   {
     switch(index) {
@@ -132,48 +133,47 @@ void test_convertor()
 template<typename RANDOM>
 void test_transition(RANDOM gen)
 {
-  /*
-  auto env = gdyn::problem::cartpole::make_environment();
 
   // Enumerable S and A for MDP
-  using S = rl2::enumerable::count<gdyn::problem::cartpole::state,
-                                   nb_bins^4,
-                                   S_convertor>;
-  using A = rl2::enumerable::count<gdyn::problem::cartpole::direction, 2, A_convertor>;
+  using S = rl2::enumerable::count<gdyn::problem::cartpole::state,     S_convertor::size, S_convertor>;
+  using A = rl2::enumerable::count<gdyn::problem::cartpole::direction, A_convertor::size, A_convertor>;
 
-  // to make an MDP we need
-  // - TRANSITION type with function t(s,a) -> s
-  auto T = [&env] (const S& s, const A& a) -> S {
-    env = static_cast<S::base_type>(s);
-    env(static_cast<A::base_type>(a));
-    return S{*env};
+  // Let us build a transition function from the continuous
+  // cartpole. This transition functions is the one for a discretized
+  // cartpole.
+  auto T = [sys = gdyn::problem::cartpole::make()] (const S& s, const A& a) mutable -> S {
+    sys = static_cast<S::base_type>(s); // We init sys with s
+    sys(static_cast<A::base_type>(a));  // We ask the continuous system to perform a transition.
+    return *sys;                        // implicit conversion from gdyn::problem::cartpole::state to discrete S.
   };
 
-  // test transition from a random state
-  env = gdyn::problem::cartpole::random_state(gen, env.param);
-  auto obs = *env;
-  auto act = gdyn::problem::cartpole::random_command(gen);
-  auto report = env(act);
-  auto next_obs = *env;
-  print_context("starting from", obs, 0);
-  std::cout << "we apply " << act << std::endl;
-  print_context("to get", next_obs, report);
+  
+  auto sys = gdyn::problem::cartpole::make();
+    
+  // // test transition from a random state
+  // env = gdyn::problem::cartpole::random_state(gen, env.param);
+  // auto obs = *env;
+  // auto act = gdyn::problem::cartpole::random_command(gen);
+  // auto report = env(act);
+  // auto next_obs = *env;
+  // print_context("starting from", obs, 0);
+  // std::cout << "we apply " << act << std::endl;
+  // print_context("to get", next_obs, report);
 
-  // same with TRANSITION ?
-  auto s = S{obs};
-  auto a = A{act};
-  auto s_next = T(s, a);
-  std::cout << "Using TRANSITION" << std::endl;
-  // TODO pk je peux pas directement écrire print_context("starting from", static_cast<S::base_type>(s), 0);
-  auto s_base = static_cast<S::base_type>(s);
-  print_context("starting from", s_base, 0);
-  std::cout << "  with index=" << static_cast<std::size_t>(s) << std::endl;
-  std::cout << "we apply " << static_cast<A::base_type>(a) << ", index=" << std::endl;
-  auto s_next_base = static_cast<S::base_type>(s_next);
-  print_context("to get", s_next_base, 0);
-  std::cout << "  with index=" << static_cast<std::size_t>(s_next) << std::endl;
+  // // same with TRANSITION ?
+  // auto s = S{obs};
+  // auto a = A{act};
+  // auto s_next = T(s, a);
+  // std::cout << "Using TRANSITION" << std::endl;
+  // // TODO pk je peux pas directement écrire print_context("starting from", static_cast<S::base_type>(s), 0);
+  // auto s_base = static_cast<S::base_type>(s);
+  // print_context("starting from", s_base, 0);
+  // std::cout << "  with index=" << static_cast<std::size_t>(s) << std::endl;
+  // std::cout << "we apply " << static_cast<A::base_type>(a) << ", index=" << std::endl;
+  // auto s_next_base = static_cast<S::base_type>(s_next);
+  // print_context("to get", s_next_base, 0);
+  // std::cout << "  with index=" << static_cast<std::size_t>(s_next) << std::endl;
 
-  */
 }
 
 template<typename RANDOM>
