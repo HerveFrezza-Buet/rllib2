@@ -93,5 +93,36 @@ namespace rl2 {
 	: super_type(typename super_type::base_type(static_cast<typename FIRST::base_type>(first),
 						    static_cast<typename SECOND::base_type>(second))) {}
     };
+
+
+    namespace utils {
+      namespace digitize {
+	
+
+	// Partition in bins, upper bound in last bin
+	std::size_t to_index(double value, double value_min, double value_max, std::size_t nb_bins)
+	{
+	  if (value == value_max) return nb_bins-1;
+	  double reloc = (value - value_min) / (value_max - value_min) * reinterpret_cast<double>(nb_bins);
+	  return reinterpret_cast<std::size_t>(reloc);
+	}
+
+	// When converting from bin, give the middle value of the bin
+	double to_value(std::size_t index, double value_min, double value_max, std::size_t nb_bins)
+	{
+	  return value_min + (reinterpet_cast<double>(index) + 0.5)
+	    * (value_max - value_min) / reinterpet_cast<double>(nb_bins);
+	}
+	
+	std::size_t to_index(double value, std::size_t nb_bins) {
+	  return to_index(value, 0., 1., nb_bins);
+	}
+	
+	double to_value(std::size_t index, std::size_t nb_bins) {
+	  return to_value(index, 0., 1., nb_bins);
+	}
+
+      }
+    }
   }
 }
