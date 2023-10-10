@@ -2,7 +2,10 @@
 #include <cstddef>
 #include <numbers>
 #include <iostream>
+#include <iomanip>
 #include <tuple>
+#include <ranges>
+	
 
 #include <rllib2.hpp>
 
@@ -38,7 +41,7 @@ namespace discrete {
 }
 
 
-// This is our continuous system
+// This is our continuous systems
 
 struct circle {
   using state_type       = continuous::angle;
@@ -72,6 +75,9 @@ struct transparent_circle : public circle {
 static_assert(gdyn::specs::system<circle>);
 static_assert(gdyn::specs::transparent_system<transparent_circle>);
 
+
+// This is our discrete systems
+
 using discrete_circle             = rl2::enumerable::system<discrete::angle, discrete::plane, discrete::angle, circle>;
 using discrete_transparent_circle = rl2::enumerable::system<discrete::angle, discrete::plane, discrete::angle, transparent_circle>;
 
@@ -79,6 +85,25 @@ static_assert(gdyn::specs::system<discrete_circle>);
 static_assert(gdyn::specs::transparent_system<discrete_transparent_circle>);
 
 int main(int argc, char* argv[]) {
+
+  transparent_circle system;
+  discrete_transparent_circle dsystem(system);
+
+  system = continuous::angle(0);
+  for(auto cmd
+	: std::views::iota(0)
+	| std::views::transform([](auto x) -> double {return x;})
+	| std::views::take(360)) {
+    system(cmd);
+    auto [x,   y] = *system;
+    auto [dx, dy] = static_cast<discrete::plane>(*dsystem);
+    auto state    = system.state();
+    auto dstate   = dsystem.state();
+
+    std::cout << x << " | " << y << " | " << dx << " | " << dy << " | " << std::endl;
+      
+  }
+  
   return 0;
 }
 
