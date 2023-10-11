@@ -6,6 +6,7 @@
  * @example example-001-001-getting-started.cpp
  * @example example-001-002-functionals.cpp
  * @example example-001-003-sarsa-qlearning.cpp
+ * @example example-001-004-enumerable-systems.cpp
  * @example example-002-001-cartpole-discrete.cpp
  */
 
