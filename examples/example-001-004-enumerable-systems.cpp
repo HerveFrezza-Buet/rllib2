@@ -2,6 +2,7 @@
 #include <cstddef>
 #include <numbers>
 #include <iostream>
+#include <sstream>
 #include <iomanip>
 #include <tuple>
 #include <ranges>
@@ -32,8 +33,8 @@ namespace discrete {
   
   struct angle_convertor {
     static constexpr std::size_t nb_bins {24};
-    static continuous::angle to(std::size_t index)   {return rl2::enumerable::utils::digitize::to_value(index, -1., 1., nb_bins);}
-    static std::size_t from(continuous::angle value) {return rl2::enumerable::utils::digitize::to_index(value, -1., 1., nb_bins);}
+    static continuous::angle to(std::size_t index)   {return rl2::enumerable::utils::digitize::to_value(index, 0., 360., nb_bins);}
+    static std::size_t from(continuous::angle value) {return rl2::enumerable::utils::digitize::to_index(value, 0., 360., nb_bins);}
   };
   using angle = rl2::enumerable::count<continuous::angle, angle_convertor::nb_bins, angle_convertor>;
 
@@ -56,7 +57,7 @@ struct circle {
   report_type operator()(command_type command) {
     theta = command;
     while(theta >= 360) theta -= 360;
-    while(theta < 0)    theta += 360;
+    while(theta <    0) theta += 360;
     return {};
   }
   operator bool() const {return true;}
@@ -84,25 +85,56 @@ using discrete_transparent_circle = rl2::enumerable::system<discrete::angle, dis
 static_assert(gdyn::specs::system<discrete_circle>);
 static_assert(gdyn::specs::transparent_system<discrete_transparent_circle>);
 
+#define WIDTH 8
 int main(int argc, char* argv[]) {
 
   transparent_circle system;
   discrete_transparent_circle dsystem(system);
 
   system = continuous::angle(0);
+
+  std::cout <<  "| " << std::setw(WIDTH) << "state"
+	    << " | " << std::setw(WIDTH) << "dstate"
+	    << " | " << std::setw(WIDTH) << "sta_idx"
+	    << " | " << std::setw(WIDTH) << "x"
+	    << " | " << std::setw(WIDTH) << "y"
+	    << " | " << std::setw(WIDTH) << "dx"
+	    << " | " << std::setw(WIDTH) << "dy"
+	    << " | " << std::setw(WIDTH) << "obs_idx"
+	    << " |" << std::endl;
+  
+  std::string chunk = std::string("+") + std::string(WIDTH+2, '-');
+  std::string bar;
+  for(int i = 0; i < 8; ++i, bar += chunk);
+  bar += std::string("+");
+  std::cout << bar << std::endl;
+  
   for(auto cmd
 	: std::views::iota(0)
 	| std::views::transform([](auto x) -> double {return x;})
 	| std::views::take(360)) {
     system(cmd);
     auto [x,   y] = *system;
-    auto [dx, dy] = static_cast<discrete::plane>(*dsystem);
+    auto [dx, dy] = static_cast<discrete_transparent_circle::observation_type::base_type>(*dsystem);
+    auto obs_idx  = static_cast<std::size_t>(*dsystem);
     auto state    = system.state();
-    auto dstate   = dsystem.state();
-
-    std::cout << x << " | " << y << " | " << dx << " | " << dy << " | " << std::endl;
+    auto dstate   = static_cast<discrete_transparent_circle::state_type::base_type>(dsystem.state());
+    auto sta_idx  = static_cast<std::size_t>(dsystem.state());
+    std::cout << std::fixed << std::setprecision(4)
+	      <<  "| " << std::setw(WIDTH) << state
+	      << " | " << std::setw(WIDTH) << dstate
+	      << " | " << std::setw(WIDTH) << sta_idx
+	      << " | " << std::setw(WIDTH) << x
+	      << " | " << std::setw(WIDTH) << y
+	      << " | " << std::setw(WIDTH) << dx
+	      << " | " << std::setw(WIDTH) << dy
+	      << " | " << std::setw(WIDTH) << obs_idx
+	      << " |" << std::endl;
       
   }
+  
+  std::cout << bar << std::endl;
+  
   
   return 0;
 }
