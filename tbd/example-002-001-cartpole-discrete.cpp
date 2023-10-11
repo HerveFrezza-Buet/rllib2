@@ -100,13 +100,12 @@ using SA = rl2::enumerable::pair<S, A>;
 void test_convertor()
 {
   // need an environment
-  auto env = gdyn::problem::cartpole::make();
-  //auto env = make_mdp()
+  auto sys = gdyn::problem::cartpole::make();
 
   // teste conversion continuous - discrete
   // for the cartpole observation.
   {
-    auto obs = *env;
+    auto obs = *sys;
     auto index = S_convertor::from(obs);
     auto obs_back = S_convertor::to(index);
     std::cout << "obs: " << obs << " (index = " << index << ")," << std::endl
@@ -178,7 +177,7 @@ void test_transition(RANDOM& gen)
 
 template<typename RANDOM>
 void test_mdp(RANDOM& gen) {
-
+  /*
   auto T = [sys = gdyn::problem::cartpole::make()] (const S& s, const A& a) mutable -> S {
     sys = static_cast<S::base_type>(s); // We init sys with s
     sys(static_cast<A::base_type>(a));  // We ask the continuous system to perform a transition.
@@ -196,10 +195,10 @@ void test_mdp(RANDOM& gen) {
   };
 
   // - TERMINAL type with function terminal(s) -> bool
-  auto is_terminal = [env] (const S& s) -> bool {
+  auto is_terminal = [sys] (const S& s) -> bool {
     // TODO difficult to write solely using env
 
-    auto p = env.param;
+    auto p = sys.param;
     auto state = static_cast<S::base_type>(s);
     if (state.x < - p.x_threshold or state.x > p.x_threshold
         or state.theta < - p.theta_threshold_rad or state.theta > p.theta_threshold_rad) {
