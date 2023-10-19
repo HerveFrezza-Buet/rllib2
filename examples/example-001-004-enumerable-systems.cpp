@@ -73,8 +73,8 @@ struct transparent_circle : public circle {
   state_type state() const {return theta;}
 };
 
-static_assert(gdyn::specs::system<circle>);
-static_assert(gdyn::specs::transparent_system<transparent_circle>);
+static_assert(gdyn::concepts::system<circle>);
+static_assert(gdyn::concepts::transparent_system<transparent_circle>);
 
 
 // This is our discrete systems
@@ -82,8 +82,8 @@ static_assert(gdyn::specs::transparent_system<transparent_circle>);
 using discrete_circle             = rl2::enumerable::system<discrete::angle, discrete::plane, discrete::angle, circle>;
 using discrete_transparent_circle = rl2::enumerable::system<discrete::angle, discrete::plane, discrete::angle, transparent_circle>;
 
-static_assert(gdyn::specs::system<discrete_circle>);
-static_assert(gdyn::specs::transparent_system<discrete_transparent_circle>);
+static_assert(gdyn::concepts::system<discrete_circle>);
+static_assert(gdyn::concepts::transparent_system<discrete_transparent_circle>);
 
 #define WIDTH 8
 int main(int argc, char* argv[]) {

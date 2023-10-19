@@ -5,13 +5,13 @@
 #include <random>
 #include <utility>
 
-#include <rllib2Specs.hpp>
+#include <rllib2Concepts.hpp>
 
 namespace rl2 {
 
 
   namespace by_default {
-    template<specs::indexed BASE>
+    template<concepts::indexed BASE>
     struct IndexConversion {
       static std::size_t from(const BASE& base) {return static_cast<std::size_t>(base);}
       static BASE        to(std::size_t index)  {return static_cast<BASE>(index);      }
@@ -21,7 +21,7 @@ namespace rl2 {
   
   namespace enumerable {
     template<typename BASE, std::size_t NB,
-	     specs::static_index_conversion<BASE> INDEX_CONVERSION = by_default::IndexConversion<BASE>>
+	     concepts::static_index_conversion<BASE> INDEX_CONVERSION = by_default::IndexConversion<BASE>>
     struct count {
       using base_type = BASE;
       struct iterator {
@@ -75,7 +75,7 @@ namespace rl2 {
       constexpr static std::size_t size = NB;
     };
   
-    template <specs::enumerable FIRST, specs::enumerable SECOND>
+    template <concepts::enumerable FIRST, concepts::enumerable SECOND>
     struct pair_index_conversion {
       static std::size_t from(const std::pair<typename FIRST::base_type, typename SECOND::base_type>& base) {
 	return static_cast<std::size_t>(FIRST(base.first)) * SECOND::size + static_cast<std::size_t>(SECOND(base.second));
@@ -88,7 +88,7 @@ namespace rl2 {
       }
     };
     
-    template<specs::enumerable FIRST, specs::enumerable SECOND>
+    template<concepts::enumerable FIRST, concepts::enumerable SECOND>
     struct pair : public count<std::pair<typename FIRST::base_type, typename SECOND::base_type>, FIRST::size * SECOND::size, pair_index_conversion<FIRST, SECOND>> {
       using super_type = count<std::pair<typename FIRST::base_type, typename SECOND::base_type>, FIRST::size * SECOND::size, pair_index_conversion<FIRST, SECOND>>;
 
@@ -100,8 +100,8 @@ namespace rl2 {
 						    static_cast<typename SECOND::base_type>(second))) {}
     };
 
-    template<specs::enumerable STATE, specs::enumerable OBSERVATION, specs::enumerable COMMAND,
-      gdyn::specs::system SYSTEM>
+    template<concepts::enumerable STATE, concepts::enumerable OBSERVATION, concepts::enumerable COMMAND,
+      gdyn::concepts::system SYSTEM>
     requires
     std::same_as<typename STATE::base_type, typename SYSTEM::state_type>
     && std::same_as<typename OBSERVATION::base_type, typename SYSTEM::observation_type>
@@ -123,7 +123,7 @@ namespace rl2 {
       observation_type operator*() const                  {return *borrowed_system;}
       operator bool() const                               {return borrowed_system;}
 
-      state_type state() const requires(gdyn::specs::transparent_system<SYSTEM>) {return borrowed_system.state();}
+      state_type state() const requires(gdyn::concepts::transparent_system<SYSTEM>) {return borrowed_system.state();}
     };
 
     namespace utils {

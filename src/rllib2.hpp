@@ -17,5 +17,5 @@
 #include <rllib2Iterators.hpp>
 #include <rllib2MDP.hpp>
 #include <rllib2Ranges.hpp>
-#include <rllib2Specs.hpp>
+#include <rllib2Concepts.hpp>
 #include <rllib2Transition.hpp>

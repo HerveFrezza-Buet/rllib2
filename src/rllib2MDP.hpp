@@ -4,7 +4,7 @@
 #include <functional>
 #include <iterator>
 
-#include<rllib2Specs.hpp>
+#include<rllib2Concepts.hpp>
 
 namespace rl2 {
 
@@ -33,7 +33,7 @@ namespace rl2 {
   public:
 
 
-    template<specs::transition<STATE, ACTION> TRANSITION, specs::reward<STATE, ACTION> REWARD, specs::terminal<STATE> TERMINAL>
+    template<concepts::transition<STATE, ACTION> TRANSITION, concepts::reward<STATE, ACTION> REWARD, concepts::terminal<STATE> TERMINAL>
     MDP(const TRANSITION& T, const REWARD& R, const TERMINAL& terminal)
       : transition(T), reward(R), terminal(terminal),
 	current_state() {}
@@ -55,7 +55,7 @@ namespace rl2 {
     state_type state() const {return current_state;}
   };
 
-  template<typename STATE, typename ACTION, specs::transition<STATE, ACTION> TRANSITION, specs::reward<STATE, ACTION> REWARD, specs::terminal<STATE> TERMINAL>
+  template<typename STATE, typename ACTION, concepts::transition<STATE, ACTION> TRANSITION, concepts::reward<STATE, ACTION> REWARD, concepts::terminal<STATE> TERMINAL>
   auto make_mdp(const TRANSITION& T, const REWARD& R, const TERMINAL& terminal) {
     return MDP<STATE, ACTION>(T, R, terminal);
   }

@@ -9,7 +9,7 @@
 #include <type_traits>
 #include <utility>
 
-#include <rllib2Specs.hpp>
+#include <rllib2Concepts.hpp>
 #include <rllib2Enumerable.hpp>
 
 namespace rl2 {
@@ -19,7 +19,7 @@ namespace rl2 {
      * This function returns a function that provides a random value of
      * type TYPE at each call.
      */
-    template<specs::enumerable TYPE, typename RANDOM_GENERATOR>
+    template<concepts::enumerable TYPE, typename RANDOM_GENERATOR>
     auto uniform_sampler(RANDOM_GENERATOR& gen) {
       return [&gen]() -> TYPE {return std::uniform_int_distribution<std::size_t>(0, TYPE::size-1)(gen);};
     }
@@ -35,7 +35,7 @@ namespace rl2 {
 	     std::convertible_to<double> PARAM, // PARAM can be eps, std::ref(eps), std::cref(eps).
 	     typename RANDOM_GENERATOR> 
     auto epsilon_ify(const F& f, const PARAM& p, RANDOM_GENERATOR& gen) {
-      return [f, p, &gen](auto arg) -> specs::enumerable auto {
+      return [f, p, &gen](auto arg) -> concepts::enumerable auto {
 	typename std::remove_const<typename std::remove_reference<decltype(f(arg))>::type>::type res;
 	if(std::bernoulli_distribution(p)(gen))
 	  res = std::uniform_int_distribution<std::size_t>(0, decltype(res)::size)(gen);
@@ -49,7 +49,7 @@ namespace rl2 {
       /**
        * @return max_{x in S} f(x).
        */
-      template<specs::enumerable S,
+      template<concepts::enumerable S,
 	       std::invocable<S> F,
 	       typename COMP = std::less<std::invoke_result_t<F, S>>>
       auto max(const F& f) {
@@ -66,7 +66,7 @@ namespace rl2 {
       /**
        * @return argmax_{x in S} f(x).
        */
-      template<specs::enumerable S,
+      template<concepts::enumerable S,
 	       std::invocable<S> F,
 	       typename COMP = std::less<std::invoke_result_t<F, S>>>
       S argmax(const F& f) {
@@ -89,7 +89,7 @@ namespace rl2 {
     /**
      * @short Makes a function from an array of values
      */
-    template<specs::enumerable X, std::random_access_iterator IT>
+    template<concepts::enumerable X, std::random_access_iterator IT>
     struct function {
       using arg_type    = X;
       using result_type = std::iter_value_t<IT>;
@@ -109,13 +109,13 @@ namespace rl2 {
       result_type operator()(const typename X::iterator& it) const {return *(params_it + static_cast<std::size_t>(it));}
     };
 
-    template<specs::enumerable X, std::random_access_iterator IT>
+    template<concepts::enumerable X, std::random_access_iterator IT>
     auto make_function(IT params_it) {return function<X, IT>(params_it);}
 
     /**
      * @short Makes a function taking 2 arguments.
      */
-    template<specs::enumerable X, specs::enumerable Y, std::random_access_iterator IT>
+    template<concepts::enumerable X, concepts::enumerable Y, std::random_access_iterator IT>
     struct two_args_function : public function<enumerable::pair<X, Y>, IT> {
       using params_iterator_type = typename function<enumerable::pair<X, Y>, IT>::params_iterator_type;
       using arg_type             = typename function<enumerable::pair<X, Y>, IT>::arg_type;
@@ -130,18 +130,18 @@ namespace rl2 {
       auto operator()(const X& x)             const {return make_function<Y, IT>(this->params_it + Y::size * static_cast<std::size_t>(x));}
     };
 
-    template<specs::enumerable X, specs::enumerable Y, std::random_access_iterator IT>
+    template<concepts::enumerable X, concepts::enumerable Y, std::random_access_iterator IT>
     auto make_two_args_function(IT params_it) {return two_args_function<X, Y, IT>(params_it);}
   }
 
   namespace discrete {
-    template<specs::two_args_function TWO_ARGS_FUNCTION, typename COMP=std::less<typename TWO_ARGS_FUNCTION::result_type>>
-    requires specs::enumerable<typename TWO_ARGS_FUNCTION::second_entry_type>
+    template<concepts::two_args_function TWO_ARGS_FUNCTION, typename COMP=std::less<typename TWO_ARGS_FUNCTION::result_type>>
+    requires concepts::enumerable<typename TWO_ARGS_FUNCTION::second_entry_type>
     auto argmax_ify(TWO_ARGS_FUNCTION taf) {
       return [taf](const typename TWO_ARGS_FUNCTION::first_entry_type& arg) {return algo::argmax<typename TWO_ARGS_FUNCTION::second_entry_type, decltype(taf(std::declval<typename TWO_ARGS_FUNCTION::first_entry_type>())), COMP>(taf(arg));};
     }
 	
-    template<specs::two_args_function TWO_ARGS_FUNCTION, typename COMP=std::less<typename TWO_ARGS_FUNCTION::result_type>>
+    template<concepts::two_args_function TWO_ARGS_FUNCTION, typename COMP=std::less<typename TWO_ARGS_FUNCTION::result_type>>
     auto greedy_ify(TWO_ARGS_FUNCTION taf) {return argmax_ify<TWO_ARGS_FUNCTION, COMP>(taf);}
   }
   

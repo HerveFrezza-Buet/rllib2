@@ -74,7 +74,7 @@ namespace weakest_link {
     }
 
     // Let us build a Markov Decision Process. It fits the
-    // rl2::specs::MDP<S, A> concept, so it is a gdyn::specs::system
+    // rl2::concepts::MDP<S, A> concept, so it is a gdyn::concepts::system
     // dynamical system.
 
     // We need a transition function. Let us use a lambda here.

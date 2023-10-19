@@ -4,7 +4,7 @@
 #include <tuple>
 
 namespace rl2 {
-  namespace specs {
+  namespace concepts {
 
     /**
      * @short transition function
@@ -77,7 +77,7 @@ namespace rl2 {
      */
     template<typename MDP>
     concept mdp =
-      gdyn::specs::transparent_system<MDP>
+      gdyn::concepts::transparent_system<MDP>
       && std::same_as<typename MDP::report_type, double>;
 
     /**
@@ -85,7 +85,7 @@ namespace rl2 {
      */
     template<typename ORBIT_VALUE>
     concept mdp_orbit_point =
-      gdyn::specs::orbit_point<ORBIT_VALUE>
+      gdyn::concepts::orbit_point<ORBIT_VALUE>
       && std::same_as<typename ORBIT_VALUE::report_type, double>;
 
     /**
@@ -93,7 +93,7 @@ namespace rl2 {
      */
     template<typename ORBIT_ITERATOR>
     concept mdp_orbit_iterator =
-      gdyn::specs::orbit_iterator<ORBIT_ITERATOR>
+      gdyn::concepts::orbit_iterator<ORBIT_ITERATOR>
       && mdp_orbit_point<std::iter_value_t<ORBIT_ITERATOR>>;
 
     /**

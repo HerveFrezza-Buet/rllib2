@@ -4,7 +4,7 @@
 
 #include <gdyn.hpp>
 
-#include <rllib2Specs.hpp>
+#include <rllib2Concepts.hpp>
 #include <rllib2Transition.hpp>
 
 namespace rl2 {
@@ -13,7 +13,7 @@ namespace rl2 {
     
     // transition
     
-    template<specs::mdp_orbit_iterator ORBIT_ITERATOR,
+    template<concepts::mdp_orbit_iterator ORBIT_ITERATOR,
 	     typename ORBIT_SENTINEL>
     struct sarsa {
       

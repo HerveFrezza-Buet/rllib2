@@ -3,7 +3,7 @@
 
 #include <ranges>
 
-#include <rllib2Specs.hpp>
+#include <rllib2Concepts.hpp>
 #include <rllib2Iterators.hpp>
 
 namespace rl2 {
@@ -17,7 +17,7 @@ namespace rl2 {
 
     template<std::ranges::input_range R>
     requires std::ranges::view<R> &&
-    specs::mdp_orbit_iterator<std::ranges::iterator_t<R>>
+    concepts::mdp_orbit_iterator<std::ranges::iterator_t<R>>
     class sarsa_view : public std::ranges::view_interface<sarsa_view<R>> {
     private:
       R from {};
@@ -71,8 +71,8 @@ namespace rl2 {
      * while only the state is given to a policy. This controller does
      * the fitting.
      */
-    template<specs::mdp MDP,
-	     specs::policy<typename MDP::state_type, typename MDP::command_type> POLICY>
+    template<concepts::mdp MDP,
+	     concepts::policy<typename MDP::state_type, typename MDP::command_type> POLICY>
     auto controller(MDP& mdp, const POLICY& policy) {return gdyn::ranges::tick([&mdp, policy](){return policy(*mdp);});}
   
   }
