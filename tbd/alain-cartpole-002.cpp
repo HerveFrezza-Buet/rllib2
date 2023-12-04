@@ -17,8 +17,6 @@
 #include <random>
 #include <rllib2.hpp>
 
-#include "cartpole-system.hpp"
-
 // TODO global that could come from a gdyn::system description of the State space
 constexpr std::size_t _state_dim {4};
 
@@ -26,8 +24,8 @@ constexpr std::size_t _state_dim {4};
 // in textbook, StateVec should be a column vector
 using StateVec = Eigen::Vector<double, _state_dim>;
 
-cartpole::State to(const StateVec& vec) {
-  cartpole::State state;
+gdyn::problem::cartpole::state to(const StateVec& vec) {
+  gdyn::problem::cartpole::state state;
 
   state.x = vec[0];
   state.x_dot = vec[1];
@@ -37,7 +35,7 @@ cartpole::State to(const StateVec& vec) {
   return state;
 }
 
-StateVec from(const cartpole::State& s) {
+StateVec from(const gdyn::problem::cartpole::state& s) {
   StateVec vec {{s.x, s.x_dot, s.theta, s.theta_dot}};
   return vec;
 }
@@ -55,27 +53,27 @@ std::ostream& operator<<(std::ostream& s, const StateVec& v)
 }
 // need also Enumerable Actions
 struct A_convertor {
-  static cartpole::Dir to (std::size_t index)
+  static gdyn::problem::cartpole::direction to (std::size_t index)
   {
     switch(index) {
     case 0:
-        return cartpole::Dir::L;
+        return gdyn::problem::cartpole::direction::Left;
     default:
-      return cartpole::Dir::R;
+      return gdyn::problem::cartpole::direction::Right;
     }
   }
-  static std::size_t from(const cartpole::Dir& d)
+  static std::size_t from(const gdyn::problem::cartpole::direction& d)
   {
     return static_cast<std::size_t>(d);
   }
 }; // struct A_convertor
 
 using S = StateVec;
-using A = rl2::enumerable::count<cartpole::Dir, 2, A_convertor>;
+using A = rl2::enumerable::count<gdyn::problem::cartpole::direction, 2, A_convertor>;
 
 // For LSTD-Q, the "features" vector phi(s,a) are concatenation of |A|xStateVec
 using PHI = Eigen::Vector<double, _state_dim*A::size>;
-PHI make_feature(const cartpole::State& obs, const A& a) {
+PHI make_feature(const gdyn::problem::cartpole::state& obs, const A& a) {
   PHI features;
   features.setZero();
 
@@ -123,7 +121,7 @@ struct QLINAPPROX {
     std::stringstream dump;
     dump << "__Weights" << std::endl;
     for (int ida = 0; ida < W.cols(); ++ida) {
-      auto dir = static_cast<cartpole::Dir>(ida);
+      auto dir = static_cast<gdyn::problem::cartpole::direction>(ida);
       dump << "  " << dir << ": " << W.col(ida).transpose() << std::endl;
     }
 
@@ -137,18 +135,17 @@ void test_conversion()
   std::random_device rd;
   std::mt19937 gen(rd());
 
-  auto env = cartpole::make_environment();
-  env = cartpole::random_state(gen, env.param);
+  auto env = gdyn::problem::cartpole::make();
+  env = gdyn::problem::cartpole::random_state(gen, gdyn::problem::cartpole::parameters());
   auto obs = *env;
 
   std::cout << "__Conversion *****************************************" << std::endl;
-  cartpole::print_context("obs", obs, 0.0);
+  std::cout << "  s=" << obs << std::endl;
   auto obs_vec = from(obs);
   std::cout << "  as vec=" << obs_vec << std::endl;
 
   auto obs_to = to(obs_vec);
-  cartpole::print_context("  and back to", obs_to, 0.0);
-
+  std::cout << "  back to " << obs_to << std::endl;
 }
 
 // test random init of Q, computation of Q(s,a)
@@ -168,8 +165,8 @@ void test_qval()
   std::cout << qapp.str_dump() << std::endl;
 
   std::cout << "__Qval for a random state" << std::endl;
-  auto env = cartpole::make_environment();
-  env = cartpole::random_state(gen, env.param);
+  auto env = gdyn::problem::cartpole::make();
+  env = gdyn::problem::cartpole::random_state(gen, gdyn::problem::cartpole::parameters());
   auto s = from(*env);
   auto a = A{0};
   auto qsa = qapp(s, a);
@@ -185,12 +182,12 @@ void test_orbit()
   unsigned int step = 1;
 
   std::cout << "__Cartpole environment" << std::endl;
-  auto env = cartpole::make_environment();
-  env = cartpole::random_state(gen, env.param);
+  auto env = gdyn::problem::cartpole::make();
+  env = gdyn::problem::cartpole::random_state(gen, gdyn::problem::cartpole::parameters());
 
   std::cout << "__Manual Orbit" << std::endl;
   for (auto command
-         : gdyn::ranges::tick([&gen](){return cartpole::random_command(gen);})
+         : gdyn::ranges::tick([&gen](){return gdyn::problem::cartpole::random_command(gen);})
          | std::views::take(10)) {
     auto s = from(*env);
     auto report = env(command);
@@ -205,10 +202,10 @@ void test_orbit()
   }
 
   std::cout << "__gdyn Orbit" << std::endl;
-  env = cartpole::random_state(gen, env.param);
+  env = gdyn::problem::cartpole::random_state(gen, gdyn::problem::cartpole::parameters());
   step = 1;
   for (auto [cur_obs, next_act_opt, prev_report_opt]
-         : gdyn::ranges::tick([&gen](){return cartpole::random_command(gen);})
+         : gdyn::ranges::tick([&gen](){return gdyn::problem::cartpole::random_command(gen);})
          | gdyn::views::orbit(env)
          | std::views::take(20)) {
     auto s = from(cur_obs);
@@ -222,11 +219,11 @@ void test_orbit()
   }
 
   std::cout << "__RL2 with SARSA view" << std::endl;
-  env = cartpole::random_state(gen, env.param);
+  env = gdyn::problem::cartpole::random_state(gen, gdyn::problem::cartpole::parameters());
   step = 1;
   // s, a, r types are defined by env: cartpole::State, cartpole::Dire, double
   for (auto [s, a, r, snext, anext] // report is the reward here.
-         : gdyn::ranges::tick([&gen](){return cartpole::random_command(gen);})
+         : gdyn::ranges::tick([&gen](){return gdyn::problem::cartpole::random_command(gen);})
          | gdyn::views::orbit(env)
          | rl2::views::sarsa
          | std::views::take(20)) {
@@ -249,25 +246,25 @@ void test_LSTDQ()
 
   std::cout << "__LSTD-Q *********************************************" << std::endl;
   std::cout << "  create Cartpole environment" << std::endl;
-  auto env = cartpole::make_environment();
+  auto env = gdyn::problem::cartpole::make();
 
   std::cout << "  generate an orbit of features" << std::endl;
   std::list<PHI_SARSA> replay_buffer;
 
-  env = cartpole::random_state(gen, env.param);
+  env = gdyn::problem::cartpole::random_state(gen, gdyn::problem::cartpole::parameters());
   // see the first feature
   auto obs = *env;
-  cartpole::print_context("  start obs", obs, 0.0);
-  auto feature = make_feature(*env, A{cartpole::Dir::R});
+  std::cout << "  start obs " << obs  << std::endl;
+  auto feature = make_feature(*env, A{gdyn::problem::cartpole::direction::Right});
   std::cout << "  feature=" << feature.transpose() << std::endl;
 
   while (replay_buffer.size() < 2 * PHI::SizeAtCompileTime) {
     // reset environment
-    env = cartpole::random_state(gen, env.param);
+    env = gdyn::problem::cartpole::random_state(gen, gdyn::problem::cartpole::parameters());
 
     // s, a, r types are defined by env: cartpole::State, cartpole::Dir, double
     for (auto [s, a, r, snext, anext] // report is the reward here.
-           : gdyn::ranges::tick([&gen](){return cartpole::random_command(gen);})
+           : gdyn::ranges::tick([&gen](){return gdyn::problem::cartpole::random_command(gen);})
            | gdyn::views::orbit(env)
            | rl2::views::sarsa
            | std::views::take(20)) {

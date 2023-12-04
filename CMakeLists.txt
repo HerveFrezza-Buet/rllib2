@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.10)
 
 project(rllib2) 
 
+SET(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 SET(PACKAGE_VERSION "1.00")
 SET(PACKAGE_LICENSE "GPL")
 SET(PROJECT_DESCRIPTION_SUMMARY "RLlib2 is for generic C++ package for RL algorithms")
@@ -37,5 +38,6 @@ INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_PROJECT_NAME}.pc
 
 add_subdirectory(src)
 add_subdirectory(examples)
+add_subdirectory(tbd)
 add_subdirectory(doc)
 

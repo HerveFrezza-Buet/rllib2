@@ -10,8 +10,6 @@
 #include <rllib2.hpp>
 
 
-
-
 struct S_convertor {
 
   static constexpr std::size_t nb_bins {6};
@@ -71,6 +69,35 @@ struct S_convertor {
     return res;
   }
 }; // struct S_convertor
+
+// not useful right now, but to answer problem described at line 272
+// a convertor with Final State
+struct S_convertor_FS : public S_convertor {
+
+  // index of final state is maximal index + 1
+  static std::size_t fs_index = S_convertor::from(gdyn::problem::cartpole::state{std::get<1>(S_convertor::limits[0]), std::get<1>(S_convertor::limits[1]), std::get<1>(S_convertor::limits[2]), std::get<1>(S_convertor::limits[3])});
+
+  static gdyn::problem::cartpole::state to(std::size_t index)
+  {
+    // final state => NaN
+    if (index == fs_index) {
+      return gdyn::problem::cartpole::state{std::nan, std::nan, std::nan, std::nan};
+    }
+    return S_convertor::from(index);
+  }
+
+  static std::size_t from(const gdyn::problem::cartpole::state& s)
+  {
+    // if out of limits, final state
+    if ((s.x < std::get<0>(S_convertor::limits[0])) or (s.x > std::get<1>(S_convertor::limits[0]))
+        or (s.x_dot < std::get<0>(S_convertor::limits[1])) or (s.x_dot > std::get<1>(S_convertor::limits[1]))
+        or (s.theta < std::get<0>(S_convertor::limits[2])) or (s.theta > std::get<1>(S_convertor::limits[2]))
+        or (s.theta_dot < std::get<0>(S_convertor::limits[3])) or (s.theta_dot > std::get<1>(S_convertor::limits[3]))) {
+      return fs_index;
+    }
+    return S_convertor(s);
+  }
+}: // S_convertor_FS
 
 struct A_convertor {
   static constexpr std::size_t size {2}; 
@@ -176,7 +203,223 @@ void test_transition(RANDOM& gen)
 }
 
 template<typename RANDOM>
-void test_mdp(RANDOM& gen) {
+void test_discrete(RANDOM& gen) {
+  std::cout << "__test_discrete" << std::endl;
+
+
+  // need a system
+  using continuous_cartpole = gdyn::problem::cartpole::system;
+  auto sys = gdyn::problem::cartpole::make();
+  // to be discretized
+  using discrete_cartpole = rl2::enumerable::system<S, S, A, continuous_cartpole>;
+  auto dsys = discrete_cartpole(sys);
+
+  // system initialization
+  sys = continuous_cartpole::state_type(0,0,0,0);
+
+  // a random policy
+  auto rnd_policy = [&gen](const continuous_cartpole::observation_type) {
+    return gdyn::problem::cartpole::random_command(gen);
+  };
+
+  // display limites for x and theta
+  std::cout << "*** Limits "
+            << "x in [" << std::get<0>(S_convertor::limits[0])
+            << ", " << std::get<1>(S_convertor::limits[0]) << "]"
+            << " theta in [" << std::get<0>(S_convertor::limits[2])
+            << ", " << std::get<1>(S_convertor::limits[2]) << "]"
+            << std::endl;
+
+  unsigned int step = 0;
+  for(auto cmd
+        : gdyn::ranges::controller(sys, rnd_policy)
+        | std::views::take(50)) {
+    auto o = *sys;
+    auto d_o = static_cast<discrete_cartpole::observation_type::base_type>(*dsys);
+    auto d_o_index = static_cast<std::size_t>(*dsys);
+    bool alive = sys;
+    auto r = sys(cmd);
+    auto no = *sys;
+    auto d_no = static_cast<discrete_cartpole::observation_type::base_type>(*dsys);
+    auto d_no_index = static_cast<std::size_t>(*dsys);
+    bool nalive = sys;
+    if (not alive) {
+      std::cout << "**WARN** : transition *FROM* a terminal state" << std::endl;
+    }
+    std::cout << std::boolalpha
+              << "[" << step++ << "]"
+              << " o=" << o << " (" << alive << ")"
+              << " + a=" << cmd
+              << " => no=" << no << " (" << nalive << ")"
+              << " r=" << r
+              << std::endl;
+    std::cout << "    d_o_index=" << d_o_index
+              << " d_o=" << d_o
+              << " => d_no_index=" << d_no_index
+              << " d_no=" << d_no
+              << std::endl;
+    if (not nalive) {
+      std::cout << "  +--> reached a Terminal state" << std::endl;
+    }
+    // specific to cartpole : stop the loop if reward is zero
+    if (r == 0) {
+      std::cout << "  The transition was needed to get the 0 reward" << std::endl;
+      break;
+    }
+  }
+
+  /* **TODO********************
+  Pose problème car ce qui est considéré comme l'état final devrait avoir
+            une valeur de 0, mais ici il est possible que sa valeur change car il est
+            confondu avec un état valide qui a pu déjà être modifié.
+            << std::endl;
+  Question : rl2::range::controller ou gdyn::views::orbit ou
+            gdyn::views::sarsa tiennent compte du statut (boolean) du système ?
+            << std::endl;
+  - rl2::range::controller => non
+   - gdyn::ranges::tick => non
+   - gdyn::iterators::orbit => OUI
+  */
+
+  std::cout << std::endl;
+  std::cout << "** Essayons en continu" << std::endl;
+  // system initialization
+  sys = continuous_cartpole::state_type(0,0,0,0);
+  step = 0;
+  for(auto [o, a, r, no, na]
+        // TODO dire/expliquer que le rl2::ranges ne marche que sur les MDP
+        : gdyn::ranges::controller(sys, rnd_policy)
+        | gdyn::views::orbit(sys)
+        | rl2::views::sarsa
+        | std::views::take(50)) {
+    bool nalive = sys;
+    std::cout << std::boolalpha
+              << "[" << step++ << "]"
+              << " o=" << o
+              << " + a=" << a
+              << " => no=" << no << " (" << nalive << ")"
+              << " r=" << r
+              << std::endl;
+  }
+
+  std::cout << std::endl;
+  std::cout << "** Essayons en discret" << std::endl;
+  // system initialization
+  sys = continuous_cartpole::state_type(0,0,0,0);
+  step = 0;
+  for(auto [o, a, r, no, na]
+        // TODO dire/expliquer que le rl2::ranges ne marche que sur les MDP
+        : gdyn::ranges::controller(dsys, rnd_policy)
+        | gdyn::views::orbit(dsys)
+        | rl2::views::sarsa
+        | std::views::take(50)) {
+    auto d_o = static_cast<discrete_cartpole::observation_type::base_type>(o);
+    auto d_o_index = static_cast<std::size_t>(o);
+    auto d_no = static_cast<discrete_cartpole::observation_type::base_type>(o);
+    auto d_no_index = static_cast<std::size_t>(o);
+    bool nalive = sys;
+    std::cout << std::boolalpha
+              << "[" << step++ << "]"
+              << " o=" << d_o_index << " " << d_o
+              << " + a=" << static_cast<discrete_cartpole::command_type::base_type>(a)
+              << " => no=" << d_no_index << " " << d_no << " (" << nalive << ")"
+              << " r=" << r
+              << std::endl;
+  }
+}
+
+template<typename RANDOM>
+void test_mdp(RANDOM& gen, bool verbose=false) {
+  using continuous_cartpole = gdyn::problem::cartpole::system;
+
+  std::cout << "__test_mdp **********************" << std::endl;
+  struct Params {
+    // Few parameters
+    double learning_rate = .05;
+    double gamma         = .95;
+    double epsilon       = .20;
+
+    // Experimental setup
+    std::size_t nb_epochs     = 2;
+    std::size_t epoch_length  =  100;
+  };
+  Params learn_params;
+
+  // gdyn::problem::cartpole is NOT a rl2::concepts::mdp
+  static_assert(not rl2::concepts::mdp<continuous_cartpole>);
+  // because it is NOT a gdyn::concept::transparent_system
+  static_assert(not gdyn::concepts::transparent_system<continuous_cartpole>);
+  // whereas is has a proper reward report
+  static_assert(std::same_as<continuous_cartpole::report_type,double>);
+
+  // TODO do we need transparent_system for MDP ??
+  // => algo can not naively be applied to POMDP
+
+  struct transparent_continuous_cartpole : public continuous_cartpole {
+    using state_type       = continuous_cartpole::state_type;
+    using command_type     = continuous_cartpole::command_type;
+    using observation_type = continuous_cartpole::observation_type;
+    using report_type      = continuous_cartpole::report_type;
+
+    transparent_continuous_cartpole(const gdyn::problem::cartpole::parameters& param)
+      : continuous_cartpole(param) {}
+
+    void operator=(state_type state_init) {this->continuous_cartpole::operator=(state_init);}
+    state_type state() const {return this->continuous_cartpole::operator*();}
+  };
+
+  // transparent_continuous_cartpole IS a rl2::concepts::mdp
+  static_assert(rl2::concepts::mdp<transparent_continuous_cartpole>);
+
+
+  // Pour utiliser rl2::critic::td::update il faut une fonction Q tabular
+  // donc, passer par un transparent_dicrete_carpole.
+  using transparent_discrete_cartpole = rl2::enumerable::system<S, S, A, transparent_continuous_cartpole>;
+  gdyn::problem::cartpole::parameters sys_param;
+  auto cont_mdp = transparent_continuous_cartpole(sys_param);
+  auto discrete_mdp = transparent_discrete_cartpole(cont_mdp);
+  static_assert(rl2::concepts::mdp<decltype(discrete_mdp)>);
+
+  // Then a tabular Q
+  std::array<double, SA::size> values;
+  auto Q = rl2::tabular::make_two_args_function<S, A>(values.begin());
+
+  // And policies
+  auto greedy_policy         = rl2::discrete::greedy_ify(Q);
+  auto epsilon_greedy_policy = rl2::discrete::epsilon_ify(greedy_policy, learn_params.epsilon, gen);
+
+  auto random_state_generator = rl2::discrete::uniform_sampler<S>(gen);
+  for(unsigned int epoch=0; epoch < learn_params.nb_epochs; ++epoch) {
+    discrete_mdp = random_state_generator(); // We implement exploring starts.
+    for(auto transition
+	  : rl2::ranges::controller(discrete_mdp, epsilon_greedy_policy)
+	  | gdyn::views::orbit(discrete_mdp)
+	  | rl2::views::sarsa
+	  | std::views::take(learn_params.epoch_length)) {
+      // TODO sarsa td::evaluation_error vs QL td::discrete::optimal_error
+      // TODO bellman_op et bellman_eval_op
+
+      // Q-Learning
+      double td_error = rl2::critic::td::discrete::optimal_error(Q, learn_params.gamma, transition);
+      if (verbose) {
+        std::cout << "update s:" << static_cast<std::size_t>(transition.s)
+                  << " a:" << static_cast<std::size_t>(transition.a)
+                  << " r=" << transition.r
+                  << " td=" << td_error
+                  << " oldQ=" << Q(transition.s, transition.a);
+      }
+      // TODO could return DeltaQ(s,a)
+      rl2::critic::td::update(Q, transition.s, transition.a, learn_params.learning_rate, td_error);
+
+      if (verbose) {
+        std::cout << " -> newQ=" << Q(transition.s, transition.a)<< std::endl;
+      }
+    }
+    // TODO change alpha
+    // TODO change epsilon (useful for SARSA)
+  }
+  
+
   /*
   auto T = [sys = gdyn::problem::cartpole::make()] (const S& s, const A& a) mutable -> S {
     sys = static_cast<S::base_type>(s); // We init sys with s
@@ -242,7 +485,7 @@ int main(int argc, char *argv[]) {
 
 
   if(argc != 2) {
-    std::cout << "Usage: " << argv[0] << " [convertor | transition | mdp]" << std::endl;
+    std::cout << "Usage: " << argv[0] << " [convertor | transition | discrete | mdp]" << std::endl;
     return 0;
   }
 
@@ -250,7 +493,8 @@ int main(int argc, char *argv[]) {
 
   if(mode == "convertor")  test_convertor();
   if(mode == "transition") test_transition(gen);
-  if(mode == "mdp")        test_mdp(gen);
+  if(mode == "discrete")   test_discrete(gen);
+  if(mode == "mdp")        test_mdp(gen, true);
   return 0;
 
 }
