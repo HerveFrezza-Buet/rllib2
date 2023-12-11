@@ -18,7 +18,7 @@ namespace rl2 {
 	    return r;
 	}
       
-      }
+      
       
       namespace discrete {
 	namespace bellman {

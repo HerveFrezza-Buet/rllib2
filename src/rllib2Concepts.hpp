@@ -7,6 +7,21 @@ namespace rl2 {
   namespace concepts {
 
     /**
+     * @short sarsa-like transitions
+     */
+    template<typename SARSA, typename STATE, typename ACTION>
+    concept sarsa =
+      requires(SARSA& ct) {
+      {ct.s}              -> std::same_as<STATE&>;
+      {ct.a}              -> std::same_as<ACTION&>;
+      {ct.r}              -> std::same_as<double&>;
+      {ct.ss}             -> std::same_as<STATE&>;
+      {ct.aa.has_value()} -> std::convertible_to<bool>;
+      {*(ct.aa)}          -> std::same_as<ACTION&>;
+      {ct.is_terminal()}  -> std::same_as<bool>;
+    };
+    
+    /**
      * @short transition function
      */
     template<typename TRANSITION, typename STATE, typename ACTION>
@@ -147,11 +162,12 @@ namespace rl2 {
     /**
      * @short A bellman operator
      */
-    template<typename OP, typename Q, typename S, typename A>
+    template<typename OP, typename Q, typename S, typename A, typename TRANS>
     concept bellman_operator =
-      requires(const OP cop, const Q, double gamma, const sarsa<S, A> ct) {
-      {cop(Q, gamma, ct)} -> double;
-    }
+      sarsa<TRANS, S, A>
+      && requires(const OP cop, const Q cq, double gamma, const TRANS ct) {
+      {cop(cq, gamma, ct)} -> std::same_as<double>;
+    };
       
   }
 }

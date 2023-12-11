@@ -8,9 +8,14 @@
 #include <rllib2Enumerable.hpp>
 #include <rllib2MDP.hpp>
 #include <rllib2Functional.hpp>
+#include <rllib2Transition.hpp>
 
 namespace rl2 {
   namespace checkings {
+
+    // Transitions
+    // -----------
+    static_assert(concepts::sarsa<sarsa<char, int>, char, int>);
     
     // Index conversion
     // ----------------

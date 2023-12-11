@@ -49,8 +49,8 @@ void train(MDP& environment, QTABLE& Q, const POLICY& exploration_policy, const 
 	  | std::views::take(params.epoch_length)) {
       // TODO sarsa td::evaluation_error vs QL td::discrete::optimal_error
       // TODO bellman_op et bellman_eval_op
-      if constexpr (is_sarsa) rl2::critic::td::update(Q, transition.s, transition.a, params.learning_rate, rl2::critic::td::evaluation_error       (Q, params.gamma, transition)); // SARSA
-      else                    rl2::critic::td::update(Q, transition.s, transition.a, params.learning_rate, rl2::critic::td::discrete::optimal_error(Q, params.gamma, transition)); // Q-Learning
+      if constexpr (is_sarsa) rl2::critic::td::update(Q, transition.s, transition.a, params.learning_rate, rl2::critic::td::error(Q, params.gamma, transition, rl2::critic::td::bellman::evaluation<S, A, Q>)); // SARSA
+      else                    rl2::critic::td::update(Q, transition.s, transition.a, params.learning_rate, rl2::critic::td::error(Q, params.gamma, transition, rl2::critic::td::discrete::bellman::optimality<S, A, Q>)); // Q-Learning
       display_greedy_policy(Q); std::cout << '\r' << std::flush;
     }
   }

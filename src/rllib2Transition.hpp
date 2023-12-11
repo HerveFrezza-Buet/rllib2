@@ -15,7 +15,7 @@ namespace rl2 {
     S ss;
     std::optional<A> aa;
 
-    sarsa()                       = default;
+    sarsa()                        = default;
     sarsa(const sarsa&)            = default;
     sarsa(sarsa&&)                 = default;
     sarsa& operator=(const sarsa&) = default;
