@@ -38,7 +38,7 @@ void display_greedy_policy(const QTYPE& Q) {
 }
 
 template<bool is_sarsa, typename MDP, typename QTABLE, typename POLICY, typename RANDOM_GENERATOR>
-void train(MDP& environment, QTABLE& Q, const POLICY& exploration_policy, const Params& params, RANDOM_GENERATOR& gen) {
+void train(MDP& environment, QTABLE& q, const POLICY& exploration_policy, const Params& params, RANDOM_GENERATOR& gen) {
   auto random_state_generator = rl2::discrete::uniform_sampler<weakest_link::S>(gen);
   for(unsigned int epoch=0; epoch < params.nb_epochs; ++epoch) {
     environment = random_state_generator(); // We implement exploring starts.
@@ -47,14 +47,20 @@ void train(MDP& environment, QTABLE& Q, const POLICY& exploration_policy, const 
 	  | gdyn::views::orbit(environment)
 	  | rl2::views::sarsa     
 	  | std::views::take(params.epoch_length)) {
-      // TODO sarsa td::evaluation_error vs QL td::discrete::optimal_error
-      // TODO bellman_op et bellman_eval_op
-      if constexpr (is_sarsa) rl2::critic::td::update(Q, transition.s, transition.a, params.learning_rate, rl2::critic::td::error(Q, params.gamma, transition, rl2::critic::td::bellman::evaluation<S, A, Q>)); // SARSA
-      else                    rl2::critic::td::update(Q, transition.s, transition.a, params.learning_rate, rl2::critic::td::error(Q, params.gamma, transition, rl2::critic::td::discrete::bellman::optimality<S, A, Q>)); // Q-Learning
-      display_greedy_policy(Q); std::cout << '\r' << std::flush;
+      if constexpr (is_sarsa) {
+	auto bellman_op = rl2::critic::td::bellman::evaluation<typename MDP::state_type, typename MDP::command_type, QTABLE>;
+	rl2::critic::td::update(q, transition.s, transition.a, params.learning_rate,
+				rl2::critic::td::error(q, params.gamma, transition, bellman_op)); // SARSA
+      }
+      else {
+	auto bellman_op = rl2::critic::td::discrete::bellman::optimality<typename MDP::state_type, typename MDP::command_type, QTABLE>;
+	rl2::critic::td::update(q, transition.s, transition.a, params.learning_rate,
+				rl2::critic::td::error(q, params.gamma, transition, bellman_op)); // Q-Learning
+      }
+      display_greedy_policy(q); std::cout << '\r' << std::flush;
     }
   }
-  display_greedy_policy(Q); std::cout << std::endl;
+  display_greedy_policy(q); std::cout << std::endl;
 }
 
 template<typename MDP, typename POLICY>
