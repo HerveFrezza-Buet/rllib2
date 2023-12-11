@@ -42,5 +42,7 @@ namespace rl2 {
     using params_it_type = double*;
     using critic = tabular::two_args_function<enumerable_char, enumerable_int, params_it_type>;
     static_assert(concepts::two_args_function<critic>);
+
+    // To do : write bellman operator concept checking
   }
 }

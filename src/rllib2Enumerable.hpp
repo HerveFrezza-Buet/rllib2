@@ -131,6 +131,7 @@ namespace rl2 {
 	
 
 	// Partition in bins, upper bound in last bin
+	// Out of limits is not handled by this digitizer.
 	std::size_t to_index(double value, double value_min, double value_max, std::size_t nb_bins)
 	{
 	  if (value == value_max) return nb_bins-1;

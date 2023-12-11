@@ -14,7 +14,10 @@ struct S_convertor {
 
   static constexpr std::size_t nb_bins {6};
   static constexpr std::size_t nb_dims {4};
-  static constexpr std::size_t size    {nb_bins * nb_bins * nb_bins * nb_bins}; // nb_dims times.
+
+  // The size of the discrete state is nb_bins^nb_dims, and we add 1
+  // for out of limits. The max index is this out of limits state.
+  static constexpr std::size_t size    {nb_bins * nb_bins * nb_bins * nb_bins + 1}; 
   
   static constexpr std::array<std::tuple<double, double>, nb_dims> limits
     {{ {-4.8, 4.8},
@@ -22,9 +25,17 @@ struct S_convertor {
        {-12.0*std::numbers::pi/180.0, 12.0*std::numbers::pi/180.0},
        {-5.0, 5.0} }};
 
+  static constexpr gdyn::problem::cartpole::state out_of_limits_state {
+    std::get<1>(limits[0]) + 1.,
+    std::get<1>(limits[1]) + 1.,
+    std::get<1>(limits[2]) + 1.,
+    std::get<1>(limits[3]) + 1.};
   
   static gdyn::problem::cartpole::state to(std::size_t index)
   {
+    if(index == size - 1)
+      return out_of_limits_state;
+    
     // indexes along each Obs dimensions
     std::array<std::size_t, nb_dims> indexes;
 
@@ -46,8 +57,17 @@ struct S_convertor {
 
     return state;
   }
+  
   static std::size_t from(const gdyn::problem::cartpole::state& s)
   {
+    // if out of limits, final state
+    if ((s.x < std::get<0>(limits[0])) or (s.x > std::get<1>(limits[0]))
+        or (s.x_dot < std::get<0>(limits[1])) or (s.x_dot > std::get<1>(limits[1]))
+        or (s.theta < std::get<0>(limits[2])) or (s.theta > std::get<1>(limits[2]))
+        or (s.theta_dot < std::get<0>(limits[3])) or (s.theta_dot > std::get<1>(limits[3]))) {
+      return size - 1;
+    }
+    
     // indexes along each Obs dimensions
     std::array<std::size_t,4> indexes;
 
@@ -70,35 +90,6 @@ struct S_convertor {
   }
 }; // struct S_convertor
 
-// not useful right now, but to answer problem described at line 272
-// a convertor with Final State
-struct S_convertor_FS : public S_convertor {
-
-  // index of final state is maximal index + 1
-  static std::size_t fs_index = S_convertor::from(gdyn::problem::cartpole::state{std::get<1>(S_convertor::limits[0]), std::get<1>(S_convertor::limits[1]), std::get<1>(S_convertor::limits[2]), std::get<1>(S_convertor::limits[3])});
-
-  static gdyn::problem::cartpole::state to(std::size_t index)
-  {
-    // final state => NaN
-    if (index == fs_index) {
-      return gdyn::problem::cartpole::state{std::nan, std::nan, std::nan, std::nan};
-    }
-    return S_convertor::from(index);
-  }
-
-  static std::size_t from(const gdyn::problem::cartpole::state& s)
-  {
-    // if out of limits, final state
-    if ((s.x < std::get<0>(S_convertor::limits[0])) or (s.x > std::get<1>(S_convertor::limits[0]))
-        or (s.x_dot < std::get<0>(S_convertor::limits[1])) or (s.x_dot > std::get<1>(S_convertor::limits[1]))
-        or (s.theta < std::get<0>(S_convertor::limits[2])) or (s.theta > std::get<1>(S_convertor::limits[2]))
-        or (s.theta_dot < std::get<0>(S_convertor::limits[3])) or (s.theta_dot > std::get<1>(S_convertor::limits[3]))) {
-      return fs_index;
-    }
-    return S_convertor(s);
-  }
-}: // S_convertor_FS
-
 struct A_convertor {
   static constexpr std::size_t size {2}; 
   static gdyn::problem::cartpole::direction to (std::size_t index)
@@ -110,12 +101,9 @@ struct A_convertor {
       return gdyn::problem::cartpole::direction::Right;
     }
   }
-  static std::size_t from(const gdyn::problem::cartpole::direction& d)
-  {
+  static std::size_t from(const gdyn::problem::cartpole::direction& d)  {
     return static_cast<std::size_t>(d);
   }
-
-
 }; // struct A_convertor
 
 

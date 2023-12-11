@@ -124,6 +124,8 @@ namespace rl2 {
       {ct(cs)} -> std::invocable<typename TWO_ARGS_FUNCTION::second_entry_type>;
     };
 
+    
+
     // TODO : commenter tous les concepts
     
     template<typename TWO_ARGS_FUNCTION>
@@ -142,5 +144,14 @@ namespace rl2 {
       {cq(cs, ca)} -> std::convertible_to<double>;
     };
     
+    /**
+     * @short A bellman operator
+     */
+    template<typename OP, typename Q, typename S, typename A>
+    concept bellman_operator =
+      requires(const OP cop, const Q, double gamma, const sarsa<S, A> ct) {
+      {cop(Q, gamma, ct)} -> double;
+    }
+      
   }
 }
