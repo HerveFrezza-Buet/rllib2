@@ -6,4 +6,5 @@
 #include <rllib2eigenFunctional.hpp>
 
 /**
+   @example example-001-001-feature.hpp
  */

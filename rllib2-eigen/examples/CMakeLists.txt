@@ -3,7 +3,6 @@ file(
   GLOB
   usage_examples
   example-*.cpp
-  alain-*.cpp
 )
 
 foreach(f ${usage_examples})

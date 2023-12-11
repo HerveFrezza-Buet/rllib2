@@ -6,9 +6,9 @@ namespace rl2 {
   namespace eigen {
     namespace concepts {
 
-      template<typename AMBIENT, int DIM>
+      template<typename FEATURE, typename AMBIENT, int DIM>
       concept feature =
-	requires(const feature cf, const AMBIANT ca) {
+	requires(const FEATURE cf, const AMBIENT ca) {
 	{cf(ca)} -> std::same_as<Eigen::Vector<double, DIM>>;
       };
     }

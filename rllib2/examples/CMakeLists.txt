@@ -3,7 +3,6 @@ file(
   GLOB
   usage_examples
   example-*.cpp
-  alain-*.cpp
 )
 
 foreach(f ${usage_examples})
@@ -14,10 +13,8 @@ foreach(f ${usage_examples})
   
   target_include_directories(${exampleName} PUBLIC ${CMAKE_SOURCE_DIR}/src)
   target_include_directories(${exampleName} PUBLIC ${GDYN_INCLUDE_DIRS})
-  target_include_directories(${exampleName} PUBLIC ${EIGEN3_INCLUDE_DIRS})
 
   target_link_libraries (${exampleName} PUBLIC ${GDYN_LIBRARIES})
-  target_link_libraries (${exampleName} PUBLIC ${EIGEN3_LIBRARIES})
 
   install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/${exampleName}
     DESTINATION bin
