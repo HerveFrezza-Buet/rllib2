@@ -38,7 +38,7 @@ void display_greedy_policy(const QTYPE& Q) {
 }
 
 template<bool is_sarsa, typename MDP, typename QTABLE, typename POLICY, typename RANDOM_GENERATOR>
-void train(MDP& environment, QTABLE& q, const POLICY& exploration_policy, const Params& params, RANDOM_GENERATOR& gen) {
+void train(MDP& environment, QTABLE& q, const POLICY& exploration_policy, Params& params, RANDOM_GENERATOR& gen) {
   auto random_state_generator = rl2::discrete::uniform_sampler<weakest_link::S>(gen);
   for(unsigned int epoch=0; epoch < params.nb_epochs; ++epoch) {
     environment = random_state_generator(); // We implement exploring starts.
@@ -59,6 +59,11 @@ void train(MDP& environment, QTABLE& q, const POLICY& exploration_policy, const 
       }
       display_greedy_policy(q); std::cout << '\r' << std::flush;
     }
+
+    params.epsilon *= .9;
+    // we slowly decrease epsilon. As this is the variable taken by
+    // reference (std::cref) when the epsilon greedy policy has been
+    // created, this change will modify the policy.
   }
   display_greedy_policy(q); std::cout << std::endl;
 }
@@ -95,24 +100,22 @@ int main(int argc, char* argv[]) {
 
   // Let us define an epsilon and a epsilon-greedy policy.
   auto greedy_policy         = rl2::discrete::greedy_ify(Q);
-  auto epsilon_greedy_policy = rl2::discrete::epsilon_ify(greedy_policy, params.epsilon, gen);
+  auto epsilon_greedy_policy = rl2::discrete::epsilon_ify(greedy_policy, std::cref(params.epsilon), gen);
+  // The policy is sensitive to further modifications of params.epsilon, thanks to the use of std::cref.
 
   // This is the environment
   auto environment = weakest_link::build_mdp(gen, params.correct_proba);
 
   std::cout << "Player skill : " << int(100 * params.correct_proba) << "% of correct answers." << std::endl;
 
-  // TODO peut-être ajouter un commentaire sur true/false => SARSA/QLearning
-  // SARSA
   std::cout << "Sarsa :" << std::endl;
   for(auto& value : values) value = std::uniform_real_distribution(0., 1.)(gen); // Let us initialize the values randomly
-  train<true>(environment, Q, epsilon_greedy_policy, params, gen);
+  train<true>(environment, Q, epsilon_greedy_policy, params, gen); // train<true> triggers sarsa learning.
   test(environment, greedy_policy, params);
   
-  // Q-Learning
   std::cout << "Q-Learning :" << std::endl;
   for(auto& value : values) value = std::uniform_real_distribution(0., 1.)(gen); // Let us initialize the values randomly
-  train<false>(environment, Q, epsilon_greedy_policy, params, gen);
+  train<false>(environment, Q, epsilon_greedy_policy, params, gen); // train<false> triggers Q-learning.
   test(environment, greedy_policy, params);
 
 

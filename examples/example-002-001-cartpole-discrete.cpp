@@ -313,44 +313,22 @@ void test_mdp(RANDOM& gen, bool verbose=false) {
     double epsilon       = .20;
 
     // Experimental setup
-    std::size_t nb_epochs     = 2;
-    std::size_t epoch_length  =  100;
+    std::size_t nb_epochs     =  20;
+    std::size_t epoch_length  = 100;
   };
   Params learn_params;
 
-  // gdyn::problem::cartpole is NOT a rl2::concepts::mdp
-  static_assert(not rl2::concepts::mdp<continuous_cartpole>);
-  // because it is NOT a gdyn::concept::transparent_system
-  static_assert(not gdyn::concepts::transparent_system<continuous_cartpole>);
-  // whereas is has a proper reward report
-  static_assert(std::same_as<continuous_cartpole::report_type,double>);
+  // gdyn::problem::cartpole is a rl2::concepts::mdp
+  static_assert(rl2::concepts::mdp<continuous_cartpole>);
 
-  // TODO do we need transparent_system for MDP ??
-  // => algo can not naively be applied to POMDP
+  // For using rl2::critic::td::update we need a tabular Q function.
+  // So we have to use a discrete cartpole problem.
+  using discrete_cartpole = rl2::enumerable::system<S, S, A, continuous_cartpole>;
 
-  struct transparent_continuous_cartpole : public continuous_cartpole {
-    using state_type       = continuous_cartpole::state_type;
-    using command_type     = continuous_cartpole::command_type;
-    using observation_type = continuous_cartpole::observation_type;
-    using report_type      = continuous_cartpole::report_type;
-
-    transparent_continuous_cartpole(const gdyn::problem::cartpole::parameters& param)
-      : continuous_cartpole(param) {}
-
-    void operator=(state_type state_init) {this->continuous_cartpole::operator=(state_init);}
-    state_type state() const {return this->continuous_cartpole::operator*();}
-  };
-
-  // transparent_continuous_cartpole IS a rl2::concepts::mdp
-  static_assert(rl2::concepts::mdp<transparent_continuous_cartpole>);
-
-
-  // Pour utiliser rl2::critic::td::update il faut une fonction Q tabular
-  // donc, passer par un transparent_dicrete_carpole.
-  using transparent_discrete_cartpole = rl2::enumerable::system<S, S, A, transparent_continuous_cartpole>;
+  
   gdyn::problem::cartpole::parameters sys_param;
-  auto cont_mdp = transparent_continuous_cartpole(sys_param);
-  auto discrete_mdp = transparent_discrete_cartpole(cont_mdp);
+  auto continuous_mdp = continuous_cartpole(sys_param);
+  auto discrete_mdp = discrete_cartpole(continuous_mdp);
   static_assert(rl2::concepts::mdp<decltype(discrete_mdp)>);
 
   // Then a tabular Q
@@ -361,9 +339,12 @@ void test_mdp(RANDOM& gen, bool verbose=false) {
   auto greedy_policy         = rl2::discrete::greedy_ify(Q);
   auto epsilon_greedy_policy = rl2::discrete::epsilon_ify(greedy_policy, learn_params.epsilon, gen);
 
-  auto random_state_generator = rl2::discrete::uniform_sampler<S>(gen);
+  auto random_state = [param = continuous_mdp.param, &gen]() {return gdyn::problem::cartpole::random_state(gen, param);};
+    
   for(unsigned int epoch=0; epoch < learn_params.nb_epochs; ++epoch) {
-    discrete_mdp = random_state_generator(); // We implement exploring starts.
+   
+    std::cout << "  epoch #" << epoch << std::endl;
+    continuous_mdp = random_state(); // We implement exploring starts.
     for(auto transition
 	  : gdyn::ranges::controller(discrete_mdp, epsilon_greedy_policy)
 	  | gdyn::views::orbit(discrete_mdp)
@@ -374,21 +355,19 @@ void test_mdp(RANDOM& gen, bool verbose=false) {
       auto bellman_op = rl2::critic::td::discrete::bellman::optimality<S, A, decltype(Q)>;
       double td_error = rl2::critic::td::error(Q, learn_params.gamma, transition, bellman_op);
       if (verbose) {
-        std::cout << "update s:" << static_cast<std::size_t>(transition.s)
+        std::cout << "    update s:" << static_cast<std::size_t>(transition.s)
                   << " a:" << static_cast<std::size_t>(transition.a)
                   << " r=" << transition.r
                   << " td=" << td_error
                   << " oldQ=" << Q(transition.s, transition.a);
       }
-      // TODO could return DeltaQ(s,a)
-      rl2::critic::td::update(Q, transition.s, transition.a, learn_params.learning_rate, td_error);
+      
+      double deltaQ = rl2::critic::td::update(Q, transition.s, transition.a, learn_params.learning_rate, td_error);
 
       if (verbose) {
-        std::cout << " -> newQ=" << Q(transition.s, transition.a)<< std::endl;
+        std::cout << " -> newQ=" << Q(transition.s, transition.a) << std::endl;
       }
     }
-    // TODO change alpha
-    // TODO change epsilon (useful for SARSA)
   }
   
 }

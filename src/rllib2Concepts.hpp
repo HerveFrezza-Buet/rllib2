@@ -75,9 +75,6 @@ namespace rl2 {
       requires {
       typename ENUMERABLE::base_type;
       typename ENUMERABLE::iterator;
-      // {ENUMERABLE::begin} -> std::same_as<typename ENUMERABLE::iterator>;
-      // {ENUMERABLE::end}   -> std::same_as<typename ENUMERABLE::iterator>;
-      // {ENUMERABLE::size}  -> std::same_as<std::size_t>;
       {ENUMERABLE::begin} -> std::convertible_to<typename ENUMERABLE::iterator>;
       {ENUMERABLE::end}   -> std::convertible_to<typename ENUMERABLE::iterator>;
       {ENUMERABLE::size}  -> std::convertible_to<std::size_t>;
@@ -92,7 +89,7 @@ namespace rl2 {
      */
     template<typename MDP>
     concept mdp =
-      gdyn::concepts::transparent_system<MDP>
+      gdyn::concepts::system<MDP>
       && std::same_as<typename MDP::report_type, double>;
 
     /**
