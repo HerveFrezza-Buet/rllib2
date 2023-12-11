@@ -20,3 +20,7 @@ foreach(f ${tobetested})
   target_link_libraries (${testName} PUBLIC ${GDYN_LIBRARIES})
   target_link_libraries (${testName} PUBLIC ${EIGEN3_LIBRARIES})
 endforeach(f)
+
+
+#find_package (Eigen3 3.3 REQUIRED NO_MODULE)
+#message("Eigen is in ${EIGEN3_INCLUDE_DIR}")
