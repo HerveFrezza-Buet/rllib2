@@ -117,7 +117,7 @@ void test_convertor()
   // need an environment
   auto sys = gdyn::problem::cartpole::make();
 
-  // teste conversion continuous - discrete
+  // test conversion continuous - discrete
   // for the cartpole observation.
   {
     auto obs = *sys;
@@ -227,10 +227,10 @@ void test_discrete(RANDOM& gen) {
     auto d_o_index = static_cast<std::size_t>(*dsys);
     bool alive = sys;
     auto r = sys(cmd);
-    auto no = *sys;
-    auto d_no = static_cast<discrete_cartpole::observation_type::base_type>(*dsys);
-    auto d_no_index = static_cast<std::size_t>(*dsys);
-    bool nalive = sys;
+    auto next_o = *sys;
+    auto d_next_o = static_cast<discrete_cartpole::observation_type::base_type>(*dsys);
+    auto d_next_o_index = static_cast<std::size_t>(*dsys);
+    bool next_alive = sys;
     if (not alive) {
       std::cout << "**WARN** : transition *FROM* a terminal state" << std::endl;
     }
@@ -238,15 +238,15 @@ void test_discrete(RANDOM& gen) {
               << "[" << step++ << "]"
               << " o=" << o << " (" << alive << ")"
               << " + a=" << cmd
-              << " => no=" << no << " (" << nalive << ")"
+              << " => next_o=" << next_o << " (" << next_alive << ")"
               << " r=" << r
               << std::endl;
     std::cout << "    d_o_index=" << d_o_index
               << " d_o=" << d_o
-              << " => d_no_index=" << d_no_index
-              << " d_no=" << d_no
+              << " => d_next_o_index=" << d_next_o_index
+              << " d_next_o=" << d_next_o
               << std::endl;
-    if (not nalive) {
+    if (not next_alive) {
       std::cout << "  +--> reached a Terminal state" << std::endl;
     }
     // specific to cartpole : stop the loop if reward is zero
@@ -256,61 +256,46 @@ void test_discrete(RANDOM& gen) {
     }
   }
 
-  /* **TODO********************
-  Pose problème car ce qui est considéré comme l'état final devrait avoir
-            une valeur de 0, mais ici il est possible que sa valeur change car il est
-            confondu avec un état valide qui a pu déjà être modifié.
-            << std::endl;
-  Question : rl2::range::controller ou gdyn::views::orbit ou
-            gdyn::views::sarsa tiennent compte du statut (boolean) du système ?
-            << std::endl;
-  - rl2::range::controller => non
-   - gdyn::ranges::tick => non
-   - gdyn::iterators::orbit => OUI
-  */
-
   std::cout << std::endl;
-  std::cout << "** Essayons en continu" << std::endl;
+  std::cout << "** Let us try the continuous case" << std::endl;
   // system initialization
   sys = continuous_cartpole::state_type(0,0,0,0);
   step = 0;
-  for(auto [o, a, r, no, na]
-        // TODO dire/expliquer que le rl2::ranges ne marche que sur les MDP
+  for(auto [o, a, r, next_o, next_a]
         : gdyn::ranges::controller(sys, rnd_policy)
         | gdyn::views::orbit(sys)
         | rl2::views::sarsa
         | std::views::take(50)) {
-    bool nalive = sys;
+    bool next_alive = sys;
     std::cout << std::boolalpha
               << "[" << step++ << "]"
               << " o=" << o
               << " + a=" << a
-              << " => no=" << no << " (" << nalive << ")"
+              << " => next_o=" << next_o << " (" << next_alive << ")"
               << " r=" << r
               << std::endl;
   }
 
   std::cout << std::endl;
-  std::cout << "** Essayons en discret" << std::endl;
+  std::cout << "** Let's experiment with the discrete case" << std::endl;
   // system initialization
   sys = continuous_cartpole::state_type(0,0,0,0);
   step = 0;
-  for(auto [o, a, r, no, na]
-        // TODO dire/expliquer que le rl2::ranges ne marche que sur les MDP
+  for(auto [o, a, r, next_o, next_a]
         : gdyn::ranges::controller(dsys, rnd_policy)
         | gdyn::views::orbit(dsys)
         | rl2::views::sarsa
         | std::views::take(50)) {
     auto d_o = static_cast<discrete_cartpole::observation_type::base_type>(o);
     auto d_o_index = static_cast<std::size_t>(o);
-    auto d_no = static_cast<discrete_cartpole::observation_type::base_type>(o);
-    auto d_no_index = static_cast<std::size_t>(o);
-    bool nalive = sys;
+    auto d_next_o = static_cast<discrete_cartpole::observation_type::base_type>(o);
+    auto d_next_o_index = static_cast<std::size_t>(o);
+    bool next_alive = sys;
     std::cout << std::boolalpha
               << "[" << step++ << "]"
               << " o=" << d_o_index << " " << d_o
               << " + a=" << static_cast<discrete_cartpole::command_type::base_type>(a)
-              << " => no=" << d_no_index << " " << d_no << " (" << nalive << ")"
+              << " => next_o=" << d_next_o_index << " " << d_next_o << " (" << next_alive << ")"
               << " r=" << r
               << std::endl;
   }
@@ -380,15 +365,14 @@ void test_mdp(RANDOM& gen, bool verbose=false) {
   for(unsigned int epoch=0; epoch < learn_params.nb_epochs; ++epoch) {
     discrete_mdp = random_state_generator(); // We implement exploring starts.
     for(auto transition
-	  : rl2::ranges::controller(discrete_mdp, epsilon_greedy_policy)
+	  : gdyn::ranges::controller(discrete_mdp, epsilon_greedy_policy)
 	  | gdyn::views::orbit(discrete_mdp)
 	  | rl2::views::sarsa
 	  | std::views::take(learn_params.epoch_length)) {
-      // TODO sarsa td::evaluation_error vs QL td::discrete::optimal_error
-      // TODO bellman_op et bellman_eval_op
 
       // Q-Learning
-      double td_error = rl2::critic::td::discrete::optimal_error(Q, learn_params.gamma, transition);
+      auto bellman_op = rl2::critic::td::discrete::bellman::optimality<S, A, decltype(Q)>;
+      double td_error = rl2::critic::td::error(Q, learn_params.gamma, transition, bellman_op);
       if (verbose) {
         std::cout << "update s:" << static_cast<std::size_t>(transition.s)
                   << " a:" << static_cast<std::size_t>(transition.a)
@@ -407,63 +391,6 @@ void test_mdp(RANDOM& gen, bool verbose=false) {
     // TODO change epsilon (useful for SARSA)
   }
   
-
-  /*
-  auto T = [sys = gdyn::problem::cartpole::make()] (const S& s, const A& a) mutable -> S {
-    sys = static_cast<S::base_type>(s); // We init sys with s
-    sys(static_cast<A::base_type>(a));  // We ask the continuous system to perform a transition.
-    return *sys;                        // implicit conversion from gdyn::problem::cartpole::state to discrete S.
-  };
-
-  
-
-  // - REWARD type with function r(s,a,s) -> double
-  auto R = [] (const S&, const A&, const S&) -> double {
-    // TODO difficult to write using env
-
-    // assume that it is not called once terminated
-    return 1.0;
-  };
-
-  // - TERMINAL type with function terminal(s) -> bool
-  auto is_terminal = [sys] (const S& s) -> bool {
-    // TODO difficult to write solely using env
-
-    auto p = sys.param;
-    auto state = static_cast<S::base_type>(s);
-    if (state.x < - p.x_threshold or state.x > p.x_threshold
-        or state.theta < - p.theta_threshold_rad or state.theta > p.theta_threshold_rad) {
-      return true;
-    }
-    return false;
-  };
-
-  // TODO would be nice to have make_mdp<S,A>(gdyn::system env)
-  // or, at least, make_mdp<S,A>(gdyn::system env, R, is_terminal) if R (and is_terminal) are not in env
-  // En utilisant cartpole, j'ai l'impression de définir les choses 2 fois.
-  auto mdp = rl2::make_mdp<S, A>(T, R, is_terminal);
-
-  // Then we can test it using a greedy and epsilon_greedy policies
-  std::array<double, SA::size> qvalues;
-  for(auto& value : qvalues) value = std::uniform_real_distribution(0., 1.)(gen);
-  auto Q = rl2::tabular::make_two_args_function<S, A>(qvalues.begin());
-
-  // Let us define a greedy policy.
-  auto greedy_policy         = rl2::discrete::greedy_ify(Q);
-  // auto epsilon_greedy_policy = rl2::discrete::epsilon_ify(greedy_policy, 0.2, gen);
-
-  double total_gain = 0.0;
-  for(auto [s, a, r, ss, aa]
-        : rl2::ranges::controller(mdp, greedy_policy)
-        | gdyn::views::orbit(mdp)
-        | rl2::views::sarsa
-        | std::views::take(10)) {
-    std::cout << "s=" << static_cast<std::size_t>(s) << " + a=" << static_cast<std::size_t>(a);
-    std::cout << " => r=" << r << " snext=" << static_cast<std::size_t>(ss) << std::endl;
-    total_gain += r;
-  }
-  std::cout << "  Got a total gain of " << total_gain << std::endl;
-  */
 }
 
 

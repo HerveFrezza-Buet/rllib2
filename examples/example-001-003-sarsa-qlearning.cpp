@@ -43,7 +43,7 @@ void train(MDP& environment, QTABLE& q, const POLICY& exploration_policy, const 
   for(unsigned int epoch=0; epoch < params.nb_epochs; ++epoch) {
     environment = random_state_generator(); // We implement exploring starts.
     for(auto transition
-	  : rl2::ranges::controller(environment, exploration_policy) 
+	  : gdyn::ranges::controller(environment, exploration_policy) 
 	  | gdyn::views::orbit(environment)
 	  | rl2::views::sarsa     
 	  | std::views::take(params.epoch_length)) {
@@ -68,7 +68,7 @@ void test(MDP& environment, POLICY& test_policy, Params& params) {
   double total_gain = 0;
   environment = 'A';
   for(auto [s, a, r, ss, aa]
-	: rl2::ranges::controller(environment, test_policy) 
+	: gdyn::ranges::controller(environment, test_policy) 
 	| gdyn::views::orbit(environment)                                 
 	| rl2::views::sarsa                                               
 	| std::views::take(params.nb_test_steps))                                    

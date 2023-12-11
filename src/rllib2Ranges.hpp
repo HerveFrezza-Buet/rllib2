@@ -55,25 +55,6 @@ namespace rl2 {
     namespace views {
       constexpr auto sarsa = details::sarsa_range_adaptor()();
     }
-
-    // ##############
-    // #            #
-    // # Controller # 
-    // #            #
-    // ##############
-
-
-    /**
-     * This provides a command from a policy, i.e. a function that
-     * computes a command from the current system state. In rllib2,
-     * the observation is a pair (state, reward), so a gdyn controller
-     * would expect functions taking (state, reward) as argument,
-     * while only the state is given to a policy. This controller does
-     * the fitting.
-     */
-    template<concepts::mdp MDP,
-	     concepts::policy<typename MDP::state_type, typename MDP::command_type> POLICY>
-    auto controller(MDP& mdp, const POLICY& policy) {return gdyn::ranges::tick([&mdp, policy](){return policy(*mdp);});}
   
   }
   
