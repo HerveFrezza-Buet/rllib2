@@ -41,10 +41,11 @@ namespace rl2 {
     namespace linear {
 
       // Consider providing a std::cref(....) expression as param argument.
-      template<typename AMBIENT, int DIM, typename PARAM, concepts::feature<AMBIENT, DIM> FEATURE>
+      template<typename AMBIENT, int DIM, concepts::feature<AMBIENT, DIM> FEATURE, typename PARAM>
       auto make(const FEATURE& phi, PARAM param) {
 	return [phi, param](const AMBIENT& arg) {
-	  return phi(arg).transpose() * param;
+	  const Eigen::Vector<double, DIM>& p = param; // Required if param is a std::cref
+	  return phi(arg).transpose() * p;
 	};
       }
     }
