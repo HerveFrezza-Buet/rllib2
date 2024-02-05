@@ -42,7 +42,7 @@ int main(int argc, char* argv[]) {
   std::cout << "State " << static_cast<weakest_link::S::base_type>(s2) << " has index " << static_cast<std::size_t>(s2) << std::endl;
 
   // Iterators enable to span all the enumerable state values.
-  auto it = weakest_link::S::begin; // 'it' refers to the first value of S.
+  auto it = weakest_link::S::begin(); // 'it' refers to the first value of S.
   ++it;               // 'it' is now the second value of S.
   ++it;               // 'it' is now the third value of S.
   weakest_link::S s3 {it};          // Enumerables can be constructed from an iterator.
@@ -72,17 +72,17 @@ int main(int argc, char* argv[]) {
   // that has been intrumented to be enumerable.
 
   std::cout << "State space : " << weakest_link::S::size << " values" << std::endl;
-  for(auto it = weakest_link::S::begin; it != weakest_link::S::end; ++it)
+  for(auto it = weakest_link::S::begin(); it != weakest_link::S::end(); ++it)
     std::cout << "  " << static_cast<std::size_t>(it) << " : " << *it << std::endl;
   std::cout << std::endl;
   
   std::cout << "Action space : " << weakest_link::A::size << " values" << std::endl;
-  for(auto it = weakest_link::A::begin; it != weakest_link::A::end; ++it)
+  for(auto it = weakest_link::A::begin(); it != weakest_link::A::end(); ++it)
     std::cout << "  " << static_cast<std::size_t>(it) << " : " << *it << std::endl;
   std::cout << std::endl;
     
   std::cout << "Cartesian product : " << weakest_link::SA::size << " values" << std::endl;
-  for(auto it = weakest_link::SA::begin; it != weakest_link::SA::end; ++it)  {
+  for(auto it = weakest_link::SA::begin(); it != weakest_link::SA::end(); ++it)  {
     auto [s, a] = *it;
     std::cout << "  " << std::setw(2) << static_cast<std::size_t>(it) << " : (" << s << ", " << a << ')' << std::endl;
   }

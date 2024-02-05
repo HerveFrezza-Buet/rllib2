@@ -50,13 +50,12 @@ namespace weakest_link {
   using SA = rl2::enumerable::pair<S, A>;
 
 
-  // TODO rename to make_mdp
   template <typename RANDOM_GENERATOR>
-  auto build_mdp(RANDOM_GENERATOR& gen, double correct_answer_probability, bool show_reward_table=false) {
+  auto make_mdp(RANDOM_GENERATOR& gen, double correct_answer_probability, bool show_reward_table=false) {
   
     // Let us define the reward table for the game. We can have arrays
-    // since the state space size S::size is known at compiling time.
-    std::array<double, S::size> rewards = {0, 50, 100, 200, 400, 600, 1000, 1500, 3000, 5000};
+    // since the state space size S::size() is known at compiling time.
+    std::array<double, S::size()> rewards = {0, 50, 100, 200, 400, 600, 1000, 1500, 3000, 5000};
 
     // Let us display the reward table. The value of 'it' can be used
     // for accessing the elements of a tabular storing related to S
@@ -65,7 +64,7 @@ namespace weakest_link {
       std::cout  << "Rewards : " << std::endl;
       // TODO pas moyen de faire S.begin(), S.end() ??
       // par exemple for( auto s: S ) cout << reward[s] ??
-      for(auto it = S::begin; it != S::end; ++it)
+      for(auto it = S::begin(); it != S::end(); ++it)
         // TODO c'est pas un peu moche le 'rewards[it]'
 	std::cout << "  for state " << *it << " : " << rewards[it] << std::endl; 
       std::cout << std::endl;

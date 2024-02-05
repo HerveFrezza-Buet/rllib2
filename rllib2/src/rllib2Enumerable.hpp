@@ -70,27 +70,27 @@ namespace rl2 {
       operator std::size_t () const {return INDEX_CONVERSION::from(this->value);}
       operator base_type   () const {return value;}
     
-      constexpr static iterator begin   = iterator(0);
-      constexpr static iterator end     = iterator(NB);
-      constexpr static std::size_t size = NB;
+      constexpr static iterator begin()   {return iterator(0);}
+      constexpr static iterator end()     {return iterator(NB);}
+      constexpr static std::size_t size() {return NB;}
     };
   
     template <concepts::enumerable FIRST, concepts::enumerable SECOND>
     struct pair_index_conversion {
       static std::size_t from(const std::pair<typename FIRST::base_type, typename SECOND::base_type>& base) {
-	return static_cast<std::size_t>(FIRST(base.first)) * SECOND::size + static_cast<std::size_t>(SECOND(base.second));
+	return static_cast<std::size_t>(FIRST(base.first)) * SECOND::size() + static_cast<std::size_t>(SECOND(base.second));
       }
       static std::pair<typename FIRST::base_type, typename SECOND::base_type>  to(std::size_t index)  {
 	return {
-	  static_cast<typename FIRST::base_type >(FIRST (index / SECOND::size)),
-	  static_cast<typename SECOND::base_type>(SECOND(index % SECOND::size))
+	  static_cast<typename FIRST::base_type >(FIRST (index / SECOND::size())),
+	  static_cast<typename SECOND::base_type>(SECOND(index % SECOND::size()))
 	};
       }
     };
     
     template<concepts::enumerable FIRST, concepts::enumerable SECOND>
-    struct pair : public set<std::pair<typename FIRST::base_type, typename SECOND::base_type>, FIRST::size * SECOND::size, pair_index_conversion<FIRST, SECOND>> {
-      using super_type = set<std::pair<typename FIRST::base_type, typename SECOND::base_type>, FIRST::size * SECOND::size, pair_index_conversion<FIRST, SECOND>>;
+    struct pair : public set<std::pair<typename FIRST::base_type, typename SECOND::base_type>, FIRST::size() * SECOND::size(), pair_index_conversion<FIRST, SECOND>> {
+      using super_type = set<std::pair<typename FIRST::base_type, typename SECOND::base_type>, FIRST::size() * SECOND::size(), pair_index_conversion<FIRST, SECOND>>;
 
       using super_type::set;
       using super_type::operator=;

@@ -14,9 +14,9 @@ int main(int argc, char* argv[]) {
   std::mt19937 gen(rd());
   std::cout << std::boolalpha; // Prints booleans as true/false rather than 1/0.
 
-  auto environment = weakest_link::build_mdp(gen,
-					     .75,   // Probability of answering correctly.
-					     true); // true <=> display the reward table.
+  auto environment = weakest_link::make_mdp(gen,
+					    .75,   // Probability of answering correctly.
+					    true); // true <=> display the reward table.
   environment = 'A';
   double total_gain = 0;
 

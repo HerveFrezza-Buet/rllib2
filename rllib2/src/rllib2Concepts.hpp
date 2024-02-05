@@ -75,9 +75,9 @@ namespace rl2 {
       requires {
       typename ENUMERABLE::base_type;
       typename ENUMERABLE::iterator;
-      {ENUMERABLE::begin} -> std::convertible_to<typename ENUMERABLE::iterator>;
-      {ENUMERABLE::end}   -> std::convertible_to<typename ENUMERABLE::iterator>;
-      {ENUMERABLE::size}  -> std::convertible_to<std::size_t>;
+      {ENUMERABLE::begin()} -> std::convertible_to<typename ENUMERABLE::iterator>;
+      {ENUMERABLE::end()}   -> std::convertible_to<typename ENUMERABLE::iterator>;
+      {ENUMERABLE::size()}  -> std::convertible_to<std::size_t>;
     } &&
     requires (ENUMERABLE::iterator it) {
       ++it;

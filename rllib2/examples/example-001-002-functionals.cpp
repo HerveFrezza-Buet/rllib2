@@ -54,9 +54,9 @@ int main(int argc, char* argv[]) {
     // Let us defined a tabular function, associating a quality to
     // each state... 
 
-    std::array<quality, weakest_link::S::size> values;
+    std::array<quality, weakest_link::S::size()> values;
     std::size_t quality_idx = 0;
-    for(auto& value : values) value = (quality_idx++ % quality::size);
+    for(auto& value : values) value = (quality_idx++ % quality::size());
     
     // We can make a tabular function (S -> quality) from the array of
     // values. The index of the state is the key, the content of the
@@ -65,7 +65,7 @@ int main(int argc, char* argv[]) {
     
     // Let us display the association
     std::cout << "Tabular quality function:" << std::endl;
-    for(auto it = weakest_link::S::begin; it != weakest_link::S::end; ++it) {
+    for(auto it = weakest_link::S::begin(); it != weakest_link::S::end(); ++it) {
       weakest_link::S state {it};
       std::cout << "  f(" << static_cast<weakest_link::S::base_type>(state   )
 		<< ") = " << static_cast<quality::base_type>        (f(state))
@@ -91,7 +91,7 @@ int main(int argc, char* argv[]) {
 			     | std::views::filter([&f, &epsilon_f](const auto& s){return f(s) != epsilon_f(s);}))
 	++nb_mismatches;
       std::cout << "epsilon = " << epsilon << ", mismatch_ratio = " << 100*(nb_mismatches/(double)nb_trials)
-		<< "% (should be close to " << 100*epsilon * (quality::size - 1) / (double)(quality::size)
+		<< "% (should be close to " << 100*epsilon * (quality::size() - 1) / (double)(quality::size())
 		<< "%)." << std::endl;
     }
   }
@@ -109,7 +109,7 @@ int main(int argc, char* argv[]) {
 	      << "-------------" << std::endl
 	      << std::endl;
 
-    std::array<double, weakest_link::SA::size> values;
+    std::array<double, weakest_link::SA::size()> values;
     for(auto& value : values) value = std::uniform_real_distribution(0., 1.)(gen);
     
     auto Q = rl2::tabular::make_two_args_function<weakest_link::S, weakest_link::A>(values.begin());
@@ -124,18 +124,18 @@ int main(int argc, char* argv[]) {
     // Let us display the values.
     
     std::cout << "Q |";
-    for(auto it = weakest_link::A::begin; it != weakest_link::A::end; ++it) std::cout << ' ' << std::setw(5) << static_cast<weakest_link::A::base_type>(it);
+    for(auto it = weakest_link::A::begin(); it != weakest_link::A::end(); ++it) std::cout << ' ' << std::setw(5) << static_cast<weakest_link::A::base_type>(it);
     std::cout << std::endl;
 
     std::cout << "--+";
-    for(auto it = weakest_link::A::begin; it != weakest_link::A::end; ++it) std::cout << std::string(6, '-');
+    for(auto it = weakest_link::A::begin(); it != weakest_link::A::end(); ++it) std::cout << std::string(6, '-');
     std::cout << std::endl;
 
-    for(auto s_it = weakest_link::S::begin; s_it != weakest_link::S::end; ++s_it) {
+    for(auto s_it = weakest_link::S::begin(); s_it != weakest_link::S::end(); ++s_it) {
       weakest_link::S s(s_it);
       std::cout << static_cast<weakest_link::S::base_type>(s) << " |";
       auto QS = Q(s); // Q(S) is a function taking actions (i.e. weakest_link::A) as arguments and returning values.
-      for(auto a_it = weakest_link::A::begin; a_it != weakest_link::A::end; ++a_it)
+      for(auto a_it = weakest_link::A::begin(); a_it != weakest_link::A::end(); ++a_it)
 	std::cout << ' ' << std::setw(5) <<  QS(a_it); // a_it is implicitly converted into weakest_link::A here.
       weakest_link::A best = greedy_on_Q(s);
       std::cout << "  -->  argmax = " << static_cast<weakest_link::A::base_type>(best) << std::endl;

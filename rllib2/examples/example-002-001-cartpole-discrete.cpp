@@ -17,7 +17,7 @@ struct S_convertor {
 
   // The size of the discrete state is nb_bins^nb_dims, and we add 1
   // for out of limits. The max index is this out of limits state.
-  static constexpr std::size_t size    {nb_bins * nb_bins * nb_bins * nb_bins + 1}; 
+  static constexpr std::size_t size() {return nb_bins * nb_bins * nb_bins * nb_bins + 1;}
   
   static constexpr std::array<std::tuple<double, double>, nb_dims> limits
     {{ {-4.8, 4.8},
@@ -33,7 +33,7 @@ struct S_convertor {
   
   static gdyn::problem::cartpole::state to(std::size_t index)
   {
-    if(index == size - 1)
+    if(index == size() - 1)
       return out_of_limits_state;
     
     // indexes along each Obs dimensions
@@ -65,7 +65,7 @@ struct S_convertor {
         or (s.x_dot < std::get<0>(limits[1])) or (s.x_dot > std::get<1>(limits[1]))
         or (s.theta < std::get<0>(limits[2])) or (s.theta > std::get<1>(limits[2]))
         or (s.theta_dot < std::get<0>(limits[3])) or (s.theta_dot > std::get<1>(limits[3]))) {
-      return size - 1;
+      return size() - 1;
     }
     
     // indexes along each Obs dimensions
@@ -91,7 +91,7 @@ struct S_convertor {
 }; // struct S_convertor
 
 struct A_convertor {
-  static constexpr std::size_t size {2}; 
+  static constexpr std::size_t size() {return 2;} 
   static gdyn::problem::cartpole::direction to (std::size_t index)
   {
     switch(index) {
@@ -108,8 +108,8 @@ struct A_convertor {
 
 
 // Enumerable S and A for MDP
-using S  = rl2::enumerable::set<gdyn::problem::cartpole::state,     S_convertor::size, S_convertor>;
-using A  = rl2::enumerable::set<gdyn::problem::cartpole::direction, A_convertor::size, A_convertor>;
+using S  = rl2::enumerable::set<gdyn::problem::cartpole::state,     S_convertor::size(), S_convertor>;
+using A  = rl2::enumerable::set<gdyn::problem::cartpole::direction, A_convertor::size(), A_convertor>;
 using SA = rl2::enumerable::pair<S, A>;
 
 void test_convertor()
@@ -332,7 +332,7 @@ void test_mdp(RANDOM& gen, bool verbose=false) {
   static_assert(rl2::concepts::mdp<decltype(discrete_mdp)>);
 
   // Then a tabular Q
-  std::array<double, SA::size> values;
+  std::array<double, SA::size()> values;
   auto Q = rl2::tabular::make_two_args_function<S, A>(values.begin());
 
   // And policies

@@ -29,7 +29,7 @@ template<typename QTYPE>
 void display_greedy_policy(const QTYPE& Q) {
   // The questions for which the greedy policy says 'bank' are in upper case.
   std::cout << "  greedy: ";
-  for(auto it = weakest_link::S::begin; it != weakest_link::S::end; ++it) {
+  for(auto it = weakest_link::S::begin(); it != weakest_link::S::end(); ++it) {
     bool a = static_cast<weakest_link::A::base_type>(rl2::discrete::algo::argmax<weakest_link::A>(Q(weakest_link::S(it))));
     char c = *it;
     if(!a) c += 32;
@@ -79,8 +79,8 @@ void test(MDP& environment, POLICY& test_policy, Params& params) {
 	| std::views::take(params.nb_test_steps))                                    
     total_gain += r;
     
-  std::cout << "  Got an average gain for " << weakest_link::S::size << " questions: "
-	    << weakest_link::S::size * total_gain/(double)(params.nb_test_steps) << "$." << std::endl;
+  std::cout << "  Got an average gain for " << weakest_link::S::size() << " questions: "
+	    << weakest_link::S::size() * total_gain/(double)(params.nb_test_steps) << "$." << std::endl;
 }
 
 int main(int argc, char* argv[]) {
@@ -93,7 +93,7 @@ int main(int argc, char* argv[]) {
   std::cout << std::boolalpha << std::fixed;
   
   // First we need parameters for the Q function.
-  std::array<double, weakest_link::SA::size> values;
+  std::array<double, weakest_link::SA::size()> values;
 
   // This is the Q function.
   auto Q = rl2::tabular::make_two_args_function<weakest_link::S, weakest_link::A>(values.begin());
@@ -104,7 +104,7 @@ int main(int argc, char* argv[]) {
   // The policy is sensitive to further modifications of params.epsilon, thanks to the use of std::cref.
 
   // This is the environment
-  auto environment = weakest_link::build_mdp(gen, params.correct_proba);
+  auto environment = weakest_link::make_mdp(gen, params.correct_proba);
 
   std::cout << "Player skill : " << int(100 * params.correct_proba) << "% of correct answers." << std::endl;
 

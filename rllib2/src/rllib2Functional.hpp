@@ -21,7 +21,7 @@ namespace rl2 {
      */
     template<concepts::enumerable TYPE, typename RANDOM_GENERATOR>
     auto uniform_sampler(RANDOM_GENERATOR& gen) {
-      return [&gen]() -> TYPE {return std::uniform_int_distribution<std::size_t>(0, TYPE::size-1)(gen);};
+      return [&gen]() -> TYPE {return std::uniform_int_distribution<std::size_t>(0, TYPE::size()-1)(gen);};
     }
 
 
@@ -38,7 +38,7 @@ namespace rl2 {
       return [f, p, &gen](auto arg) -> concepts::enumerable auto {
 	typename std::remove_const<typename std::remove_reference<decltype(f(arg))>::type>::type res;
 	if(std::bernoulli_distribution(p)(gen))
-	  res = std::uniform_int_distribution<std::size_t>(0, decltype(res)::size)(gen);
+	  res = std::uniform_int_distribution<std::size_t>(0, decltype(res)::size())(gen);
 	else
 	  res = f(arg);
 	return res;
@@ -54,9 +54,9 @@ namespace rl2 {
 	       typename COMP = std::less<std::invoke_result_t<F, S>>>
       auto max(const F& f) {
 	COMP comp;
-	auto it = S::begin;
+	auto it = S::begin();
 	auto max_value = f(it); // it is implicitly casted into a S.
-	for(; it != S::end; ++it) 
+	for(; it != S::end(); ++it) 
 	  if(auto value = f(it); comp(max_value, value))
 	    max_value = value;
 	return max_value;
@@ -71,10 +71,10 @@ namespace rl2 {
 	       typename COMP = std::less<std::invoke_result_t<F, S>>>
       S argmax(const F& f) {
 	COMP comp;
-	auto it = S::begin;
+	auto it = S::begin();
 	auto max_value = f(it); // it is implicitly casted into a S.
 	auto res        = it++;
-	for(; it != S::end; ++it) 
+	for(; it != S::end(); ++it) 
 	  if(auto value = f(it); comp(max_value, value)) {
 	    max_value = value;
 	    res       = it;
@@ -127,7 +127,7 @@ namespace rl2 {
       using function<enumerable::pair<X, Y>, IT>::operator();
 
       auto operator()(const X& x, const Y& y) const {return (*this)(arg_type(x, y));}
-      auto operator()(const X& x)             const {return make_function<Y, IT>(this->params_it + Y::size * static_cast<std::size_t>(x));}
+      auto operator()(const X& x)             const {return make_function<Y, IT>(this->params_it + Y::size() * static_cast<std::size_t>(x));}
     };
 
     template<concepts::enumerable X, concepts::enumerable Y, std::random_access_iterator IT>
