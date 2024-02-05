@@ -136,10 +136,9 @@ namespace rl2 {
       {ct(cs)} -> std::invocable<typename TWO_ARGS_FUNCTION::second_entry_type>;
     };
 
-    
-
-    // TODO : commenter tous les concepts
-    
+    /**
+     * @short A two-args function whose types are enumerable.
+     */
     template<typename TWO_ARGS_FUNCTION>
     concept tabular_two_args_function =
       two_args_function<TWO_ARGS_FUNCTION>
@@ -149,6 +148,10 @@ namespace rl2 {
       && enumerable<typename TWO_ARGS_FUNCTION::first_entry_type>
     && enumerable<typename TWO_ARGS_FUNCTION::second_entry_type>;
 
+
+    /**
+     * @short A function such as q(s, a) is scalar.
+     */
     template<typename Q, typename S, typename A>
     concept q_function = 
       std::invocable<Q, S, A>

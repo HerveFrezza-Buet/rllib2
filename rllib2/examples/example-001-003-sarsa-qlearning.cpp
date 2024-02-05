@@ -24,9 +24,8 @@ struct Params {
   std::size_t nb_test_steps = 1000;
 };
 
-// TODO QTYPE => QTABLE
-template<typename QTYPE>
-void display_greedy_policy(const QTYPE& Q) {
+template<typename QTABLE>
+void display_greedy_policy(const QTABLE& Q) {
   // The questions for which the greedy policy says 'bank' are in upper case.
   std::cout << "  greedy: ";
   for(auto it = weakest_link::S::begin(); it != weakest_link::S::end(); ++it) {
