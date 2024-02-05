@@ -62,10 +62,7 @@ namespace weakest_link {
     // (here the rewards).
     if(show_reward_table) {
       std::cout  << "Rewards : " << std::endl;
-      // TODO pas moyen de faire S.begin(), S.end() ??
-      // par exemple for( auto s: S ) cout << reward[s] ??
       for(auto it = S::begin(); it != S::end(); ++it)
-        // TODO c'est pas un peu moche le 'rewards[it]'
 	std::cout << "  for state " << *it << " : " << rewards[it] << std::endl; 
       std::cout << std::endl;
     }
@@ -88,8 +85,6 @@ namespace weakest_link {
     // a lambda function as well, which copies the reward table in its
     // lexical closure.
     auto R = [rewards](const S& s, const A& a, const S& ss) -> double {
-      // TODO la conversion s -> std::size est pas "jolie" non plus
-      // TODO S.index()
       if(a) return rewards[static_cast<std::size_t>(s)]; // We get a reward if we bank.
       return 0;                                          // or 0 reward otherwise.
     };
@@ -98,7 +93,6 @@ namespace weakest_link {
     auto is_terminal = [](const S& s) {return false;}; // No state is terminal.
 
     // This builds a dynamical system.
-    // TODO could also add the starting_S_distribution as a function of MDP
     return rl2::make_mdp<S, A>(T, R, is_terminal);
   }
 

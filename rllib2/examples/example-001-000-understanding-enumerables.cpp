@@ -71,17 +71,17 @@ int main(int argc, char* argv[]) {
   // particular space value, and *it has the type base_type of the set
   // that has been intrumented to be enumerable.
 
-  std::cout << "State space : " << weakest_link::S::size << " values" << std::endl;
+  std::cout << "State space : " << weakest_link::S::size() << " values" << std::endl;
   for(auto it = weakest_link::S::begin(); it != weakest_link::S::end(); ++it)
     std::cout << "  " << static_cast<std::size_t>(it) << " : " << *it << std::endl;
   std::cout << std::endl;
   
-  std::cout << "Action space : " << weakest_link::A::size << " values" << std::endl;
+  std::cout << "Action space : " << weakest_link::A::size() << " values" << std::endl;
   for(auto it = weakest_link::A::begin(); it != weakest_link::A::end(); ++it)
     std::cout << "  " << static_cast<std::size_t>(it) << " : " << *it << std::endl;
   std::cout << std::endl;
     
-  std::cout << "Cartesian product : " << weakest_link::SA::size << " values" << std::endl;
+  std::cout << "Cartesian product : " << weakest_link::SA::size() << " values" << std::endl;
   for(auto it = weakest_link::SA::begin(); it != weakest_link::SA::end(); ++it)  {
     auto [s, a] = *it;
     std::cout << "  " << std::setw(2) << static_cast<std::size_t>(it) << " : (" << s << ", " << a << ')' << std::endl;

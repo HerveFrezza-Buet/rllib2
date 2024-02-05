@@ -86,7 +86,7 @@ int main(int argc, char* argv[]) {
       epsilon = eps; // epsilon_f depends on this setting, thanks to std::cref(epsilon).
       std::size_t nb_mismatches = 0;
       for([[maybe_unused]] const auto& unused
-			     : gdyn::ranges::tick(rl2::discrete::uniform_sampler<weakest_link::S>(gen))
+			     : gdyn::views::pulse(rl2::discrete::uniform_sampler<weakest_link::S>(gen))
 			     | std::views::take(nb_trials)
 			     | std::views::filter([&f, &epsilon_f](const auto& s){return f(s) != epsilon_f(s);}))
 	++nb_mismatches;
