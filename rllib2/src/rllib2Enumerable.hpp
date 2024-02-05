@@ -22,7 +22,7 @@ namespace rl2 {
   namespace enumerable {
     template<typename BASE, std::size_t NB,
 	     concepts::static_index_conversion<BASE> INDEX_CONVERSION = by_default::IndexConversion<BASE>>
-    struct count {
+    struct set {
       using base_type = BASE;
       struct iterator {
 	using value_type = base_type;
@@ -48,23 +48,23 @@ namespace rl2 {
       }
       
     public:
-      count()              = default;
-      count(const count&)  = default;
-      count(count&&)       = default;
+      set()              = default;
+      set(const set&)  = default;
+      set(set&&)       = default;
     
-      bool operator<=>(const count&) const = default;
+      bool operator<=>(const set&) const = default;
     
-      count& operator=(const count&) = default;
-      count& operator=(count&&)      = default;
+      set& operator=(const set&) = default;
+      set& operator=(set&&)      = default;
 
-      count(const base_type& value) : value(quantize(value)) {}
-      count& operator=(const base_type& value) {this->value = quantize(value); return *this;}
+      set(const base_type& value) : value(quantize(value)) {}
+      set& operator=(const base_type& value) {this->value = quantize(value); return *this;}
     
-      count(std::size_t index) : value(INDEX_CONVERSION::to(index)) {}
-      count& operator=(std::size_t index) {this->value = INDEX_CONVERSION::to(index); return *this;}
+      set(std::size_t index) : value(INDEX_CONVERSION::to(index)) {}
+      set& operator=(std::size_t index) {this->value = INDEX_CONVERSION::to(index); return *this;}
 
-      count(iterator it) : count(static_cast<std::size_t>(it)) {}
-      count& operator=(iterator it) {return (*this = static_cast<std::size_t>(it));}
+      set(iterator it) : set(static_cast<std::size_t>(it)) {}
+      set& operator=(iterator it) {return (*this = static_cast<std::size_t>(it));}
     
      
       operator std::size_t () const {return INDEX_CONVERSION::from(this->value);}
@@ -89,10 +89,10 @@ namespace rl2 {
     };
     
     template<concepts::enumerable FIRST, concepts::enumerable SECOND>
-    struct pair : public count<std::pair<typename FIRST::base_type, typename SECOND::base_type>, FIRST::size * SECOND::size, pair_index_conversion<FIRST, SECOND>> {
-      using super_type = count<std::pair<typename FIRST::base_type, typename SECOND::base_type>, FIRST::size * SECOND::size, pair_index_conversion<FIRST, SECOND>>;
+    struct pair : public set<std::pair<typename FIRST::base_type, typename SECOND::base_type>, FIRST::size * SECOND::size, pair_index_conversion<FIRST, SECOND>> {
+      using super_type = set<std::pair<typename FIRST::base_type, typename SECOND::base_type>, FIRST::size * SECOND::size, pair_index_conversion<FIRST, SECOND>>;
 
-      using super_type::count;
+      using super_type::set;
       using super_type::operator=;
 
       pair(const FIRST& first, const SECOND& second)

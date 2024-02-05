@@ -28,7 +28,7 @@ struct quality_index_convertor {
   }
 };
 
-using quality = rl2::enumerable::count<std::string, 3, quality_index_convertor>; 
+using quality = rl2::enumerable::set<std::string, 3, quality_index_convertor>; 
 
 
 int main(int argc, char* argv[]) {
@@ -79,7 +79,7 @@ int main(int argc, char* argv[]) {
     double epsilon; // The values will be set later in the loop.
     auto epsilon_f = rl2::discrete::epsilon_ify(f, std::cref(epsilon), gen);
 
-    // Let us count how many times f and epsilon_f differ.
+    // Let us set how many times f and epsilon_f differ.
     
     std::size_t nb_trials = 100000;
     for(auto eps : {.25, .5, .75}) {

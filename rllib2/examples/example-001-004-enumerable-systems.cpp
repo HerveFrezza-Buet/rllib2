@@ -29,14 +29,14 @@ namespace discrete {
     static continuous::interval to(std::size_t index)   {return rl2::enumerable::utils::digitize::to_value(index, -1., 1., nb_bins);}
     static std::size_t from(continuous::interval value) {return rl2::enumerable::utils::digitize::to_index(value, -1., 1., nb_bins);}
   };
-  using interval = rl2::enumerable::count<continuous::interval, interval_convertor::nb_bins, interval_convertor>;
+  using interval = rl2::enumerable::set<continuous::interval, interval_convertor::nb_bins, interval_convertor>;
   
   struct angle_convertor {
     static constexpr std::size_t nb_bins {24};
     static continuous::angle to(std::size_t index)   {return rl2::enumerable::utils::digitize::to_value(index, 0., 360., nb_bins);}
     static std::size_t from(continuous::angle value) {return rl2::enumerable::utils::digitize::to_index(value, 0., 360., nb_bins);}
   };
-  using angle = rl2::enumerable::count<continuous::angle, angle_convertor::nb_bins, angle_convertor>;
+  using angle = rl2::enumerable::set<continuous::angle, angle_convertor::nb_bins, angle_convertor>;
 
   using plane = rl2::enumerable::pair<interval, interval>;
 }

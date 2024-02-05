@@ -29,8 +29,8 @@ namespace rl2 {
     // Enumerable
     // ----------
     
-    using enumerable_int  = enumerable::count<int,  10>;
-    using enumerable_char = enumerable::count<char, 10>;
+    using enumerable_int  = enumerable::set<int,  10>;
+    using enumerable_char = enumerable::set<char, 10>;
     static_assert(concepts::enumerable<enumerable_int>);
 
     // MDP

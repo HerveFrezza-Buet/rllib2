@@ -34,9 +34,7 @@ namespace weakest_link {
 
   // For actions, the conversion is obvious, since in C++, bool is
   // mapped naturally on to {0, 1}.
-  // TODO rename enumerable => countable ?
-  // TODO rename count => set (par rapport à pair)
-  using A = rl2::enumerable::count<A_,  2>; // A::base_type is A_, i.e. bool.
+  using A = rl2::enumerable::set<A_,  2>; // A::base_type is A_, i.e. bool.
 
   // For characters, we need to map {'A', 'B', 'C', ... 'J'} onto {0, 1,
   // ... 9}. This needs a shift (since A is the char value 65). To
@@ -46,7 +44,7 @@ namespace weakest_link {
     static S_          to  (std::size_t index) {return static_cast<S_>(index + 65);         }
     static std::size_t from(S_          value) {return static_cast<std::size_t>(value) - 65;}
   };
-  using S = rl2::enumerable::count<S_, 10, S_index_convertor>; // S::base_type is S_, i.e. char.
+  using S = rl2::enumerable::set<S_, 10, S_index_convertor>; // S::base_type is S_, i.e. char.
 
   // We can also enumerate the Cartesian product of 2 enumerable sets.
   using SA = rl2::enumerable::pair<S, A>;

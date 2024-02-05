@@ -108,8 +108,8 @@ struct A_convertor {
 
 
 // Enumerable S and A for MDP
-using S  = rl2::enumerable::count<gdyn::problem::cartpole::state,     S_convertor::size, S_convertor>;
-using A  = rl2::enumerable::count<gdyn::problem::cartpole::direction, A_convertor::size, A_convertor>;
+using S  = rl2::enumerable::set<gdyn::problem::cartpole::state,     S_convertor::size, S_convertor>;
+using A  = rl2::enumerable::set<gdyn::problem::cartpole::direction, A_convertor::size, A_convertor>;
 using SA = rl2::enumerable::pair<S, A>;
 
 void test_convertor()
