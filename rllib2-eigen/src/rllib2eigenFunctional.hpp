@@ -1,8 +1,10 @@
 #pragma once
 
 #include <cmath>
-#include <complex>
 #include <array>
+#include <vector>
+#include <utility>
+#include <type_traits>
 #include <initializer_list>
 #include <Eigen/Dense>
 #include <rllib2eigenConcepts.hpp>
@@ -13,21 +15,21 @@ namespace rl2 {
 
     namespace function {
 
-      template<typename DOMAIN>
+      template<typename AMBIENT>
       struct Gaussian {
       private:
-	DOMAIN mu;
+	AMBIENT mu;
 	double sigma;
 	double gamma;
 
       public:
 	
-	Gaussian(const DOMAIN& mu, double sigma) : mu(mu), sigma(sigma), gamma(.5/(sigma*sigma)) {}
+	Gaussian(const AMBIENT& mu, double sigma) : mu(mu), sigma(sigma), gamma(.5/(sigma*sigma)) {}
 	Gaussian() : Gaussian({}, 1.) {}
 	Gaussian(const Gaussian&) = default;
 	Gaussian& operator=(const Gaussian&) = default;
 
-	double operator()(const DOMAIN& x) const {
+	double operator()(const AMBIENT& x) const {
 	  auto delta = x - mu;
 	  return std::exp(-delta.dot(delta) * gamma);
 	}
@@ -55,8 +57,8 @@ namespace rl2 {
 	}
       };
 
-      template<typename DOMAIN>
-      auto gaussian(const DOMAIN& mu, double sigma) {return Gaussian(mu, sigma);}
+      template<typename AMBIENT>
+      auto gaussian(const AMBIENT& mu, double sigma) {return Gaussian(mu, sigma);}
     }
 
     namespace feature {
@@ -64,7 +66,9 @@ namespace rl2 {
       template<unsigned int DEGREE>
       struct polynomial {
       public:
-	using return_type = Eigen::Vector<double, DEGREE+1>;
+	constexpr static unsigned int dim = DEGREE + 1;
+	using return_type = Eigen::Vector<double, dim>;
+	using ambient_type = double;
 	
       private:
 
@@ -81,6 +85,12 @@ namespace rl2 {
 	
       public:
       
+	polynomial() = default;
+	polynomial(const polynomial&) = default;
+	polynomial& operator=(const polynomial&) = default;
+	polynomial(polynomial&&) = default;
+	polynomial& operator=(polynomial&&) = default;
+	
 	return_type operator()(double x) const {
 	  return_type res;
 	  auto it = res.begin();
@@ -90,26 +100,27 @@ namespace rl2 {
 	}
       };
 
-      template<typename DOMAIN, unsigned int NB_RBF>
+      template<typename AMBIENT, unsigned int NB_RBF>
       struct gaussian_rbf {
-	using rbf_type = function::Gaussian<DOMAIN>;
-	using return_type = Eigen::Vector<double, NB_RBF + 1>;
+	constexpr static unsigned int dim = NB_RBF + 1;
+	using ambient_type = AMBIENT;
+	using rbf_type = function::Gaussian<AMBIENT>;
+	using return_type = Eigen::Vector<double, dim>;
 	
-	std::array<function::Gaussian<DOMAIN>, NB_RBF> rbfs;
+	std::vector<function::Gaussian<AMBIENT>> rbfs;
 	
 	gaussian_rbf() = default;
 	gaussian_rbf(const gaussian_rbf&) = default;
 	gaussian_rbf& operator=(const gaussian_rbf&) = default;
+	gaussian_rbf(gaussian_rbf&&) = default;
+	gaussian_rbf& operator=(gaussian_rbf&&) = default;
 
 	// I would have preferred something like this.. but I do not know how to force size checking at compiling time.
 	// gaussian_rbf(const std::initializer_list<rbf_type>& args) : rbfs(args) {}
 	
-	gaussian_rbf(const std::initializer_list<rbf_type>& args) : rbfs() {
-	  auto it = args.begin();
-	  for(auto& rbf : rbfs) rbf = *(it++);
-	}
+	gaussian_rbf(const std::initializer_list<rbf_type>& args) : rbfs(args) {}
 	
-	return_type operator()(const DOMAIN& x) const {
+	return_type operator()(const AMBIENT& x) const {
 	  return_type res;
 	  auto res_it = res.begin();
 	  *(res_it++) = 1; // This is the offset.
@@ -119,17 +130,33 @@ namespace rl2 {
       };
     }
 
-    
-    namespace linear {
+    namespace function {
 
-      // Consider providing a std::cref(....) expression as param argument.
-      template<typename AMBIENT, unsigned int DIM, concepts::feature<AMBIENT, DIM> FEATURE, typename PARAM>
-      auto make(const FEATURE& phi, PARAM param) {
-	return [phi, param](const AMBIENT& arg) {
-	  const Eigen::Vector<double, DIM>& p = param; // Required if param is a std::cref
-	  return phi(arg).transpose() * p;
-	};
-      }
+      template<typename AMBIENT, unsigned int DIM, concepts::feature<AMBIENT, DIM> FEATURE>
+      struct linear {
+	using param_type = Eigen::Vector<double, DIM>;
+	FEATURE phi;
+	param_type theta;
+	
+	linear() = delete;
+	linear(const linear&) = default;
+	linear& operator=(const linear&) = default;
+	linear(const FEATURE& phi) : phi(phi), theta() {}
+	linear(FEATURE&& phi) : phi(std::move(phi)), theta() {}
+
+	auto operator()(const AMBIENT& arg) const {
+	  return phi(arg).transpose() * theta;
+	}
+      };
+
+      
+      template<typename FEATURE>
+      auto make_linear(FEATURE&& phi) {return linear<typename std::remove_cvref_t<FEATURE>::ambient_type,
+						     std::remove_cvref_t<FEATURE>::dim,
+						     std::remove_cvref_t<FEATURE>>(std::forward<FEATURE>(phi));}
     }
+
+
+    
   }
 }
