@@ -63,9 +63,11 @@ int main(int argc, char* argv[]) {
     }
 
     std::cout << std::endl
-	      << "phi(2.0)" << std::endl << phi(2.0) << std::endl
+	      << "phi(2.0)" << std::endl
+	      << "--------" << std::endl << phi(2.0) << std::endl
 	      << std::endl
-	      << "phi(2.05)" << std::endl << phi(2.05) << std::endl;
+	      << "phi(2.05)" << std::endl
+	      << "---------" << std::endl << phi(2.05) << std::endl;
     
     // We will not use phi anymore, so we can move it for building the linear function.
     auto f = rl2::eigen::function::make_linear(std::move(phi)); 
@@ -73,6 +75,16 @@ int main(int argc, char* argv[]) {
     
     std::cout << std::endl
 	      << "f(2) = " << f(2) << ", " << "f(3) = " << f(3) << std::endl;
+    
+
+    // The feature phi is not valid anymore, since we have moved (and
+    // not copied) its content into f. Nevertheless, we can retrieve it.
+    std::cout << std::endl
+	      << "f.phi(2.0)" << std::endl
+	      << "----------" << std::endl << f.phi(2.0) << std::endl
+	      << std::endl
+	      << "f.phi(2.05)" << std::endl
+	      << "-----------" << std::endl << f.phi(2.05) << std::endl;
 
   }
   
