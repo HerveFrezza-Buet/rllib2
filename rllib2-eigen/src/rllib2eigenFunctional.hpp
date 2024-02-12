@@ -144,7 +144,7 @@ namespace rl2 {
 	linear(const FEATURE& phi) : phi(phi), theta() {}
 	linear(FEATURE&& phi) : phi(std::move(phi)), theta() {}
 
-	auto operator()(const AMBIENT& arg) const {
+	double operator()(const AMBIENT& arg) const {
 	  return phi(arg).transpose() * theta;
 	}
       };
