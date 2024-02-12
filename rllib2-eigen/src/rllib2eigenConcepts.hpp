@@ -26,12 +26,7 @@ namespace rl2 {
 	{f.theta} -> std::same_as<Eigen::Vector<double, DIM>&>;
 	{cf(ca)} -> std::same_as<double>;
       };
-	
-      
-
-
       
     }
   }
 }
-
