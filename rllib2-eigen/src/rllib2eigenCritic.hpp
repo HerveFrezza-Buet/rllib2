@@ -2,6 +2,7 @@
 
 #include <rllib2.hpp>
 #include <Eigen/Dense>
+#include <utility>
 
 #include <rllib2eigenDiscreteA.hpp>
 
@@ -9,9 +10,14 @@ namespace rl2 {
   namespace eigen {
     namespace critic {
       namespace discrete_a {
-	template<typename S_FEATURE, rl2::concepts::enumerable A, typename ITERATOR, typename SENTINEL>
-	inline void lstd(S_FEATURE&& s_phi, ITERATOR begin, SENTINEL end) {
+	
+	template<rl2::concepts::enumerable A, typename S_FEATURE, typename ITERATOR, typename SENTINEL>
+	inline auto lstd(il_manque_une_politique, S_FEATURE&& s_phi, ITERATOR begin, SENTINEL end) {
+	  auto q = rl2::eigen::feature::discrete_a::make_linear<A>(std::forward<S_FEATURE>(s_phi));
+	  // To be done... renvoyer theta, comme ça on ne copie pas les features.
+	  return q;
 	}
+	
       }
     }
   }

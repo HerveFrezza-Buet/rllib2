@@ -53,9 +53,6 @@ int main(int argc, char* argv[]) {
   // We can also use pairs as arguments.
   for(s = 0; s <= 1.01; s += .05)
     std::cout << q({s, 'Z'}) << std::endl;
-  
- 
-    
 
   return 0;
 }

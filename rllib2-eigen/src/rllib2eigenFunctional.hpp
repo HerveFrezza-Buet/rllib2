@@ -19,19 +19,23 @@ namespace rl2 {
       struct Gaussian {
       private:
 	AMBIENT mu;
-	double sigma;
-	double gamma;
+	Eigen::ArrayWrapper<AMBIANT> gammas;
+
+	static AMBIENT make_sigmas(double sigma) {AMBIENT res; res.fill(sigma); return res;}
+	static auto make_gammas(AMBIANT& sigmas) {return (sigmas.square().inverse() * .5).array();}
 
       public:
 	
-	Gaussian(const AMBIENT& mu, double sigma) : mu(mu), sigma(sigma), gamma(.5/(sigma*sigma)) {}
+	Gaussian(const AMBIENT& mu, const AMBIENT& sigmas) : mu(mu), gamma(make_gammas(sigmas)) {}
+	Gaussian(const AMBIENT& mu, double sigma) : Gaussian(mu, make_sigmas(sigma)) {}
 	Gaussian() : Gaussian({}, 1.) {}
 	Gaussian(const Gaussian&) = default;
 	Gaussian& operator=(const Gaussian&) = default;
 
 	double operator()(const AMBIENT& x) const {
-	  auto delta = x - mu;
-	  return std::exp(-delta.dot(delta) * gamma);
+	  auto delta = (x - mu).square().array() * gammas;
+	  
+	  return std::exp(-delta.sum());
 	}
       };
       
