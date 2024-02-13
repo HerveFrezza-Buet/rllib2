@@ -5,6 +5,8 @@
 
 #include <fstream>
 
+// This illustrates ythe use of linear functions, i.e. f(x) = theta^T . phi(x)
+
 using Point2D = Eigen::Vector<double, 2>;
 
 int main(int argc, char* argv[]) {

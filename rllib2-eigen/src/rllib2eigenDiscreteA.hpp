@@ -8,7 +8,15 @@ namespace rl2 {
   namespace eigen {
     namespace feature {
       namespace discrete_a {
-	
+
+	/**
+	 * This feature is computed from one feature for the state,
+	 * that is used for each action, providing a vector that
+	 * contains 0, ecxept for the part related to the action for
+	 * which the state feature is used. This is not really used
+	 * (linear computes from the state feature directly), but it
+	 * can solve dimension computation at compiling time.
+	 */
 	template<typename S, rl2::concepts::enumerable A, unsigned int S_DIM, rl2::eigen::concepts::feature<S, S_DIM> S_FEATURE>
 	struct phi {
 	  constexpr static unsigned int dim = S_DIM * A::size();
@@ -52,6 +60,13 @@ namespace rl2 {
 	  }
 	  
 	};
+
+	
+	template<typename A, typename S_FEATURE>
+	auto make_linear(S_FEATURE&& phi) {return linear<typename std::remove_cvref_t<S_FEATURE>::ambient_type,
+							 A,
+							 std::remove_cvref_t<S_FEATURE>::dim,
+							 std::remove_cvref_t<S_FEATURE>>(std::forward<S_FEATURE>(phi));}
 		      
 
 
