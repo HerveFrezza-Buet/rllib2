@@ -22,8 +22,8 @@ namespace rl2 {
 
       using S = double;
       using A = rl2::enumerable::set<char, 3>;
-      using linear_q_discrete_a = feature::discrete_a::linear<S, A, 10, rbf_feature>;
-      static_assert(concepts::linear_function<linear_q_discrete_a, feature::discrete_a::phi<S, A, 10, rbf_feature>, std::pair<S, A>, 3 * 10>);
+      using linear_q_discrete_a = feature::discrete_a::linear<S, A, 11, rbf_feature>;
+      static_assert(concepts::linear_function<linear_q_discrete_a, feature::discrete_a::phi<S, A, 11, rbf_feature>, std::pair<S, A>, 3 * 11>);
     }
   }
 }
