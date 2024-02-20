@@ -9,6 +9,7 @@
 #include <rllib2MDP.hpp>
 #include <rllib2Functional.hpp>
 #include <rllib2Features.hpp>
+#include <rllib2Nuplet.hpp>
 #include <rllib2Transition.hpp>
 
 namespace rl2 {
@@ -52,7 +53,7 @@ namespace rl2 {
     // Linear approximation
     // --------------------
     
-    using theta_params = linear::params<std::vector<double>, 32>; 
+    using theta_params = nuplet::from<std::vector<double>, 32>; 
     static_assert(concepts::nuplet<theta_params>);
 
     using polynomial_feature = features::polynomial<8>;

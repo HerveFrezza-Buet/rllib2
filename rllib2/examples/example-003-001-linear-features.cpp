@@ -29,7 +29,7 @@ int main(int argc, char* argv[]) {
       1., 2., 3., 4., 5.}; // These won't be used.
 
     // Let us compute a parameter from [big_theta.begin() + 3, big_theta.begin() + 3 + 9]
-    auto theta = rl2::linear::make_params_from_iterator<phi.dim>(big_theta.begin() + 3);
+    auto theta = rl2::nuplet::from_iterator<phi.dim>(big_theta.begin() + 3);
     std::cout << rl2::linear::dot_product(theta, phi(2)) << ' '
 	      << rl2::linear::dot_product(theta, phi(3)) << ' '
 	      << rl2::linear::dot_product(theta, phi(4)) << ' '

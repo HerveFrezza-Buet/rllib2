@@ -6,6 +6,7 @@
 
 #include <gdyn.hpp>
 #include <rllib2Functional.hpp>
+#include <rllib2Nuplet.hpp>
 
 namespace rl2 {
 
@@ -36,15 +37,15 @@ namespace rl2 {
     struct polynomial {
       constexpr static std::size_t dim = DEGREE + 1;
       auto operator()(double x) const {
-	return linear::make_params_from_range<dim>(gdyn::views::pulse([x, next = 1]() mutable {auto res = next; next *= x; return res;})
-						   | std::views::take(dim));
+	return nuplet::from_range<dim>(gdyn::views::pulse([x, next = 1]() mutable {auto res = next; next *= x; return res;})
+				       | std::views::take(dim));
       }
     };
 
-    template<unsigned int NB_RBF>
+    template<unsigned int NB_RBFS>
     struct gaussian_rbf {
-      constexpr static std::size_t dim = DEGREE + 1;
-    }
+      constexpr static std::size_t dim = NB_RBFS + 1;
+    };
 
   }
 }
