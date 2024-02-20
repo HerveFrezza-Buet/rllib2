@@ -5,6 +5,8 @@
 #include <cmath>
 #include <array>
 #include <optional>
+#include <memory>
+#include <iostream>
 
 #include <gdyn.hpp>
 #include <rllib2Functional.hpp>
@@ -13,6 +15,9 @@
 namespace rl2 {
 
   namespace functional {
+
+    inline double gaussian_gamma_of_sigma(double sigma) {return .5/(sigma*sigma);}
+    
     template<typename INPUT>
     struct gaussian {};
 
@@ -21,7 +26,7 @@ namespace rl2 {
       double mu;
       double gamma;
       
-      gaussian(double mu, double sigma) : mu(mu), gamma(.5/(sigma*sigma)) {}
+      gaussian(double mu, double sigma) : mu(mu), gamma(gaussian_gamma_of_sigma(sigma)) {}
       gaussian() : gaussian(0, 1.) {}
       gaussian(const gaussian&) = default;
       gaussian& operator=(const gaussian&) = default;
@@ -31,6 +36,10 @@ namespace rl2 {
 	return std::exp(- delta * delta * gamma);
       }
     };
+
+    inline std::ostream& operator<<(std::ostream& os, const gaussian<double>& g) {
+      return  os << "gauss(mu = " << g.mu << ", gamma = " << g.gamma << ')';
+    }
   }
     
   namespace features {
@@ -49,14 +58,16 @@ namespace rl2 {
 
     template<unsigned int NB_RBFS, typename RBF>
     struct rbf {
+      constexpr static std::size_t nb_rbfs = NB_RBFS;
       constexpr static std::size_t dim = NB_RBFS + 1;
-      std::shared_ptr<std::array<RBF, NB_RBFS>> rbfs;
+      using rbfs_type = std::array<RBF, NB_RBFS>;
+      std::shared_ptr<rbfs_type> rbfs;
 
       template<typename X>
       auto operator()(X&& x) const {
-	return nuplet::from_range<dim>(gdyn::views::pulse([mu = std::forward<X>(x), it = rbfs.end(), this]() mutable {
-	  if(it == rbfs.end()) {
-	    it = rbfs.begin();
+	return nuplet::from_range<dim>(gdyn::views::pulse([mu = std::forward<X>(x), it = rbfs->end(), this]() mutable -> double {
+	  if(it == rbfs->end()) {
+	    it = rbfs->begin();
 	    return 1;
 	  }
 	  else
