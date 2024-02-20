@@ -163,7 +163,7 @@ namespace rl2 {
     auto make_params_from_iterator(ITERATOR begin) {return make_params_from_range<DIM>(std::ranges::subrange(begin, begin + DIM));}
     
     
-    template<concepts::function_parameters FUNCTION_PARAMS, concepts::function_parameters FEATURE_PARAMS>
+    template<concepts::nuplet FUNCTION_PARAMS, concepts::nuplet FEATURE_PARAMS>
     requires (FUNCTION_PARAMS::dim == FEATURE_PARAMS::dim)
     double dot_product(const FUNCTION_PARAMS& thetas, const FEATURE_PARAMS& phis) {
       double res = 0;
@@ -173,7 +173,7 @@ namespace rl2 {
     }
     
     namespace discrete_a {
-      template<concepts::function_parameters PARAMS, typename S, concepts::enumerable A, concepts::feature<S> S_FEATURE>
+      template<concepts::nuplet PARAMS, typename S, concepts::enumerable A, concepts::feature<S> S_FEATURE>
       struct q {
 	using params_type = PARAMS;
 	using state_type = S;

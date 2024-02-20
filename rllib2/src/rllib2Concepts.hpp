@@ -170,10 +170,10 @@ namespace rl2 {
     };
 
     /**
-     * @short The parameters for parametrized function. It is a range whose size is known at compiling time.
+     * @short This is a range whose size is known at compiling time.
      */
     template<typename PARAMS>
-    concept function_parameters =
+    concept nuplet =
       std::ranges::input_range<PARAMS>
       && requires () {
       {PARAMS::dim} -> std::convertible_to<const std::size_t>;

@@ -8,6 +8,7 @@
  * @example example-001-003-sarsa-qlearning.cpp
  * @example example-001-004-enumerable-systems.cpp
  * @example example-002-001-cartpole-discrete.cpp
+ * @example example-003-001-linear-features.cpp
  */
 
 #include <rllib2Checkings.hpp>
@@ -17,6 +18,7 @@
 #include <rllib2Functional.hpp>
 #include <rllib2Iterators.hpp>
 #include <rllib2MDP.hpp>
+#include <rllib2Nuplet.hpp>
 #include <rllib2Ranges.hpp>
 #include <rllib2Concepts.hpp>
 #include <rllib2Transition.hpp>

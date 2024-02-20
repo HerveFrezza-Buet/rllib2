@@ -53,7 +53,7 @@ namespace rl2 {
     // --------------------
     
     using theta_params = linear::params<std::vector<double>, 32>; 
-    static_assert(concepts::function_parameters<theta_params>);
+    static_assert(concepts::nuplet<theta_params>);
 
     using polynomial_feature = features::polynomial<8>;
     static_assert(concepts::feature<polynomial_feature, double>);
