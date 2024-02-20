@@ -189,6 +189,6 @@ namespace rl2 {
       {cf(cx)} -> std::ranges::input_range;
       {cf.dim} -> std::convertible_to<const std::size_t>;
     };
-      
+    
   }
 }
