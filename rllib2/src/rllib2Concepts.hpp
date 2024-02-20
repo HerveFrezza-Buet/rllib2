@@ -168,6 +168,24 @@ namespace rl2 {
       && requires(const OP cop, const Q cq, double gamma, const TRANS ct) {
       {cop(cq, gamma, ct)} -> std::same_as<double>;
     };
+
+    /**
+     * @short The parameters for parametrized function.
+     */
+    template<typename PARAMS>
+    concept function_parameters =
+      std::ranges::input_range<PARAMS>;
+
+    /**
+     * @short This is the feature part (phi in f(x) = theta.T x phi(s)) of a linearly parametrized function.
+     */
+    template<typename FEATURE, typename PARAMS, typename X>
+    concept feature = 
+      std::copy_constructible<FEATURE>
+      && function_parameters<PARAMS>
+      && requires(const FEATURE cf, const X cx) {
+      {cf(cx)} -> std::same_as<PARAMS>;
+    };
       
   }
 }

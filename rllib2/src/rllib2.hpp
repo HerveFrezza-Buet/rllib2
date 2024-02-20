@@ -13,6 +13,7 @@
 #include <rllib2Checkings.hpp>
 #include <rllib2Critic.hpp>
 #include <rllib2Enumerable.hpp>
+#include <rllib2Features.hpp>
 #include <rllib2Functional.hpp>
 #include <rllib2Iterators.hpp>
 #include <rllib2MDP.hpp>

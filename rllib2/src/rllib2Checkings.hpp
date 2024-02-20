@@ -48,6 +48,15 @@ namespace rl2 {
     using critic = tabular::two_args_function<enumerable_char, enumerable_int, params_it_type>;
     static_assert(concepts::two_args_function<critic>);
 
+    // Linear approximation
+    // --------------------
+    
+    using theta_params = std::vector<double>;
+    static_assert(concepts::function_parameters<theta_params>);
+
+    // using q_parametrized = linear::discrete_a::q<theta_params, double, enumerable_int, state_feature>;
+    
+    
     // To do : write bellman operator concept checking
   }
 }

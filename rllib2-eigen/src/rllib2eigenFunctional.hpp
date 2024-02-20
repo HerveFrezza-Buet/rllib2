@@ -8,6 +8,7 @@
 #include <initializer_list>
 #include <Eigen/Dense>
 #include <rllib2eigenConcepts.hpp>
+#include <memory>
 
 
 namespace rl2 {
@@ -16,42 +17,44 @@ namespace rl2 {
     namespace function {
 
       template<typename AMBIENT>
-      struct Gaussian {
-      private:
+      struct gaussian {
+	using gammas_type     = std::remove_cvref_t<Eigen::ArrayWrapper<AMBIENT>>;
+	using gammas_ptr_type = std::shared_ptr<gammas_type>;
+	
 	AMBIENT mu;
-	Eigen::ArrayWrapper<AMBIANT> gammas;
-
-	static AMBIENT make_sigmas(double sigma) {AMBIENT res; res.fill(sigma); return res;}
-	static auto make_gammas(AMBIANT& sigmas) {return (sigmas.square().inverse() * .5).array();}
+	gammas_ptr_type gammas_ptr;
 
       public:
-	
-	Gaussian(const AMBIENT& mu, const AMBIENT& sigmas) : mu(mu), gamma(make_gammas(sigmas)) {}
-	Gaussian(const AMBIENT& mu, double sigma) : Gaussian(mu, make_sigmas(sigma)) {}
-	Gaussian() : Gaussian({}, 1.) {}
-	Gaussian(const Gaussian&) = default;
-	Gaussian& operator=(const Gaussian&) = default;
+
+	gaussian(const AMBIENT& mu, gammas_ptr_type gammas_ptr) : mu(mu), gammas_ptr(gammas_ptr) {}
+	gaussian() = default;
+	gaussian(const gaussian&) = default;
+	gaussian& operator=(const gaussian&) = default;
 
 	double operator()(const AMBIENT& x) const {
-	  auto delta = (x - mu).square().array() * gammas;
+	  auto delta = (x - mu).array().square() * (*gammas_ptr);
 	  
 	  return std::exp(-delta.sum());
 	}
       };
+
+      template<typename AMBIENT>
+      auto gammas(const AMBIENT& sigmas) {
+	typename gaussian<AMBIENT>::gammas_type x {sigmas.array().inverse() * .5};
+	return std::make_shared<typename gaussian<AMBIENT>::gammas_type>(sigmas.array().inverse() * .5);
+      }
+	
       
       template<>
-      struct Gaussian<double> {
-      private:
-	double mu;
-	double sigma;
-	double gamma;
-
-      public:
+      struct gaussian<double> {
 	
-	Gaussian(const double& mu, double sigma) : mu(mu), sigma(sigma), gamma(.5/(sigma*sigma)) {}
-	Gaussian() : Gaussian(0, 1.) {}
-	Gaussian(const Gaussian&) = default;
-	Gaussian& operator=(const Gaussian&) = default;
+	double mu;
+	double gamma;
+	
+	gaussian(double mu, double sigma) : mu(mu), gamma(.5/(sigma*sigma)) {}
+	gaussian() : gaussian(0, 1.) {}
+	gaussian(const gaussian&) = default;
+	gaussian& operator=(const gaussian&) = default;
 
 	
 
@@ -61,8 +64,6 @@ namespace rl2 {
 	}
       };
 
-      template<typename AMBIENT>
-      auto gaussian(const AMBIENT& mu, double sigma) {return Gaussian(mu, sigma);}
     }
 
     namespace feature {
@@ -108,19 +109,16 @@ namespace rl2 {
       struct gaussian_rbf {
 	constexpr static unsigned int dim = NB_RBF + 1;
 	using ambient_type = AMBIENT;
-	using rbf_type = function::Gaussian<AMBIENT>;
+	using rbf_type = function::gaussian<AMBIENT>;
 	using return_type = Eigen::Vector<double, dim>;
 	
-	std::vector<function::Gaussian<AMBIENT>> rbfs;
+	std::array<function::gaussian<AMBIENT>, NB_RBF> rbfs;
 	
 	gaussian_rbf() = default;
 	gaussian_rbf(const gaussian_rbf&) = default;
 	gaussian_rbf& operator=(const gaussian_rbf&) = default;
 	gaussian_rbf(gaussian_rbf&&) = default;
 	gaussian_rbf& operator=(gaussian_rbf&&) = default;
-
-	// I would have preferred something like this.. but I do not know how to force size checking at compiling time.
-	// gaussian_rbf(const std::initializer_list<rbf_type>& args) : rbfs(args) {}
 	
 	gaussian_rbf(const std::initializer_list<rbf_type>& args) : rbfs(args) {}
 	

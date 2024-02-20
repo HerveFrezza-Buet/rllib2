@@ -5,7 +5,7 @@
 
 #include <fstream>
 
-// This illustrates ythe use of linear functions, i.e. f(x) = theta^T . phi(x)
+// This illustrates the use of linear functions, i.e. f(x) = theta^T . phi(x)
 
 using Point2D = Eigen::Vector<double, 2>;
 
@@ -34,19 +34,27 @@ int main(int argc, char* argv[]) {
     // NB: size_of(phi) = 0, so make_linear(phi) makes no copy. This
     // will be different with gaussian features.
   }
-
+  
   {
     std::cout << std::endl << std::string(10, '-') << std::endl << std::endl;
 
-    Point2D x {0, 0};
+    Point2D mu     {0., 0.};
+    Point2D sigmas {1., 1.}; // sigma_x and sigma_y
+
+    // We need to build the gammas (i.e. 1/(2*sigma*sigma)). It is a
+    // smart pointer, so that the can be computed once and shared with
+    // all gaussians.
+    auto gammas = rl2::eigen::function::gammas(sigmas);
     
-    auto normal = rl2::eigen::function::gaussian(x, 1.0);
+    rl2::eigen::function::gaussian<Point2D> normal = rl2::eigen::function::gaussian(mu, gammas);
+
+    // 1.0 is sigma, the standard deviation.
     // There is type inference here, the Gaussian works for 2D points.
 
     std::cout << normal({0., 0.}) << ", " << normal({0.1, 0.1}) << std::endl;
   }
 
-  
+  /*  
   {
     std::cout << std::endl << std::string(10, '-') << std::endl << std::endl;
 
@@ -94,7 +102,9 @@ int main(int argc, char* argv[]) {
     Point2D omega1 {-.5, -.2};
     Point2D omega2 {  0,   1};
     
-    // Let us do the same with 2D Gaussians.
+    // Let us do the same with 2D Gaussians. We have to define one
+    // sigma for each dimention.
+    bla bla
     rl2::eigen::feature::gaussian_rbf<Point2D, 2> phi {{omega1, .2},  // mean1, sigma1
 						       {omega2, .5}}; // mean2, sigma2
     auto f = rl2::eigen::function::make_linear(std::move(phi)); 
@@ -118,6 +128,7 @@ int main(int argc, char* argv[]) {
   }
 
 
+  */
   
   return 0;
 }

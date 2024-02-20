@@ -144,5 +144,29 @@ namespace rl2 {
     template<concepts::two_args_function TWO_ARGS_FUNCTION, typename COMP=std::less<typename TWO_ARGS_FUNCTION::result_type>>
     auto greedy_ify(TWO_ARGS_FUNCTION taf) {return argmax_ify<TWO_ARGS_FUNCTION, COMP>(taf);}
   }
+
+  namespace linear {
+    
+    template<std::input_iterator THETA_IT, concepts::function_parameters FEATURE_PARAMS>
+    double dot_product(THETA_IT t, const FEATURE_PARAMS& phi) {
+      double res = 0;
+      for(auto p : phi) res += *(t++) * p;
+      return res;
+    }
+    
+    namespace discrete_a {
+      template<concepts::function_parameters PARAMS, typename S, concepts::enumerable A, concepts::feature<PARAMS, S> S_FEATURE>
+      struct q {
+	using params_type = PARAMS;
+	using state_type = S;
+	using action_type = A;
+	using state_feature_type = S_FEATURE;
+
+	std::shared_ptr<params_type> params;
+	std::shared_ptr<state_feature_type> s_feature;
+      
+      };
+    }
+  }
   
 }

@@ -220,7 +220,7 @@ void test_discrete(RANDOM& gen) {
 
   unsigned int step = 0;
   for(auto cmd
-        : gdyn::ranges::controller(sys, rnd_policy)
+        : gdyn::views::controller(sys, rnd_policy)
         | std::views::take(50)) {
     auto o = *sys;
     auto d_o = static_cast<discrete_cartpole::observation_type::base_type>(*dsys);
@@ -262,7 +262,7 @@ void test_discrete(RANDOM& gen) {
   sys = continuous_cartpole::state_type(0,0,0,0);
   step = 0;
   for(auto [o, a, r, next_o, next_a]
-        : gdyn::ranges::controller(sys, rnd_policy)
+        : gdyn::views::controller(sys, rnd_policy)
         | gdyn::views::orbit(sys)
         | rl2::views::sarsa
         | std::views::take(50)) {
@@ -282,7 +282,7 @@ void test_discrete(RANDOM& gen) {
   sys = continuous_cartpole::state_type(0,0,0,0);
   step = 0;
   for(auto [o, a, r, next_o, next_a]
-        : gdyn::ranges::controller(dsys, rnd_policy)
+        : gdyn::views::controller(dsys, rnd_policy)
         | gdyn::views::orbit(dsys)
         | rl2::views::sarsa
         | std::views::take(50)) {
@@ -346,7 +346,7 @@ void test_mdp(RANDOM& gen, bool verbose=false) {
     std::cout << "  epoch #" << epoch << std::endl;
     continuous_mdp = random_state(); // We implement exploring starts.
     for(auto transition
-	  : gdyn::ranges::controller(discrete_mdp, epsilon_greedy_policy)
+	  : gdyn::views::controller(discrete_mdp, epsilon_greedy_policy)
 	  | gdyn::views::orbit(discrete_mdp)
 	  | rl2::views::sarsa
 	  | std::views::take(learn_params.epoch_length)) {
