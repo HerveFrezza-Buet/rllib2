@@ -8,6 +8,7 @@
 #include <rllib2Enumerable.hpp>
 #include <rllib2MDP.hpp>
 #include <rllib2Functional.hpp>
+#include <rllib2Features.hpp>
 #include <rllib2Transition.hpp>
 
 namespace rl2 {
@@ -51,8 +52,11 @@ namespace rl2 {
     // Linear approximation
     // --------------------
     
-    using theta_params = std::vector<double>;
+    using theta_params = linear::params<std::vector<double>, 32>; 
     static_assert(concepts::function_parameters<theta_params>);
+
+    using polynomial_feature = features::polynomial<8>;
+    static_assert(concepts::feature<polynomial_feature, double>);
 
     // using q_parametrized = linear::discrete_a::q<theta_params, double, enumerable_int, state_feature>;
     

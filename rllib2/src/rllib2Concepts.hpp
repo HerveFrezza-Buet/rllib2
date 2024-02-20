@@ -170,21 +170,24 @@ namespace rl2 {
     };
 
     /**
-     * @short The parameters for parametrized function.
+     * @short The parameters for parametrized function. It is a range whose size is known at compiling time.
      */
     template<typename PARAMS>
     concept function_parameters =
-      std::ranges::input_range<PARAMS>;
+      std::ranges::input_range<PARAMS>
+      && requires () {
+      {PARAMS::dim} -> std::convertible_to<const std::size_t>;
+    };
 
     /**
      * @short This is the feature part (phi in f(x) = theta.T x phi(s)) of a linearly parametrized function.
      */
-    template<typename FEATURE, typename PARAMS, typename X>
-    concept feature = 
+    template<typename FEATURE, typename X>
+    concept feature =
       std::copy_constructible<FEATURE>
-      && function_parameters<PARAMS>
       && requires(const FEATURE cf, const X cx) {
-      {cf(cx)} -> std::same_as<PARAMS>;
+      {cf(cx)} -> std::ranges::input_range;
+      {cf.dim} -> std::convertible_to<const std::size_t>;
     };
       
   }

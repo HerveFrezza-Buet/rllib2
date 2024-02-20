@@ -146,16 +146,34 @@ namespace rl2 {
   }
 
   namespace linear {
+
+    /**
+     * @short This wraps a range type so that it provides its size at compilation time.
+     */
+    template<typename RANGE, std::size_t DIM>
+    struct params : public RANGE {
+      template <typename... Args> params(Args&&... args) : RANGE(std::forward<Args>(args)...) {}
+      constexpr static std::size_t dim = DIM;
+    };
+
+    template<std::size_t DIM, typename RANGE>
+    auto make_params_from_range(RANGE&& source) {return params<RANGE, DIM>(std::forward<RANGE>(source));}
     
-    template<std::input_iterator THETA_IT, concepts::function_parameters FEATURE_PARAMS>
-    double dot_product(THETA_IT t, const FEATURE_PARAMS& phi) {
+    template<std::size_t DIM, std::random_access_iterator ITERATOR>
+    auto make_params_from_iterator(ITERATOR begin) {return make_params_from_range<DIM>(std::ranges::subrange(begin, begin + DIM));}
+    
+    
+    template<concepts::function_parameters FUNCTION_PARAMS, concepts::function_parameters FEATURE_PARAMS>
+    requires (FUNCTION_PARAMS::dim == FEATURE_PARAMS::dim)
+    double dot_product(const FUNCTION_PARAMS& thetas, const FEATURE_PARAMS& phis) {
       double res = 0;
-      for(auto p : phi) res += *(t++) * p;
+      auto theta_ptr = thetas.begin();
+      for(auto phi : phis) res += *(theta_ptr++) * phi;
       return res;
     }
     
     namespace discrete_a {
-      template<concepts::function_parameters PARAMS, typename S, concepts::enumerable A, concepts::feature<PARAMS, S> S_FEATURE>
+      template<concepts::function_parameters PARAMS, typename S, concepts::enumerable A, concepts::feature<S> S_FEATURE>
       struct q {
 	using params_type = PARAMS;
 	using state_type = S;
