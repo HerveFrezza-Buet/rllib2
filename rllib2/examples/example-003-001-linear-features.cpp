@@ -122,6 +122,7 @@ int main(int argc, char* argv[]) {
     rbf_feature phi {};
     phi.rbfs = std::make_shared<rbf_feature::rbfs_type>();
     auto out_it = phi.rbfs->begin();
+    // We span the X x V space
     for(std::size_t vid = 0; vid < nb_gauss_v; ++vid) {
       auto mu_v = rl2::enumerable::utils::digitize::to_value(vid, vmin, vmax, nb_gauss_v);
       for(std::size_t xid = 0; xid < nb_gauss_x; ++xid) {
