@@ -7,7 +7,7 @@ namespace rl2 {
     
     /**
      * @short This wraps a range type so that it provides its size at compilation time.
-     * See specializations.
+     * See specializations. Nuplets are used to check dimensions at compiling.
      */
 
     template<std::ranges::input_range T, std::size_t DIM>
@@ -18,7 +18,6 @@ namespace rl2 {
     
     template<typename T, std::size_t DIM>
     struct from : public std::array<T, DIM> {
-      template <typename... Args> from(Args&&... args) : std::array<T, DIM>(std::forward<Args>(args)...) {}
       constexpr static std::size_t dim = DIM;
     };
     

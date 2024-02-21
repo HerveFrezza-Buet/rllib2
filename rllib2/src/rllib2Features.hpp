@@ -22,7 +22,7 @@ namespace rl2 {
     template<concepts::nuplet X>
     X gaussian_gammas_of_sigmas(const X& sigmas) {
       X gammas;
-      auto it = gammas.begin();
+      auto it = sigmas.begin();
       for(auto& g : gammas) g = gaussian_gamma_of_sigma(*it++);
       return gammas;
     }
@@ -40,7 +40,7 @@ namespace rl2 {
 	auto mu_it = mu.begin();
 	auto gamma_it = gammas_ptr->begin();
 	for(auto x_comp : x) {
-	  auto delta = *(mu_it++) - x;
+	  auto delta = *(mu_it++) - x_comp;
 	  sum += *(gamma_it++) * delta * delta;
 	}
 	return std::exp(-sum);
@@ -83,7 +83,7 @@ namespace rl2 {
     };
 
     template<unsigned int NB_RBFS, typename RBF>
-    struct rbf {
+    struct rbfs {
       constexpr static std::size_t nb_rbfs = NB_RBFS;
       constexpr static std::size_t dim = NB_RBFS + 1;
       using rbfs_type = std::array<RBF, NB_RBFS>;

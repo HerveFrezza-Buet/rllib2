@@ -43,7 +43,7 @@ int main(int argc, char* argv[]) {
   {
     std::cout << std::endl << std::string(10, '-') << std::endl << std::endl;
 
-    using rbf_feature = rl2::features::rbf<3, rl2::functional::gaussian<double>>;
+    using rbf_feature = rl2::features::rbfs<3, rl2::functional::gaussian<double>>;
     
     // Let us use a RBF with 3 Gaussians. The input is a scalar.
     rbf_feature phi {};
@@ -103,12 +103,45 @@ int main(int argc, char* argv[]) {
     // scalar inputs. For example, let us suppose that we want to deal
     // with a problem where we have to represent the scalar position x
     // and scalar speed v of some 1D stuff (e.g mountain car).
-    auto [xmin, xmax, nb_gauss_x, sigma_x] = std::make_tuple(0. , 10., 3, 3.00);
-    auto [vmin, vmax, nb_gauss_v, sigma_v] = std::make_tuple(-.5,  3., 5,  .05);
+    constexpr unsigned int nb_gauss_x = 3;
+    constexpr unsigned int nb_gauss_v = 5;
+    constexpr unsigned int nb_rbfs    = nb_gauss_x * nb_gauss_v;
+    auto [xmin, xmax, sigma_x] = std::make_tuple(-1. , 10., 3.0);
+    auto [vmin, vmax, sigma_v] = std::make_tuple( -.5,  3.,  .2);
 
-    // Let us define our type, based on an array for storing x and v.
-    using pos_speed = rl2::nuplet::from<double, 2>;   // This is X x V
-    using rbf = rl2::functional::gaussian<pos_speed>; // This is our RBF functions.
+    // Let us define our types, based on an std::array behind the scene for storing x and v.
+    using pos_speed = rl2::nuplet::from<double, 2>;        // This is X x V, an std::array is used.
+    using rbf = rl2::functional::gaussian<pos_speed>;      // This is our RBF functions type.
+    using rbf_feature = rl2::features::rbfs<nb_rbfs, rbf>; // This is our feature type.
+    
+    pos_speed sigmas {sigma_x, sigma_v}; // This is our std_dev in each component.
+    // This will be used (and thus shared) by all the rbf functions. We compute this once, here.
+    auto gammas_ptr = std::make_shared<pos_speed>(rl2::functional::gaussian_gammas_of_sigmas(sigmas));
+
+    // This is as previously
+    rbf_feature phi {};
+    phi.rbfs = std::make_shared<rbf_feature::rbfs_type>();
+    auto out_it = phi.rbfs->begin();
+    for(std::size_t vid = 0; vid < nb_gauss_v; ++vid) {
+      auto mu_v = rl2::enumerable::utils::digitize::to_value(vid, vmin, vmax, nb_gauss_v);
+      for(std::size_t xid = 0; xid < nb_gauss_x; ++xid) {
+	auto mu_x = rl2::enumerable::utils::digitize::to_value(xid, xmin, xmax, nb_gauss_x);
+	*(out_it++) = rbf {{mu_x, mu_v}, gammas_ptr}; // We set each gaussian rbf
+      }
+    }
+
+    std::vector<pos_speed> points {{xmin, vmin}, {0., 0.}, {3., 0.}, {3., 1.}, {3., 2.}, {xmax, vmax}};
+
+    for(const auto& point : points) {
+      std::cout << "phi(" << point[0] << ", " << point[1] << ") = [";
+      auto values = phi(point);
+      auto value_it = values.begin();
+      std::cout << ' ' << std::setw(4) << (unsigned int)(1000 * *(value_it++) + .5) << std::endl; // The offset
+      for(std::size_t vid = 0; vid < nb_gauss_v; ++vid, std::cout << std::endl)
+	for(std::size_t xid = 0; xid < nb_gauss_x; ++xid) 
+	  std::cout << ' ' << std::setw(4) << (unsigned int)(1000 * *(value_it++) + .5);
+      std::cout << ']' << std::endl << std::endl;
+    }
     
   }
 
