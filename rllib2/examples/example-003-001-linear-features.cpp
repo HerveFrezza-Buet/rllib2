@@ -113,6 +113,8 @@ int main(int argc, char* argv[]) {
     using pos_speed = rl2::nuplet::from<double, 2>;        // This is X x V, an std::array is used.
     using rbf = rl2::functional::gaussian<pos_speed>;      // This is our RBF functions type.
     using rbf_feature = rl2::features::rbfs<nb_rbfs, rbf>; // This is our feature type.
+    // Nota: nb_rbfs is used as a template parameter, this is why
+    // previous constexpr definitions are mandatory.
     
     pos_speed sigmas {sigma_x, sigma_v}; // This is our std_dev in each component.
     // This will be used (and thus shared) by all the rbf functions. We compute this once, here.
