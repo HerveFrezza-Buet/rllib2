@@ -2,6 +2,7 @@
 #include <concepts>
 #include <cstddef>
 #include <tuple>
+#include <array>
 
 namespace rl2 {
   namespace concepts {
@@ -172,11 +173,11 @@ namespace rl2 {
     /**
      * @short This is a range whose size is known at compiling time.
      */
-    template<typename PARAMS>
+    template<typename X>
     concept nuplet =
-      std::ranges::input_range<PARAMS>
+      std::ranges::input_range<X>
       && requires () {
-      {PARAMS::dim} -> std::convertible_to<const std::size_t>;
+      {X::dim} -> std::convertible_to<const std::size_t>;
     };
 
     /**
@@ -189,6 +190,14 @@ namespace rl2 {
       {cf(cx)} -> std::ranges::input_range;
       {cf.dim} -> std::convertible_to<const std::size_t>;
     };
+
+    // /**
+    //  * @short A concept for std::array checking.
+    //  */
+    // template <typename T>                  struct is_std_array : std::false_type { };
+    // template <typename T, std::size_t DIM> struct is_std_array<std::array<T, DIM>> : std::true_type { };
+    // template <typename T> concept std_array = is_std_array<T>::value;
+
     
   }
 }

@@ -1,20 +1,38 @@
 #pragma once
+#include <array>
 
+#include <rllib2Concepts.hpp>
 namespace rl2 {
   namespace nuplet {
+    
     /**
      * @short This wraps a range type so that it provides its size at compilation time.
+     * See specializations.
      */
-    template<typename RANGE, std::size_t DIM>
-    struct from : public RANGE {
-      template <typename... Args> from(Args&&... args) : RANGE(std::forward<Args>(args)...) {}
+
+    template<std::ranges::input_range T, std::size_t DIM>
+    struct from_range : public T {
+      template <typename... Args> from_range(Args&&... args) : T(std::forward<Args>(args)...) {}
       constexpr static std::size_t dim = DIM;
     };
-
-    template<std::size_t DIM, typename RANGE>
-    auto from_range(RANGE&& source) {return from<RANGE, DIM>(std::forward<RANGE>(source));}
     
+    template<typename T, std::size_t DIM>
+    struct from : public std::array<T, DIM> {
+      template <typename... Args> from(Args&&... args) : std::array<T, DIM>(std::forward<Args>(args)...) {}
+      constexpr static std::size_t dim = DIM;
+    };
+    
+
+    /**
+     * @short This builds a nuplet instance from a range.
+     */
+    template<std::size_t DIM, typename T>
+    auto make_from_range(T&& source) {return from_range<T, DIM>(std::forward<T>(source));}
+    
+    /**
+     * @short This builds a nuplet instance from an iterator and a size.
+     */
     template<std::size_t DIM, std::random_access_iterator ITERATOR>
-    auto from_iterator(ITERATOR begin) {return from_range<DIM>(std::ranges::subrange(begin, begin + DIM));}
+    auto make_from_iterator(ITERATOR begin) {return make_from_range<DIM>(std::ranges::subrange(begin, begin + DIM));}
   }
 }

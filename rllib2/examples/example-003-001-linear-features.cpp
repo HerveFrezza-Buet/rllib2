@@ -4,6 +4,7 @@
 #include <vector>
 #include <memory>
 #include <iomanip>
+#include <tuple>
 
 #include <rllib2.hpp>
 
@@ -31,7 +32,7 @@ int main(int argc, char* argv[]) {
       1., 2., 3., 4., 5.}; // These won't be used.
 
     // Let us compute a parameter from [big_theta.begin() + 3, big_theta.begin() + 3 + 9]
-    auto theta = rl2::nuplet::from_iterator<phi.dim>(big_theta.begin() + 3);
+    auto theta = rl2::nuplet::make_from_iterator<phi.dim>(big_theta.begin() + 3);
     std::cout << rl2::linear::dot_product(theta, phi(2)) << ' '
 	      << rl2::linear::dot_product(theta, phi(3)) << ' '
 	      << rl2::linear::dot_product(theta, phi(4)) << ' '
@@ -43,6 +44,7 @@ int main(int argc, char* argv[]) {
     std::cout << std::endl << std::string(10, '-') << std::endl << std::endl;
 
     using rbf_feature = rl2::features::rbf<3, rl2::functional::gaussian<double>>;
+    
     // Let us use a RBF with 3 Gaussians. The input is a scalar.
     rbf_feature phi {};
 
@@ -73,7 +75,9 @@ int main(int argc, char* argv[]) {
     rbf_feature chi;
     chi.rbfs = std::make_shared<rbf_feature::rbfs_type>(*(phi.rbfs));
 
-    // Let us check this
+    // Let us check this... both phi and psi are identical, and have
+    // been modified from the initial phi. The chi function is
+    // identical to the initial phi, even after the change.
     auto& rbfs = *(phi.rbfs);
     rbfs[0].mu = .2;
     rbfs[2].mu = .6;
@@ -91,6 +95,23 @@ int main(int argc, char* argv[]) {
       std::cout << std::endl;
     }
   }
+
+  {
+    std::cout << std::endl << std::string(10, '-') << std::endl << std::endl;
+
+    // Let us do the same as previously, with vectors rather that
+    // scalar inputs. For example, let us suppose that we want to deal
+    // with a problem where we have to represent the scalar position x
+    // and scalar speed v of some 1D stuff (e.g mountain car).
+    auto [xmin, xmax, nb_gauss_x, sigma_x] = std::make_tuple(0. , 10., 3, 3.00);
+    auto [vmin, vmax, nb_gauss_v, sigma_v] = std::make_tuple(-.5,  3., 5,  .05);
+
+    // Let us define our type, based on an array for storing x and v.
+    using pos_speed = rl2::nuplet::from<double, 2>;   // This is X x V
+    using rbf = rl2::functional::gaussian<pos_speed>; // This is our RBF functions.
+    
+  }
+
 
   return 0;
 }

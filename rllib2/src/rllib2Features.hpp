@@ -11,6 +11,7 @@
 #include <gdyn.hpp>
 #include <rllib2Functional.hpp>
 #include <rllib2Nuplet.hpp>
+#include <rllib2Concepts.hpp>
 
 namespace rl2 {
 
@@ -18,8 +19,33 @@ namespace rl2 {
 
     inline double gaussian_gamma_of_sigma(double sigma) {return .5/(sigma*sigma);}
     
-    template<typename INPUT>
-    struct gaussian {};
+    template<concepts::nuplet X>
+    X gaussian_gammas_of_sigmas(const X& sigmas) {
+      X gammas;
+      auto it = gammas.begin();
+      for(auto& g : gammas) g = gaussian_gamma_of_sigma(*it++);
+      return gammas;
+    }
+    
+    template<typename X>
+    struct gaussian;
+    
+    template<concepts::nuplet X>
+    struct gaussian<X> {
+      X mu;
+      std::shared_ptr<X> gammas_ptr;
+      
+      double operator()(const X& x) const {
+	double sum = 0;
+	auto mu_it = mu.begin();
+	auto gamma_it = gammas_ptr->begin();
+	for(auto x_comp : x) {
+	  auto delta = *(mu_it++) - x;
+	  sum += *(gamma_it++) * delta * delta;
+	}
+	return std::exp(-sum);
+      }
+    };
 
     template<>
     struct gaussian<double> {
@@ -48,7 +74,7 @@ namespace rl2 {
     struct polynomial {
       constexpr static std::size_t dim = DEGREE + 1;
       auto operator()(double x) const {
-	return nuplet::from_range<dim>(gdyn::views::pulse([x, res = std::optional<double>()]() mutable {
+	return nuplet::make_from_range<dim>(gdyn::views::pulse([x, res = std::optional<double>()]() mutable {
 	  if(res) res = *res * x;
 	  else    res = 1;
 	  return *res;})
@@ -65,7 +91,7 @@ namespace rl2 {
 
       template<typename X>
       auto operator()(X&& x) const {
-	return nuplet::from_range<dim>(gdyn::views::pulse([mu = std::forward<X>(x), it = rbfs->end(), this]() mutable -> double {
+	return nuplet::make_from_range<dim>(gdyn::views::pulse([mu = std::forward<X>(x), it = rbfs->end(), this]() mutable -> double {
 	  if(it == rbfs->end()) {
 	    it = rbfs->begin();
 	    return 1;
