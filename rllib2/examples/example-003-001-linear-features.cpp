@@ -33,10 +33,10 @@ int main(int argc, char* argv[]) {
 
     // Let us compute a parameter from [big_theta.begin() + 3, big_theta.begin() + 3 + 9]
     auto theta = rl2::nuplet::make_from_iterator<phi.dim>(big_theta.begin() + 3);
-    std::cout << rl2::linear::dot_product(theta, phi(2)) << ' '
-	      << rl2::linear::dot_product(theta, phi(3)) << ' '
-	      << rl2::linear::dot_product(theta, phi(4)) << ' '
-	      << rl2::linear::dot_product(theta, phi(5)) << std::endl;
+    std::cout << rl2::nuplet::dot_product(theta, phi(2)) << ' '
+	      << rl2::nuplet::dot_product(theta, phi(3)) << ' '
+	      << rl2::nuplet::dot_product(theta, phi(4)) << ' '
+	      << rl2::nuplet::dot_product(theta, phi(5)) << std::endl;
       
   }
 

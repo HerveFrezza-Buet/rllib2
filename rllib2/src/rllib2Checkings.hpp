@@ -53,13 +53,15 @@ namespace rl2 {
     // Linear approximation
     // --------------------
     
-    using theta_params = nuplet::from<std::vector<double>, 32>; 
-    static_assert(concepts::nuplet<theta_params>);
 
     using polynomial_feature = features::polynomial<8>;
     static_assert(concepts::feature<polynomial_feature, double>);
+    
+    using theta_params = nuplet::from<std::vector<double>, polynomial_feature::dim * enumerable_int::size()>; 
+    static_assert(concepts::nuplet<theta_params>);
 
-    // using q_parametrized = linear::discrete_a::q<theta_params, double, enumerable_int, state_feature>;
+    using q_parametrized = linear::discrete_a::q<theta_params, double, enumerable_int, polynomial_feature>;
+    static_assert(concepts::discrete_a::linear_qfunction<q_parametrized>);
     
     
     // To do : write bellman operator concept checking

@@ -198,6 +198,19 @@ namespace rl2 {
     // template <typename T, std::size_t DIM> struct is_std_array<std::array<T, DIM>> : std::true_type { };
     // template <typename T> concept std_array = is_std_array<T>::value;
 
-    
+    namespace discrete_a {
+      
+      template<typename FUNCTION>
+      concept linear_qfunction = requires() {
+	typename FUNCTION::state_type;
+	typename FUNCTION::params_type;
+	typename FUNCTION::action_type;
+	typename FUNCTION::state_feature_type;
+      }	&&
+      nuplet<typename FUNCTION::params_type> &&
+      enumerable<typename FUNCTION::action_type> &&
+      feature<typename FUNCTION::state_feature_type, typename FUNCTION::state_type>;
+      
+    }
   }
 }

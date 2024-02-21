@@ -88,7 +88,7 @@ namespace rl2 {
       constexpr static std::size_t dim = NB_RBFS + 1;
       using rbfs_type = std::array<RBF, NB_RBFS>;
       std::shared_ptr<rbfs_type> rbfs;
-
+      
       template<typename X>
       auto operator()(X&& x) const {
 	return nuplet::make_from_range<dim>(gdyn::views::pulse([mu = std::forward<X>(x), it = rbfs->end(), this]() mutable -> double {

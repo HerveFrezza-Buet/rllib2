@@ -4,6 +4,15 @@
 #include <rllib2Concepts.hpp>
 namespace rl2 {
   namespace nuplet {
+
+    template<concepts::nuplet A, concepts::nuplet B>
+    requires (A::dim == B::dim)
+    double dot_product(const A& as, const B& bs) {
+      double res = 0;
+      auto a_ptr = as.begin();
+      for(auto b : bs) res += *(a_ptr++) * b;
+      return res;
+    }
     
     /**
      * @short This wraps a range type so that it provides its size at compilation time.

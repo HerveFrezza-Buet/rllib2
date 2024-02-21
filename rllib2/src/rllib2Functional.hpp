@@ -8,6 +8,7 @@
 #include <memory>
 #include <type_traits>
 #include <utility>
+#include <type_traits>
 
 #include <rllib2Concepts.hpp>
 #include <rllib2Enumerable.hpp>
@@ -147,27 +148,37 @@ namespace rl2 {
   }
 
   namespace linear {
-
-    template<concepts::nuplet FUNCTION_PARAMS, concepts::nuplet FEATURE_PARAMS>
-    requires (FUNCTION_PARAMS::dim == FEATURE_PARAMS::dim)
-    double dot_product(const FUNCTION_PARAMS& thetas, const FEATURE_PARAMS& phis) {
-      double res = 0;
-      auto theta_ptr = thetas.begin();
-      for(auto phi : phis) res += *(theta_ptr++) * phi;
-      return res;
-    }
     
     namespace discrete_a {
+
+      
+      template<typename S, concepts::enumerable A, concepts::feature<S> S_FEATURE>
+      struct q_dim : std::integral_constant<std::size_t, S_FEATURE::dim * A::size()> {};
+      
+      template<typename S, concepts::enumerable A, concepts::feature<S> S_FEATURE>
+      inline constexpr std::size_t q_dim_v = q_dim<S, A, S_FEATURE>::value;
+      
+      
       template<concepts::nuplet PARAMS, typename S, concepts::enumerable A, concepts::feature<S> S_FEATURE>
+      requires (PARAMS::dim == q_dim_v<S, A, S_FEATURE>)
       struct q {
 	using params_type = PARAMS;
 	using state_type = S;
 	using action_type = A;
 	using state_feature_type = S_FEATURE;
+	constexpr static std::size_t dim = S_FEATURE::dim * A::size();
 
-	std::shared_ptr<params_type> params;
 	std::shared_ptr<state_feature_type> s_feature;
-      
+	std::shared_ptr<params_type> params;
+
+	double operator()(const S& s, A a) const {
+	  auto it = params->begin();
+	  std::advance(it, static_cast<std::size_t>(a) * S_FEATURE::dim);
+	  double res = 0;
+	  for(auto phi_coef : (*s_feature)(s)) res += phi_coef * *(it++);
+	  return res;
+	}
+	      
       };
     }
   }
