@@ -110,15 +110,16 @@ int main(int argc, char* argv[]) {
     auto [vmin, vmax, sigma_v] = std::make_tuple( -.5,  3.,  .2);
 
     // Let us define our types, based on an std::array behind the scene for storing x and v.
-    using pos_speed = rl2::nuplet::from<double, 2>;        // This is X x V, an std::array is used.
-    using rbf = rl2::functional::gaussian<pos_speed>;      // This is our RBF functions type.
-    using rbf_feature = rl2::features::rbfs<nb_rbfs, rbf>; // This is our feature type.
+    using pos_speed = std::array<double, 2>;                // This is X x V, an std::array is used (see next for a non-range type).
+    using mu_type = rl2::nuplet::from<double, 2>;           // This is the radial centers, it must be a nuplet.
+    using rbf = rl2::functional::gaussian<mu_type>;         // This is our RBF functions type. The type parameter must be a rl2::nuplet.
+    using rbf_feature = rl2::features::rbfs<nb_rbfs, rbf>;  // This is our feature type.
     // Nota: nb_rbfs is used as a template parameter, this is why
     // previous constexpr definitions are mandatory.
     
-    pos_speed sigmas {sigma_x, sigma_v}; // This is our std_dev in each component.
+    mu_type sigmas {sigma_x, sigma_v}; // This is our std_dev in each component.
     // This will be used (and thus shared) by all the rbf functions. We compute this once, here.
-    auto gammas_ptr = std::make_shared<pos_speed>(rl2::functional::gaussian_gammas_of_sigmas(sigmas));
+    auto gammas_ptr = std::make_shared<mu_type>(rl2::functional::gaussian_gammas_of_sigmas(sigmas));
 
     // This is as previously
     rbf_feature phi {};

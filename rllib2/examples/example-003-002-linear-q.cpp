@@ -12,8 +12,8 @@
 constexpr unsigned int nb_gauss_x = 3;
 constexpr unsigned int nb_gauss_v = 5;
 constexpr unsigned int nb_rbfs    = nb_gauss_x * nb_gauss_v;
-
-using S         = rl2::nuplet::from<double,  2>;                                                // s = (x, dx/dt) in Position x Speed
+//rl2::nuplet::from<double,  2>
+using S         = std::array<double,  2>;                                                // s = (x, dx/dt) in Position x Speed
 struct A2char {
   static char          to(std::size_t index) {return static_cast<char>(index + 60);       }
   static std::size_t from(char        value) {return static_cast<std::size_t>(value) - 60;}

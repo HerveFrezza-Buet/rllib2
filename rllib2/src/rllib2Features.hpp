@@ -7,6 +7,7 @@
 #include <optional>
 #include <memory>
 #include <iostream>
+#include <tuple>
 
 #include <gdyn.hpp>
 #include <rllib2Functional.hpp>
@@ -14,6 +15,7 @@
 #include <rllib2Concepts.hpp>
 
 namespace rl2 {
+
 
   namespace functional {
 
@@ -28,6 +30,7 @@ namespace rl2 {
     }
     
     template<typename MU>
+    requires (concepts::nuplet<MU> || std::same_as<MU, double>)
     struct gaussian;
     
     template<concepts::nuplet MU>
@@ -35,12 +38,14 @@ namespace rl2 {
       MU mu;
       std::shared_ptr<MU> gammas_ptr;
       
+      template<typename X, concepts::nuplet_wrapper<X> WRAPPER = nuplet::by_default::wrapper<X>>
       double operator()(const X& x) const {
 	double sum = 0;
 	auto mu_it = mu.begin();
 	auto gamma_it = gammas_ptr->begin();
-	for(auto x_comp : x) {
-	  auto delta = *(mu_it++) - x_comp;
+	WRAPPER wrapper {x};
+	for(auto x_it = wrapper.begin(); x_it != wrapper.end(); ) {
+	  auto delta = *(mu_it++) - *(x_it++);
 	  sum += *(gamma_it++) * delta * delta;
 	}
 	return std::exp(-sum);
@@ -57,6 +62,7 @@ namespace rl2 {
       gaussian(const gaussian&) = default;
       gaussian& operator=(const gaussian&) = default;
    
+      template<typename X, typename WRAPPER>
       double operator()(const double& x) const {
 	auto delta = x - mu;
 	return std::exp(- delta * delta * gamma);
@@ -89,7 +95,7 @@ namespace rl2 {
       using rbfs_type = std::array<RBF, NB_RBFS>;
       std::shared_ptr<rbfs_type> rbfs;
       
-      template<typename X>
+      template<typename X, concepts::nuplet_wrapper<X> WRAPPER = nuplet::by_default::wrapper<X>>
       auto operator()(X&& x) const {
 	return nuplet::make_from_range<dim>(gdyn::views::pulse([x = std::forward<X>(x), it = rbfs->end(), this]() mutable -> double {
 	  if(it == rbfs->end()) {
@@ -97,10 +103,12 @@ namespace rl2 {
 	    return 1;
 	  }
 	  else
-	    return (*(it++))(x);
+	    return (*(it++)).template operator()<X, WRAPPER>(x);
 	})
 	  | std::views::take(dim));
       }
+
+      
     };
 
   }

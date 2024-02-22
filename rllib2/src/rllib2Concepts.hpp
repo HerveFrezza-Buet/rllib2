@@ -201,6 +201,15 @@ namespace rl2 {
       {cf.dim} -> std::convertible_to<const std::size_t>;
     };
 
+    template<typename WRAPPER, typename X>
+    concept nuplet_wrapper =
+      std::constructible_from<WRAPPER, X>
+      && requires (const WRAPPER cw, const X cx) {
+      {cw.begin()} -> std::input_iterator;
+      {cw.end()} -> std::sentinel_for<decltype(cw.begin())>;
+    };
+    
+
     // /**
     //  * @short A concept for std::array checking.
     //  */

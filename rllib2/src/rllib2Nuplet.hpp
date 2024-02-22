@@ -1,10 +1,42 @@
 #pragma once
 #include <array>
 #include <random>
+#include <ranges>
 
 #include <rllib2Concepts.hpp>
 namespace rl2 {
   namespace nuplet {
+    
+    namespace by_default {
+
+      template<typename X>
+      requires (std::ranges::input_range<X> || std::same_as<X, double&>)
+      struct wrapper;
+      
+      template<std::ranges::input_range X>
+      struct wrapper<X> {
+
+	//  std::ranges::const_*_t available in C++-23
+	// std::ranges::const_iterator_t<X> start;
+	// std::ranges::const_sentinel_t<X> stop;
+
+	// C++20 workaround
+	decltype(std::ranges::cbegin(std::declval<X&>())) start;
+	decltype(std::ranges::cend(std::declval<X&>()))   stop;
+	
+	wrapper(const X& x) : start(x.begin()), stop(x.end()) {}
+	auto begin() const {return start;}
+	auto end() const {return stop;}
+      };
+
+      template<>
+      struct wrapper<double&> {
+	double value;
+	wrapper(const double& x) : value(x) {}
+	auto begin() const {return &value;}
+	auto end() const {return &value + 1;}
+      };
+    }
 
     template<concepts::nuplet A, concepts::nuplet B>
     requires (A::dim == B::dim)
