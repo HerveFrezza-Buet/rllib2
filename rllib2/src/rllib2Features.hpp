@@ -95,7 +95,7 @@ namespace rl2 {
       using rbfs_type = std::array<RBF, NB_RBFS>;
       std::shared_ptr<rbfs_type> rbfs;
       
-      template<typename X, concepts::nuplet_wrapper<X> WRAPPER = nuplet::by_default::wrapper<X>>
+      template<typename X, typename WRAPPER = nuplet::by_default::wrapper<X>>
       auto operator()(X&& x) const {
 	return nuplet::make_from_range<dim>(gdyn::views::pulse([x = std::forward<X>(x), it = rbfs->end(), this]() mutable -> double {
 	  if(it == rbfs->end()) {

@@ -16,7 +16,7 @@ namespace rl2 {
       template<std::ranges::input_range X>
       struct wrapper<X> {
 
-	//  std::ranges::const_*_t available in C++-23
+	// std::ranges::const_*_t available in C++-23
 	// std::ranges::const_iterator_t<X> start;
 	// std::ranges::const_sentinel_t<X> stop;
 
@@ -32,6 +32,7 @@ namespace rl2 {
       template<>
       struct wrapper<double&> {
 	double value;
+	
 	wrapper(const double& x) : value(x) {}
 	auto begin() const {return &value;}
 	auto end() const {return &value + 1;}

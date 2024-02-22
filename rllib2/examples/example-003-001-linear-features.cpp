@@ -5,11 +5,65 @@
 #include <memory>
 #include <iomanip>
 #include <tuple>
+#include <algorithm>
 
 #include <rllib2.hpp>
 
 // This illustrates the use of linear functions, i.e. f(x) = theta^T . phi(x)
 
+
+// This defines a car. This (and the wrapper below) will be used
+// at the end of this file, skip it for first steps.
+    
+struct car {
+  std::string brand;   
+  std::string model;   
+  unsigned int  cost;
+  unsigned int  miles;
+  double motor_power;
+};
+
+
+#define COST_COEF 1e-6
+#define MILES_COEF 1e-3
+struct car_wrapper {
+  // For using RBFs, we need to associate a vector (iterable) to
+  // each car. This is what nuplet wrapper is designed for.
+      
+  constexpr static std::size_t dim = 4;
+  std::array<double, dim> data;
+      
+  car_wrapper(const car& some_car) {
+    auto it = data.begin();
+    *(it++) = (double)(some_car.cost) * COST_COEF;
+    *(it++) = (double)(some_car.miles) * MILES_COEF;
+    *(it++) = (double)(some_car.motor_power);
+
+    // Last component is how the brand is perceived by
+    // jet-setters, in a scale from 0 (bad) to 100 (excellent). No
+    // information is 0... Of course, this is fake here.
+    if(some_car.brand == "Ferrari")
+      *(it++) = 100.;
+    else if (some_car.brand == "Bentley")
+      *(it++) =  95.;
+    else if (some_car.brand == "Porsche")
+      *(it++) =  90.;
+    else if (some_car.brand == "Tesla")
+      *(it++) =  80.;
+    else if (some_car.brand == "Renault")
+      *(it++) =  10.;
+    else if (some_car.brand == "Citroen")
+      *(it++) =  10.;
+    else if (some_car.brand == "Fiat")
+      *(it++) =  10.;
+    else
+      *(it++) =   0.;
+
+    // We we have 4 scalars for a car.
+  }
+  auto begin() const {return data.begin();}
+  auto end()   const {return data.end();}
+};
 
 int main(int argc, char* argv[]) {
 
@@ -130,7 +184,7 @@ int main(int argc, char* argv[]) {
       auto mu_v = rl2::enumerable::utils::digitize::to_value(vid, vmin, vmax, nb_gauss_v);
       for(std::size_t xid = 0; xid < nb_gauss_x; ++xid) {
 	auto mu_x = rl2::enumerable::utils::digitize::to_value(xid, xmin, xmax, nb_gauss_x);
-	*(out_it++) = rbf {{mu_x, mu_v}, gammas_ptr}; // We set each gaussian rbf
+	*(out_it++) = {{mu_x, mu_v}, gammas_ptr}; // We set each gaussian rbf
       }
     }
 
@@ -149,6 +203,44 @@ int main(int argc, char* argv[]) {
     
   }
 
+  {
+    // Let us illustrate here the need for nuplet adaptor, when the
+    // type of the gaussian argument is not naturally iterable.
+    // Have a look at car and car_wrapper definitions at the beginning of this file.
+
+    car alices {"Ferrari", "F-40",    2600000,  1000, 478};
+    car bobs   {"Porsche", "Carrera",  158000, 50000, 612};
+    car mine   {"Renault", "Clio",      13000,     0,  80};
+
+    // Ok, now we can set up RBFs features, as previously 
+    using mu_type = rl2::nuplet::from<double, car_wrapper::dim>; 
+    using rbf = rl2::functional::gaussian<mu_type>;        
+    using rbf_feature = rl2::features::rbfs<3, rbf>;  // This is our feature type, with 3 rbfs.
+    
+    mu_type sigmas {1., 1., 500., 10.}; // This is our std_dev in each component (cost, miles, power, brand).
+    // Nota :  the wrapper
+    
+    // This will be used (and thus shared) by all the rbf functions. We compute this once, here.
+    auto gammas_ptr = std::make_shared<mu_type>(rl2::functional::gaussian_gammas_of_sigmas(sigmas));
+    
+    rbf_feature phi {};
+    phi.rbfs = std::make_shared<rbf_feature::rbfs_type>();
+
+    // Let us use pour 3 cars as rbf centers.
+    auto out_it = phi.rbfs->begin();
+    mu_type center;
+    for(const auto& c : {alices, bobs, mine}) {
+      car_wrapper wrapper {c};
+      std::copy(wrapper.begin(), wrapper.end(), center.begin()); // Warning, sized are not checked at compiling time.
+      *(out_it++) = {center, gammas_ptr};
+    }
+
+    // Let us compute the features for each car
+    for(const auto& c : {alices, bobs, mine}) {
+      for(auto value : phi.template operator()<const car&, car_wrapper>(c)) std::cout << value << ' ';
+      std::cout << std::endl;
+    }
+  }
 
   return 0;
 }
