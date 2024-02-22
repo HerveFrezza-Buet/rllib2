@@ -7,19 +7,21 @@
 
 #include <rllib2.hpp>
 
+// Enumeration converter for actions.
+struct A2char {
+  static char          to(std::size_t index) {return static_cast<char>(index + 60);       }
+  static std::size_t from(char        value) {return static_cast<std::size_t>(value) - 60;}
+};
+
 // This shows how linear Q-function are implemented with rllib2.
 
 constexpr unsigned int nb_gauss_x = 3;
 constexpr unsigned int nb_gauss_v = 5;
 constexpr unsigned int nb_rbfs    = nb_gauss_x * nb_gauss_v;
-//rl2::nuplet::from<double,  2>
-using S         = std::array<double,  2>;                                                // s = (x, dx/dt) in Position x Speed
-struct A2char {
-  static char          to(std::size_t index) {return static_cast<char>(index + 60);       }
-  static std::size_t from(char        value) {return static_cast<std::size_t>(value) - 60;}
-};
-using A = rl2::enumerable::set<char, 4, A2char>;                                                // a in {'<', '=', '>', '?'}
-using rbf       = rl2::functional::gaussian<S>;                                                 // This is our RBF functions type.
+using S         = std::array<double,  2>;                                                       // s = (x, dx/dt) in Position x Speed
+using A         = rl2::enumerable::set<char, 4, A2char>;                                        // a in {'<', '=', '>', '?'}
+using mu_type   = rl2::nuplet::from<double, 2>;                                                 // This is the radial centers, it must be a nuplet.
+using rbf       = rl2::functional::gaussian<mu_type>;                                           // This is our RBF functions type.
 using S_feature = rl2::features::rbfs<nb_rbfs, rbf>;                                            // This is our feature type for S.
 using params    = rl2::nuplet::from<double, rl2::linear::discrete_a::q_dim_v<S, A, S_feature>>; // This is for theta.
 using Q         = rl2::linear::discrete_a::q<params, S, A, S_feature>;                          // functions such as Q(s,a) = thetaT.[0...phi(s)...0]
@@ -74,7 +76,7 @@ int main(int argc, char* argv[]) {
   // Let us build the bases...
 
   // This is the common parameters for the 2D Gaussians.
-  auto gammas_ptr = std::make_shared<S>(rl2::functional::gaussian_gammas_of_sigmas<S>({sigma_x, sigma_v}));
+  auto gammas_ptr = std::make_shared<mu_type>(rl2::functional::gaussian_gammas_of_sigmas<mu_type>({sigma_x, sigma_v}));
 
   // Let us set the Gaussians
   auto out_it = phi.rbfs->begin();
