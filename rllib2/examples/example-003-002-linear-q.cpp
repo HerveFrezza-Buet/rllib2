@@ -3,6 +3,7 @@
 #include <random>
 #include <string>
 #include <sstream>
+#include <array>
 
 #include <rllib2.hpp>
 
@@ -13,7 +14,11 @@ constexpr unsigned int nb_gauss_v = 5;
 constexpr unsigned int nb_rbfs    = nb_gauss_x * nb_gauss_v;
 
 using S         = rl2::nuplet::from<double,  2>;                                                // s = (x, dx/dt) in Position x Speed
-using A         = rl2::enumerable::set<int,  3>;                                                // a in {0, 1, 2}
+struct A2char {
+  static char          to(std::size_t index) {return static_cast<char>(index + 60);       }
+  static std::size_t from(char        value) {return static_cast<std::size_t>(value) - 60;}
+};
+using A = rl2::enumerable::set<char, 4, A2char>;                                                // a in {'<', '=', '>', '?'}
 using rbf       = rl2::functional::gaussian<S>;                                                 // This is our RBF functions type.
 using S_feature = rl2::features::rbfs<nb_rbfs, rbf>;                                            // This is our feature type for S.
 using params    = rl2::nuplet::from<double, rl2::linear::discrete_a::q_dim_v<S, A, S_feature>>; // This is for theta.
@@ -37,7 +42,7 @@ void print(std::ostream& os,
   os << bar.str();
   for(auto a_it = A::begin(); a_it != A::end(); ++a_it) {
     std::ostringstream a_title;
-    a_title << "a = " << static_cast<A::base_type>(a_it);
+    a_title << "a = " << *a_it;
     os << sep << std::setw(a_stride) << a_title.str();
   }
   os << sep << std::endl;
@@ -47,7 +52,7 @@ void print(std::ostream& os,
     for(auto a_it = A::begin(); a_it != A::end(); ++a_it) {
       for(std::size_t xid = 0; xid < nb_x; ++xid) {
 	auto x = rl2::enumerable::utils::digitize::to_value(xid, xmin, xmax, nb_x);
-	os << sep << std::setw(slot) << (unsigned int)(100 * q({x, v}, *a_it) + .5); // Nota: q({x, v}, *a_it)
+	os << sep << std::setw(slot) << (unsigned int)(100 * q({x, v}, a_it) + .5); // Nota: q({x, v}, a_it)
       }
     }
     os << sep << std::endl;
@@ -100,18 +105,34 @@ int main(int argc, char* argv[]) {
 
   // Let us consider a specific state
   S s {1., 1.}; // (x, v).
-  A a {1};
+  A a {'='};
 
   std::cout << "q(s, a) = " << q(s, a) << std::endl
 	    << std::endl; 
 
   auto q_s = q(s); // Q is partially callable.
   for(auto a_it = A::begin(); a_it != A::end(); ++a_it)
-    std::cout << "q_s(" << static_cast<A::base_type>(a_it) << ") = " << q_s(*a_it) << std::endl;
+    std::cout << "q_s(" << static_cast<A::base_type>(a_it) << ") = " << q_s(a_it) << std::endl;
   std::cout << std::endl;
   
   auto greedy_on_q = rl2::discrete::greedy_ify(q); // or rl2::discrete::argmax_ify(q)
+  double epsilon = .5;
+  auto epsilon_greedy_on_q = rl2::discrete::epsilon_ify(greedy_on_q, epsilon, gen);
+  // None of these function creation invoked a copy of features or parameters.
 
+  std::cout << "greedy_q(s) = " << static_cast<A::base_type>(greedy_on_q(s)) << std::endl
+	    << "-----------" << std::endl;
+
+  std::array<std::size_t, A::size()> hist;
+  
+  for(std::size_t i = 0; i < 50; ++i)
+    ++hist[static_cast<std::size_t>(epsilon_greedy_on_q(s))];
+  
+  for(auto a_it = A::begin(); a_it != A::end(); ++a_it) 
+    std::cout << "a = " << *a_it
+	      << " |" << std::string(hist[static_cast<std::size_t>(a_it)], '#')
+	      << std::endl;
+  std::cout << std::endl;
 
   return 0;
 }
