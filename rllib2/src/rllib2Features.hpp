@@ -27,13 +27,13 @@ namespace rl2 {
       return gammas;
     }
     
-    template<typename X>
+    template<typename MU>
     struct gaussian;
     
-    template<concepts::nuplet X>
-    struct gaussian<X> {
-      X mu;
-      std::shared_ptr<X> gammas_ptr;
+    template<concepts::nuplet MU>
+    struct gaussian<MU> {
+      MU mu;
+      std::shared_ptr<MU> gammas_ptr;
       
       double operator()(const X& x) const {
 	double sum = 0;
@@ -91,13 +91,13 @@ namespace rl2 {
       
       template<typename X>
       auto operator()(X&& x) const {
-	return nuplet::make_from_range<dim>(gdyn::views::pulse([mu = std::forward<X>(x), it = rbfs->end(), this]() mutable -> double {
+	return nuplet::make_from_range<dim>(gdyn::views::pulse([x = std::forward<X>(x), it = rbfs->end(), this]() mutable -> double {
 	  if(it == rbfs->end()) {
 	    it = rbfs->begin();
 	    return 1;
 	  }
 	  else
-	    return (*(it++))(mu);
+	    return (*(it++))(x);
 	})
 	  | std::views::take(dim));
       }
