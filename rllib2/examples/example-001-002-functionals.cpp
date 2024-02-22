@@ -115,7 +115,7 @@ int main(int argc, char* argv[]) {
     auto Q = rl2::tabular::make_two_args_function<weakest_link::S, weakest_link::A>(values.begin());
 
     // From this table, we can build up a greedy policy, since weakest_link::A is enumerable (this is mandatory for internal argmax);
-    auto greedy_on_Q = rl2::discrete::greedy_ify(Q); // or rl2::discrete::argmax(Q)
+    auto greedy_on_Q = rl2::discrete::greedy_ify(Q); // or rl2::discrete::argmax_ify(Q)
 
     // We can espilon-ize such things to get an epsilon greedy policy.
     double epsilon = .2;

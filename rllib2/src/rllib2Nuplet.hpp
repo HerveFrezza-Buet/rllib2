@@ -1,5 +1,6 @@
 #pragma once
 #include <array>
+#include <random>
 
 #include <rllib2Concepts.hpp>
 namespace rl2 {
@@ -12,6 +13,12 @@ namespace rl2 {
       auto a_ptr = as.begin();
       for(auto b : bs) res += *(a_ptr++) * b;
       return res;
+    }
+
+    template<typename RD, concepts::nuplet A>
+    void random_init(RD& gen, A& as, double min, double max) {
+      auto d = std::uniform_real_distribution<double>(min, max);
+      for(auto& a : as) a = d(gen);
     }
     
     /**

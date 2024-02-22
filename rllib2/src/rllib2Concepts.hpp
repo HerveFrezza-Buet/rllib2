@@ -149,6 +149,16 @@ namespace rl2 {
       && enumerable<typename TWO_ARGS_FUNCTION::first_entry_type>
     && enumerable<typename TWO_ARGS_FUNCTION::second_entry_type>;
 
+    namespace discrete_a {
+      /**
+       * @short A two-args function whose second type is enumerable.
+       */
+      template<typename TWO_ARGS_FUNCTION>
+      concept two_args_function =
+	concepts::two_args_function<TWO_ARGS_FUNCTION>
+	&& enumerable<typename TWO_ARGS_FUNCTION::second_entry_type>;
+    }
+
 
     /**
      * @short A function such as q(s, a) is scalar.

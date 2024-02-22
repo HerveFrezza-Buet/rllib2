@@ -54,14 +54,17 @@ namespace rl2 {
     // --------------------
     
 
-    using polynomial_feature = features::polynomial<8>;
-    static_assert(concepts::feature<polynomial_feature, double>);
+    using q_state = double;
+    using q_action = enumerable_int;
+    using s_feature = features::polynomial<8>;
+    static_assert(concepts::feature<s_feature, double>);
     
-    using theta_params = nuplet::from<std::vector<double>, polynomial_feature::dim * enumerable_int::size()>; 
+    using theta_params = nuplet::from<double, s_feature::dim * q_action::size()>; 
     static_assert(concepts::nuplet<theta_params>);
 
-    using q_parametrized = linear::discrete_a::q<theta_params, double, enumerable_int, polynomial_feature>;
+    using q_parametrized = linear::discrete_a::q<theta_params, q_state, q_action, s_feature>;
     static_assert(concepts::discrete_a::linear_qfunction<q_parametrized>);
+    static_assert(concepts::discrete_a::two_args_function<q_parametrized>);
     
     
     // To do : write bellman operator concept checking
