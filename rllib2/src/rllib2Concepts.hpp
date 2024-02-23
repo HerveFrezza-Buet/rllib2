@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <tuple>
 #include <array>
+#include <type_traits>
 
 namespace rl2 {
   namespace concepts {
@@ -198,7 +199,7 @@ namespace rl2 {
       std::copy_constructible<FEATURE>
       && requires(const FEATURE cf, const X cx) {
       {cf(cx)} -> std::ranges::input_range;
-      {cf.dim} -> std::convertible_to<const std::size_t>;
+      {FEATURE::dim} -> std::convertible_to<const std::size_t>;
     };
 
     template<typename WRAPPER, typename X>
@@ -207,6 +208,7 @@ namespace rl2 {
       && requires (const WRAPPER cw, const X cx) {
       {cw.begin()} -> std::input_iterator;
       {cw.end()} -> std::sentinel_for<decltype(cw.begin())>;
+      {WRAPPER::dim} -> std::convertible_to<const std::size_t>;
     };
     
 
@@ -231,5 +233,7 @@ namespace rl2 {
       feature<typename FUNCTION::state_feature_type, typename FUNCTION::state_type>;
       
     }
+
+
   }
 }

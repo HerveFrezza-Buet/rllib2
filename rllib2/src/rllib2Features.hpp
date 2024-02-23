@@ -29,16 +29,20 @@ namespace rl2 {
       return gammas;
     }
     
-    template<typename MU>
+    template<typename MU, typename X, typename WRAPPER>
     requires (concepts::nuplet<MU> || std::same_as<MU, double>)
     struct gaussian;
     
-    template<concepts::nuplet MU>
-    struct gaussian<MU> {
+    template<concepts::nuplet MU, typename X, concepts::nuplet_wrapper<X> WRAPPER = rl2::nuplet::by_default::wrapper<X, MU::dim>>
+    requires (MU::dim == WRAPPER::dim)
+    struct gaussian<MU, X, WRAPPER> {
+      using mu_type = MU;
+      using x_type = X;
+      using wrapper_type = WRAPPER;
+      
       MU mu;
       std::shared_ptr<MU> gammas_ptr;
       
-      template<typename X, concepts::nuplet_wrapper<X> WRAPPER = nuplet::by_default::wrapper<X>>
       double operator()(const X& x) const {
 	double sum = 0;
 	auto mu_it = mu.begin();
@@ -53,7 +57,11 @@ namespace rl2 {
     };
 
     template<>
-    struct gaussian<double> {
+    struct gaussian<double, double, rl2::nuplet::by_default::wrapper<double>> {
+      using mu_type = double;
+      using x_type = double;
+      using wrapper_type = rl2::nuplet::by_default::wrapper<double>;
+      
       double mu;
       double gamma;
       
@@ -62,8 +70,7 @@ namespace rl2 {
       gaussian(const gaussian&) = default;
       gaussian& operator=(const gaussian&) = default;
    
-      template<typename X, typename WRAPPER>
-      double operator()(const double& x) const {
+      double operator()(const double x) const {
 	auto delta = x - mu;
 	return std::exp(- delta * delta * gamma);
       }
@@ -72,6 +79,17 @@ namespace rl2 {
     inline std::ostream& operator<<(std::ostream& os, const gaussian<double>& g) {
       return  os << "gauss(mu = " << g.mu << ", gamma = " << g.gamma << ')';
     }
+  }
+
+  namespace concepts { // This cannot be written in rllib2Concepts.hpp
+    template <typename T>
+    struct is_gaussian_basis : std::false_type { };
+    
+    template <typename MU, typename X, typename WRAPPER>
+    struct is_gaussian_basis<gaussian<MU, X, WRAPPER>> : std::true_type { };
+
+    template <typename T>
+    concept gaussian_basis = is_gaussian_basis<T>::value;
   }
     
   namespace features {
@@ -87,7 +105,7 @@ namespace rl2 {
 	  | std::views::take(dim));
       }
     };
-
+    
     template<unsigned int NB_RBFS, typename RBF>
     struct rbfs {
       constexpr static std::size_t nb_rbfs = NB_RBFS;
@@ -95,7 +113,7 @@ namespace rl2 {
       using rbfs_type = std::array<RBF, NB_RBFS>;
       std::shared_ptr<rbfs_type> rbfs;
       
-      template<typename X, typename WRAPPER = nuplet::by_default::wrapper<X>>
+      template<typename X>
       auto operator()(X&& x) const {
 	return nuplet::make_from_range<dim>(gdyn::views::pulse([x = std::forward<X>(x), it = rbfs->end(), this]() mutable -> double {
 	  if(it == rbfs->end()) {
@@ -103,12 +121,10 @@ namespace rl2 {
 	    return 1;
 	  }
 	  else
-	    return (*(it++)).template operator()<X, WRAPPER>(x);
+	    return (*(it++))(x);
 	})
 	  | std::views::take(dim));
       }
-
-      
     };
 
   }
