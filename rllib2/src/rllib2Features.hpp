@@ -28,14 +28,13 @@ namespace rl2 {
       for(auto& g : gammas) g = gaussian_gamma_of_sigma(*it++);
       return gammas;
     }
-    
-    template<typename MU, typename X, typename WRAPPER>
-    requires (concepts::nuplet<MU> || std::same_as<MU, double>)
+
+    template<typename MU, typename X=MU, typename WRAPPER = rl2::nuplet::by_default::wrapper<MU, X>>
     struct gaussian;
     
-    template<concepts::nuplet MU, typename X, concepts::nuplet_wrapper<X> WRAPPER = rl2::nuplet::by_default::wrapper<X, MU::dim>>
+    template<concepts::nuplet MU, typename X, concepts::nuplet_wrapper<X> WRAPPER>
     requires (MU::dim == WRAPPER::dim)
-    struct gaussian<MU, X, WRAPPER> {
+      struct gaussian<MU, X, WRAPPER> {
       using mu_type = MU;
       using x_type = X;
       using wrapper_type = WRAPPER;
@@ -57,10 +56,7 @@ namespace rl2 {
     };
 
     template<>
-    struct gaussian<double, double, rl2::nuplet::by_default::wrapper<double>> {
-      using mu_type = double;
-      using x_type = double;
-      using wrapper_type = rl2::nuplet::by_default::wrapper<double>;
+    struct gaussian<double, double, rl2::nuplet::by_default::wrapper<double, double>> {
       
       double mu;
       double gamma;
@@ -86,7 +82,7 @@ namespace rl2 {
     struct is_gaussian_basis : std::false_type { };
     
     template <typename MU, typename X, typename WRAPPER>
-    struct is_gaussian_basis<gaussian<MU, X, WRAPPER>> : std::true_type { };
+    struct is_gaussian_basis<functional::gaussian<MU, X, WRAPPER>> : std::true_type { };
 
     template <typename T>
     concept gaussian_basis = is_gaussian_basis<T>::value;

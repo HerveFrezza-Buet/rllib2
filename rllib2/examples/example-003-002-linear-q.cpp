@@ -21,7 +21,7 @@ constexpr unsigned int nb_rbfs    = nb_gauss_x * nb_gauss_v;
 using S         = std::array<double,  2>;                                                       // s = (x, dx/dt) in Position x Speed
 using A         = rl2::enumerable::set<char, 4, A2char>;                                        // a in {'<', '=', '>', '?'}
 using mu_type   = rl2::nuplet::from<double, 2>;                                                 // This is the radial centers, it must be a nuplet.
-using rbf       = rl2::functional::gaussian<mu_type>;                                           // This is our RBF functions type.
+using rbf       = rl2::functional::gaussian<mu_type, S>;                                        // This is our RBF functions type.
 using S_feature = rl2::features::rbfs<nb_rbfs, rbf>;                                            // This is our feature type for S.
 using params    = rl2::nuplet::from<double, rl2::linear::discrete_a::q_dim_v<S, A, S_feature>>; // This is for theta.
 using Q         = rl2::linear::discrete_a::q<params, S, A, S_feature>;                          // functions such as Q(s,a) = thetaT.[0...phi(s)...0]

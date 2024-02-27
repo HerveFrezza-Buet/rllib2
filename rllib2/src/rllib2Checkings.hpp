@@ -67,7 +67,7 @@ namespace rl2 {
     static_assert(concepts::discrete_a::two_args_function<q_parametrized>);
 
     using iterable = std::array<double, 10>;
-    using nuplet_wrapper = nuplet::by_default::wrapper<iterable>;
+    using nuplet_wrapper = nuplet::by_default::wrapper<nuplet::from_range<iterable, 10>, iterable>;
     static_assert(concepts::nuplet_wrapper<nuplet_wrapper, iterable>);
     
     // To do : write bellman operator concept checking

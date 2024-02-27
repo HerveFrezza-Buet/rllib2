@@ -9,13 +9,13 @@ namespace rl2 {
     
     namespace by_default {
 
-      template<typename X, std::size_t DIM>
-      requires (std::ranges::input_range<X> || std::same_as<X, double>)
+      template<typename MU, typename X>
       struct wrapper;
-      
-      template<std::ranges::input_range X, std::size_t DIM>
-      struct wrapper<X, DIM> {
-	constexpr static std::size_t dim = DIM;
+
+      template<typename MU, typename X>
+      requires (concepts::nuplet<MU> || std::ranges::input_range<X>)
+      struct wrapper<MU, X> {
+	constexpr static std::size_t dim = MU::dim;
 
 	// std::ranges::const_*_t available in C++-23
 	// std::ranges::const_iterator_t<X> start;
@@ -30,8 +30,9 @@ namespace rl2 {
 	auto end() const {return stop;}
       };
 
-      template<std::size_t DIM> // DIM ignored...
-      struct wrapper<double, DIM> {};
+      template<>
+      struct wrapper<double, double> {};
+
     }
 
     template<concepts::nuplet A, concepts::nuplet B>

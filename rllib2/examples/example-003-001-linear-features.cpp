@@ -166,7 +166,7 @@ int main(int argc, char* argv[]) {
     // Let us define our types, based on an std::array behind the scene for storing x and v.
     using pos_speed = std::array<double, 2>;                // This is X x V, an std::array is used (see next for a non-range type).
     using mu_type = rl2::nuplet::from<double, 2>;           // This is the radial centers, it must be a nuplet.
-    using rbf = rl2::functional::gaussian<mu_type>;         // This is our RBF functions type. The type parameter must be a rl2::nuplet.
+    using rbf = rl2::functional::gaussian<mu_type, pos_speed>;  // This is our RBF functions type. The type parameter must be a rl2::nuplet.
     using rbf_feature = rl2::features::rbfs<nb_rbfs, rbf>;  // This is our feature type.
     // Nota: nb_rbfs is used as a template parameter, this is why
     // previous constexpr definitions are mandatory.
@@ -214,7 +214,7 @@ int main(int argc, char* argv[]) {
 
     // Ok, now we can set up RBFs features, as previously 
     using mu_type = rl2::nuplet::from<double, car_wrapper::dim>; 
-    using rbf = rl2::functional::gaussian<mu_type>;        
+    using rbf = rl2::functional::gaussian<mu_type, car, car_wrapper>;        
     using rbf_feature = rl2::features::rbfs<3, rbf>;  // This is our feature type, with 3 rbfs.
     
     mu_type sigmas {1., 1., 500., 10.}; // This is our std_dev in each component (cost, miles, power, brand).
@@ -237,7 +237,7 @@ int main(int argc, char* argv[]) {
 
     // Let us compute the features for each car
     for(const auto& c : {alices, bobs, mine}) {
-      for(auto value : phi.template operator()<const car&, car_wrapper>(c)) std::cout << value << ' ';
+      for(auto value : phi(c)) std::cout << value << ' ';
       std::cout << std::endl;
     }
   }
