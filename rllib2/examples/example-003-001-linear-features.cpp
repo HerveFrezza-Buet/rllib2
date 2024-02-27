@@ -13,7 +13,7 @@
 
 
 // This defines a car. This (and the wrapper below) will be used
-// at the end of this file, skip it for first steps.
+// at the end of this example file, skip it for first steps.
     
 struct car {
   std::string brand;   
@@ -23,17 +23,23 @@ struct car {
   double motor_power;
 };
 
-
 #define COST_COEF 1e-6
 #define MILES_COEF 1e-3
 struct car_wrapper {
   // For using RBFs, we need to associate a vector (iterable) to
   // each car. This is what nuplet wrapper is designed for.
+
+  // CONCEPTS: This is required by rl2::concepts::nuplet_wrapper.
+  constexpr static std::size_t dim = 4; // This tells how many scalars are used to represent the car.
+  
+  std::array<double, dim> data;         // This is a buffer for storing them when needed.
       
-  constexpr static std::size_t dim = 4;
-  std::array<double, dim> data;
-      
+  // CONCEPTS: This is required by rl2::concepts::nuplet_wrapper.
   car_wrapper(const car& some_car) {
+
+    // Here, we define how a car is represented as 4 scalars, we store
+    // the representation of some_car into data.
+    
     auto it = data.begin();
     *(it++) = (double)(some_car.cost) * COST_COEF;
     *(it++) = (double)(some_car.miles) * MILES_COEF;
@@ -42,32 +48,30 @@ struct car_wrapper {
     // Last component is how the brand is perceived by
     // jet-setters, in a scale from 0 (bad) to 100 (excellent). No
     // information is 0... Of course, this is fake here.
-    if(some_car.brand == "Ferrari")
-      *(it++) = 100.;
-    else if (some_car.brand == "Bentley")
-      *(it++) =  95.;
-    else if (some_car.brand == "Porsche")
-      *(it++) =  90.;
-    else if (some_car.brand == "Tesla")
-      *(it++) =  80.;
-    else if (some_car.brand == "Renault")
-      *(it++) =  10.;
-    else if (some_car.brand == "Citroen")
-      *(it++) =  10.;
-    else if (some_car.brand == "Fiat")
-      *(it++) =  10.;
-    else
-      *(it++) =   0.;
+    if      (some_car.brand == "Ferrari") *(it++) = 100.;
+    else if (some_car.brand == "Bentley") *(it++) =  95.;
+    else if (some_car.brand == "Porsche") *(it++) =  90.;
+    else if (some_car.brand == "Tesla")   *(it++) =  80.;
+    else if (some_car.brand == "Renault") *(it++) =  10.;
+    else if (some_car.brand == "Citroen") *(it++) =  10.;
+    else if (some_car.brand == "Fiat")    *(it++) =  10.;
+    else                                  *(it++) =   0.;
 
     // We we have 4 scalars for a car.
   }
+  
+  // CONCEPTS: These are required by
+  // rl2::concepts::nuplet_wrapper. They provide the begin-sentinel
+  // pair for iterating on the scalars representing our car.
   auto begin() const {return data.begin();}
   auto end()   const {return data.end();}
 };
 
-int main(int argc, char* argv[]) {
 
-  {
+unsigned int uint_1000(double value) {return (unsigned int)(1000 * value + .5);}
+
+// This shows the use of polynomial features.
+void test_polynomial() {
     std::cout << std::endl << std::string(10, '-') << std::endl << std::endl;
 
     // Let us use a degree 8 polynomial approximation.
@@ -91,10 +95,10 @@ int main(int argc, char* argv[]) {
 	      << rl2::nuplet::dot_product(theta, phi(3)) << ' '
 	      << rl2::nuplet::dot_product(theta, phi(4)) << ' '
 	      << rl2::nuplet::dot_product(theta, phi(5)) << std::endl;
-      
-  }
+}
 
-  {
+// This shows the use of rbf features, with 1D gaussians.
+void test_1d_gaussian() {
     std::cout << std::endl << std::string(10, '-') << std::endl << std::endl;
 
     using rbf_feature = rl2::features::rbfs<3, rl2::functional::gaussian<double>>;
@@ -107,9 +111,12 @@ int main(int argc, char* argv[]) {
     // and then provided to phi.
     phi.rbfs = std::make_shared<rbf_feature::rbfs_type>();
     std::size_t i = 0;
-    double gamma = rl2::functional::gaussian_gamma_of_sigma(.1); // we use sigma = 0.1, gamma is 1/(2*sigma^2).
+
+    // we use sigma = 0.1, gamma is 1/(2*sigma^2).
+    double gamma = rl2::functional::gaussian_gamma_of_sigma(.1); 
     for(auto& gaussian : *(phi.rbfs)) {
-      gaussian.mu = rl2::enumerable::utils::digitize::to_value(i++, 0., 1., rbf_feature::nb_rbfs); // We set the means spread in [0, 1].
+      // We set the means, spanned over [0, 1].
+      gaussian.mu = rl2::enumerable::utils::digitize::to_value(i++, 0., 1., rbf_feature::nb_rbfs); 
       gaussian.gamma = gamma;
       std::cout << "rbf " << gaussian << " added." << std::endl;
     }
@@ -117,7 +124,7 @@ int main(int argc, char* argv[]) {
     
     for(double x = 0; x < 1.1; x += .2) {
       std::cout << "phi(" << std::setw(3) << x << ") = [";
-      for(double value : phi(x)) std::cout << ' ' << std::setw(4) << (unsigned int)(1000 * value + .5);
+      for(double value : phi(x)) std::cout << ' ' << std::setw(4) << uint_1000(value);
       std::cout << ']' << std::endl;
     }
     std::cout << std::endl;
@@ -138,19 +145,22 @@ int main(int argc, char* argv[]) {
 
     for(double x = 0; x < 1.1; x += .2) {
       std::cout << "phi(" << std::setw(3) << x << ") = [";
-      for(double value : phi(x)) std::cout << ' ' << std::setw(4) << (unsigned int)(1000 * value + .5);
+      for(double value : phi(x)) std::cout << ' ' << std::setw(4) << uint_1000(value);
       std::cout << ']' << std::endl;
       std::cout << "psi(" << std::setw(3) << x << ") = [";
-      for(double value : psi(x)) std::cout << ' ' << std::setw(4) << (unsigned int)(1000 * value + .5);
+      for(double value : psi(x)) std::cout << ' ' << std::setw(4) << uint_1000(value);
       std::cout << ']' << std::endl;
       std::cout << "chi(" << std::setw(3) << x << ") = [";
-      for(double value : chi(x)) std::cout << ' ' << std::setw(4) << (unsigned int)(1000 * value + .5);
+      for(double value : chi(x)) std::cout << ' ' << std::setw(4) << uint_1000(value);
       std::cout << ']' << std::endl;
       std::cout << std::endl;
     }
-  }
+}
 
-  {
+// This is for N-dimentional Gaussians. We need to handle share
+// pointers here, in order to keep memory allocation as reduced as
+// possible.
+void test_nd_gaussian() {
     std::cout << std::endl << std::string(10, '-') << std::endl << std::endl;
 
     // Let us do the same as previously, with vectors rather that
@@ -164,10 +174,10 @@ int main(int argc, char* argv[]) {
     auto [vmin, vmax, sigma_v] = std::make_tuple( -.5,  3.,  .2);
 
     // Let us define our types, based on an std::array behind the scene for storing x and v.
-    using pos_speed = std::array<double, 2>;                // This is X x V, an std::array is used (see next for a non-range type).
-    using mu_type = rl2::nuplet::from<double, 2>;           // This is the radial centers, it must be a nuplet.
-    using rbf = rl2::functional::gaussian<mu_type, pos_speed>;  // This is our RBF functions type. The type parameter must be a rl2::nuplet.
-    using rbf_feature = rl2::features::rbfs<nb_rbfs, rbf>;  // This is our feature type.
+    using pos_speed = std::array<double, 2>;                    // This is X x V, an std::array is used (see next for a non-range type).
+    using mu_type = rl2::nuplet::from<double, 2>;               // This is the radial centers, it must be a nuplet.
+    using rbf = rl2::functional::gaussian<mu_type, pos_speed>;  // This is our RBF functions type. 
+    using rbf_feature = rl2::features::rbfs<nb_rbfs, rbf>;      // This is our feature type.
     // Nota: nb_rbfs is used as a template parameter, this is why
     // previous constexpr definitions are mandatory.
     
@@ -194,16 +204,19 @@ int main(int argc, char* argv[]) {
       std::cout << "phi(" << point[0] << ", " << point[1] << ") = [";
       auto values = phi(point);
       auto value_it = values.begin();
-      std::cout << ' ' << std::setw(4) << (unsigned int)(1000 * *(value_it++) + .5) << std::endl; // The offset
+      std::cout << ' ' << std::setw(4) << uint_1000(value_it++) << std::endl; // The offset
       for(std::size_t vid = 0; vid < nb_gauss_v; ++vid, std::cout << std::endl)
 	for(std::size_t xid = 0; xid < nb_gauss_x; ++xid) 
-	  std::cout << ' ' << std::setw(4) << (unsigned int)(1000 * *(value_it++) + .5);
+	  std::cout << ' ' << std::setw(4) << uint_1000(value_it++);
       std::cout << ']' << std::endl << std::endl;
     }
-    
-  }
+}
 
-  {
+
+// This is where the class definitions at the beginning of this file
+// are used. We customize the use of Gaussian RBFs to an entry type
+// which is not naturally iterable.
+void test_custom_gaussian() {
     // Let us illustrate here the need for nuplet adaptor, when the
     // type of the gaussian argument is not naturally iterable.
     // Have a look at car and car_wrapper definitions at the beginning of this file.
@@ -231,7 +244,7 @@ int main(int argc, char* argv[]) {
     mu_type center;
     for(const auto& c : {alices, bobs, mine}) {
       car_wrapper wrapper {c};
-      std::copy(wrapper.begin(), wrapper.end(), center.begin()); // Warning, sized are not checked at compiling time.
+      std::copy(wrapper.begin(), wrapper.end(), center.begin()); 
       *(out_it++) = {center, gammas_ptr};
     }
 
@@ -240,8 +253,13 @@ int main(int argc, char* argv[]) {
       for(auto value : phi(c)) std::cout << value << ' ';
       std::cout << std::endl;
     }
-  }
+}
 
+int main(int argc, char* argv[]) {
+  test_polynomial();
+  test_1d_gaussian();
+  test_nd_gaussian();
+  test_custom_gaussian();
   return 0;
 }
   
