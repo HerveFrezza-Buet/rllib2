@@ -231,7 +231,6 @@ void test_custom_gaussian() {
     using rbf_feature = rl2::features::rbfs<3, rbf>;  // This is our feature type, with 3 rbfs.
     
     mu_type sigmas {1., 1., 500., 10.}; // This is our std_dev in each component (cost, miles, power, brand).
-    // Nota :  the wrapper
     
     // This will be used (and thus shared) by all the rbf functions. We compute this once, here.
     auto gammas_ptr = std::make_shared<mu_type>(rl2::functional::gaussian_gammas_of_sigmas(sigmas));

@@ -1,14 +1,16 @@
-/*
- Example en utilisant Cartpole en discrétisant les observations.
-*/
+
 
 #include <numbers>
 #include <random>
 #include <string>
 #include <iostream>
 #include <iomanip>
+
+
+#include <gdyn.hpp>
 #include <rllib2.hpp>
 
+// Here, we consider the cartpole system, but the state is discretized.
 
 struct S_convertor {
 

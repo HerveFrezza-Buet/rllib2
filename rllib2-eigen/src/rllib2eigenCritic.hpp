@@ -4,7 +4,6 @@
 #include <Eigen/Dense>
 #include <utility>
 
-#include <rllib2eigenDiscreteA.hpp>
 
 namespace rl2 {
   namespace eigen {
