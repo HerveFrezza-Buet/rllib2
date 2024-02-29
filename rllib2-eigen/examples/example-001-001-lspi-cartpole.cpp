@@ -14,23 +14,25 @@
 // Read the type definitions in this file
 #include "cartpole-defs.hpp"
 
+// Eigen::Vector<double, 4>;
 
 
-// template<typename RANDOM_GENERATOR, typename POLICY, typename OutputIt>
-// void fill(RANDOM_GENERATOR& gen, system& simulator, const POLICY& policy,
-// 	  OutputIt out,
-// 	  unsigned int nb_samples, unsigned int max_episode_length) {
-//   unsigned int to_be_filled = nb_samples;      
-//   while(to_be_filled > 0) {
-//     simulator.random_init(gen);
-//     std::ranges::copy(gdyn::views::pulse([&policy, &to_be_filled](){policy(); --to_be_filled;})
-// 		      | gdyn::views::orbit(simulator)  
-// 		      | rl2::views::sarsa
-// 		      | std::views::take(to_be_filled)
-// 		      | std::views::take(max_episode_length),
-// 		      out);     
-//   }
-// }
+
+template<typename RANDOM_GENERATOR, typename POLICY, typename OutputIt>
+void fill(RANDOM_GENERATOR& gen, system& simulator, const POLICY& policy,
+	  OutputIt out,
+	  unsigned int nb_samples, unsigned int max_episode_length) {
+  unsigned int to_be_filled = nb_samples;      
+  while(to_be_filled > 0) {
+    simulator.random_init(gen);
+    std::ranges::copy(gdyn::views::pulse([&policy, &to_be_filled](){policy(); --to_be_filled;})
+		      | gdyn::views::orbit(simulator)  
+		      | rl2::views::sarsa
+		      | std::views::take(to_be_filled)
+		      | std::views::take(max_episode_length),
+		      out);     
+  }
+}
 
 
 #define NB_TRANSITIONS     1000

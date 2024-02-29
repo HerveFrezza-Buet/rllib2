@@ -87,8 +87,9 @@ inline auto make_state_feature() {
 
   return phi;
 }
+
+// This is the cartpole "environment"
+using system = gdyn::problem::cartpole::system;
 			       
 
 
-
-// Eigen::Vector<double, 4>;
