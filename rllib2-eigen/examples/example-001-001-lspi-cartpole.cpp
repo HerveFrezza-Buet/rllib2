@@ -12,7 +12,7 @@
 #include <gdyn.hpp>
 
 // Read the type definitions in this file
-#include "cartpole-eigen.hpp"
+#include "cartpole-defs.hpp"
 
 
 

@@ -7,6 +7,6 @@
 #include <rllib2eigenCheckings.hpp>
 
 /**
- * @example cartpole-eigen.hpp
+ * @example cartpole-defs.hpp
  * @example example-001-001-lspi-cartpole.cpp
  */
