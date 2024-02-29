@@ -1,5 +1,6 @@
 #pragma once
 
+#include <random>
 #include <gdyn.hpp>
 #include <rllib2.hpp>
 
@@ -57,6 +58,7 @@ auto make_bounds(double min, double max, unsigned int nb) {
   return std::make_tuple(min, max, .5*(max - min)/nb); // min, max, sigma
 }
 
+
 inline auto make_state_feature() {
   auto [x_min,         x_max,         x_sigma        ] = make_bounds(-4.8, 4.8, nb_x_bins);
   auto [x_dot_min,     x_dot_max,     x_dot_sigma    ] = make_bounds(-10., 10., nb_x_dot_bins);
@@ -88,8 +90,5 @@ inline auto make_state_feature() {
   return phi;
 }
 
-// This is the cartpole "environment"
-using system = gdyn::problem::cartpole::system;
-			       
 
 
