@@ -204,10 +204,10 @@ void test_nd_gaussian() {
       std::cout << "phi(" << point[0] << ", " << point[1] << ") = [";
       auto values = phi(point);
       auto value_it = values.begin();
-      std::cout << ' ' << std::setw(4) << uint_1000(value_it++) << std::endl; // The offset
+      std::cout << ' ' << std::setw(4) << uint_1000(*(value_it++)) << std::endl; // The offset
       for(std::size_t vid = 0; vid < nb_gauss_v; ++vid, std::cout << std::endl)
 	for(std::size_t xid = 0; xid < nb_gauss_x; ++xid) 
-	  std::cout << ' ' << std::setw(4) << uint_1000(value_it++);
+	  std::cout << ' ' << std::setw(4) << uint_1000(*(value_it++));
       std::cout << ']' << std::endl << std::endl;
     }
 }
