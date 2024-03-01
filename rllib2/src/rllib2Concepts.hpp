@@ -4,6 +4,7 @@
 #include <tuple>
 #include <array>
 #include <type_traits>
+#include <memory>
 
 namespace rl2 {
   namespace concepts {
@@ -228,6 +229,10 @@ namespace rl2 {
 	typename FUNCTION::action_type;
 	typename FUNCTION::state_feature_type;
       }	&&
+      requires(FUNCTION f) {
+	{f.params}    -> std::same_as<std::shared_ptr<typename FUNCTION::params_type>&>;
+	{f.s_feature} -> std::same_as<std::shared_ptr<typename FUNCTION::state_feature_type>&>;
+      } &&      
       nuplet<typename FUNCTION::params_type> &&
       enumerable<typename FUNCTION::action_type> &&
       feature<typename FUNCTION::state_feature_type, typename FUNCTION::state_type>;

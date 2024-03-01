@@ -14,6 +14,7 @@ namespace rl2 {
 		 rl2::concepts::policy<typename Q::state_type, typename Q::action_type> POLICY,
 		 std::input_iterator Iter, std::sentinel_for<Iter> Sentinel>
 	void lstd(Q q, const POLICY& pi, Iter begin, Sentinel end) {
+	  Eigen::Vector<double, Q::params_type::dim>& theta = *(q.params);
 	  
 	}
       }
