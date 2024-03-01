@@ -40,6 +40,25 @@ int main(int argc, char* argv[]) {
   
   //////
   //
+  // Random policy
+  //
+  //////
+  {
+    std::cout << std::endl
+	      << "Random policy" << std::endl
+	      << "-------------" << std::endl
+	      << std::endl;
+    
+    auto random_policy = rl2::discrete_a::random_policy<weakest_link::S, weakest_link::A>(gen);
+    weakest_link::S s {};
+    for(int i = 0; i< 10; ++i)
+      std::cout << static_cast<weakest_link::A::base_type>(random_policy(s)) << ' ';
+    std::cout << std::endl;
+  }
+  
+  
+  //////
+  //
   // Tabular function and epsilon-ization.
   //
   //////

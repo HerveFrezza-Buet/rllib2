@@ -67,11 +67,16 @@ int main(int argc, char *argv[]) {
   auto   epsilon_greedy_on_q = rl2::discrete::epsilon_ify(greedy_on_q, std::cref(epsilon), gen);
 
   // Let us initialize Q from the random policy.
-  rl2::eigen::critic::discrete_a::lstd(next_q, rl2::discrete::uniform_sampler<A>(gen), transitions.begin(), transitions.end());
+  rl2::eigen::critic::discrete_a::lstd(next_q,
+				       rl2::discrete_a::random_policy<S, A>(gen),
+				       transitions.begin(), transitions.end());
 
   // LSPI iteration
   for(unsigned int i = 0; i < NB_LSPI_ITERATIONS; ++i) {
-    
+    std::swap(q, next_q);
+    rl2::eigen::critic::discrete_a::lstd(next_q,
+					 epsilon_greedy_on_q,
+					 transitions.begin(), transitions.end());
   }
   
 

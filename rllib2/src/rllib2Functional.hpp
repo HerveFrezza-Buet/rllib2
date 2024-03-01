@@ -27,6 +27,7 @@ namespace rl2 {
     }
 
 
+
     /**
      * This makes an epsilon version of a function. It calls f with a
      * probability 1-epsilon, and return a random result
@@ -46,6 +47,17 @@ namespace rl2 {
 	return res;
       };
     }
+  }
+
+  namespace discrete_a {
+    template<typename S, concepts::enumerable A, typename RANDOM_GENERATOR>
+    auto random_policy(RANDOM_GENERATOR& gen) {
+      return [sampler = discrete::uniform_sampler<A>(gen)](const S&) {return sampler();};
+    }
+      
+  }
+
+  namespace discrete {
 
     namespace algo {
       /**

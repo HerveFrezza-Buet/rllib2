@@ -11,7 +11,6 @@ namespace rl2 {
 	constexpr static std::size_t dim = DIM;
       };
     
-      
     }
   }
 }

@@ -10,7 +10,9 @@ namespace rl2 {
     namespace critic {
       namespace discrete_a {
 
-	template<typename Q, typename POLICY, typename Iter, typename Sentinel>
+	template<rl2::concepts::discrete_a::linear_qfunction Q,
+		 rl2::concepts::policy<typename Q::state_type, typename Q::action_type> POLICY,
+		 std::input_iterator Iter, std::sentinel_for<Iter> Sentinel>
 	void lstd(Q q, const POLICY& pi, Iter begin, Sentinel end) {
 	  
 	}
