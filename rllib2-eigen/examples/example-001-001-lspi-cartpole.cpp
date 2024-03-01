@@ -20,18 +20,19 @@
 
 
 template<typename RANDOM_GENERATOR, typename POLICY, typename OutputIt>
-void fill(RANDOM_GENERATOR& gen, gdyn::problem::cartpole::system& simulator, const POLICY& policy,
+void fill(RANDOM_GENERATOR& gen, cartpole& simulator, const POLICY& policy,
 	  OutputIt out,
 	  unsigned int nb_samples, unsigned int max_episode_length) {
   unsigned int to_be_filled = nb_samples;      
   while(to_be_filled > 0) {
     simulator = gdyn::problem::cartpole::random_state(gen, gdyn::problem::cartpole::parameters());
-    auto k = gdyn::views::pulse([&policy, &to_be_filled](){auto a = policy(); --to_be_filled; return a;})
-      | gdyn::views::orbit(simulator)  
-      | rl2::views::sarsa
-      | std::views::take(to_be_filled)
-      | std::views::take(max_episode_length);
-     std::ranges::copy(k,		      out);     
+    std::ranges::copy(gdyn::views::pulse(policy)
+     		      | gdyn::views::orbit(simulator)  
+		      | rl2::views::sarsa
+		      | std::views::take(to_be_filled)
+		      | std::views::take(max_episode_length)
+		      | std::views::filter([&to_be_filled](const auto&){--to_be_filled; return true;}),
+		      out);
   }
 }
 
@@ -46,7 +47,8 @@ int main(int argc, char *argv[]) {
   // This will store transitions for LSTDQ computation.
   std::vector<rl2::sarsa<S, A>> transitions;
   
-  auto simulator = gdyn::problem::cartpole::make();
+  auto sim = gdyn::problem::cartpole::make();
+  cartpole simulator {sim}; // simulator is sim, but handling discrete actions.
 
   // First, we fill the dataset with a random policy.
   std::cout << "Filling the dataset... " << std::flush;
@@ -54,6 +56,9 @@ int main(int argc, char *argv[]) {
        rl2::discrete::uniform_sampler<A>(gen),
        std::back_inserter(transitions),
        NB_TRANSITIONS, MAX_EPOSODE_LENGTH);
+  std::cout << " got " << transitions.size() << " samples, (" 
+	    << std::ranges::count_if(transitions, [](auto& transition){return transition.is_terminal();})
+	    << " are terminal transitions)." << std::endl;
 
   // // Let us iterate in order to apply lspi
   // while(true) {

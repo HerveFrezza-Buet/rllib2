@@ -126,6 +126,32 @@ namespace rl2 {
       state_type state() const requires(gdyn::concepts::transparent_system<SYSTEM>) {return borrowed_system.state();}
     };
 
+
+    namespace discrete_a {
+      template<typename STATE, typename OBSERVATION, concepts::enumerable COMMAND,
+	       gdyn::concepts::system SYSTEM>
+      requires std::same_as<typename COMMAND::base_type, typename SYSTEM::command_type>
+      struct system {
+	using state_type = STATE;
+	using observation_type = OBSERVATION;
+	using command_type = COMMAND;
+	using report_type = typename SYSTEM::report_type;
+      
+	SYSTEM& borrowed_system;
+	system(SYSTEM& borrowed_system) : borrowed_system(borrowed_system) {}
+	system() = delete;
+	system(system&&) = delete;
+	system& operator=(system&&) = delete;
+      
+	void operator=(const state_type& state)             {borrowed_system = state;}
+	report_type operator()(const command_type& command) {return borrowed_system(static_cast<COMMAND::base_type>(command));}
+	observation_type operator*() const                  {return *borrowed_system;}
+	operator bool() const                               {return borrowed_system;}
+
+	state_type state() const requires(gdyn::concepts::transparent_system<SYSTEM>) {return borrowed_system.state();}
+      };
+    }
+
     namespace utils {
       namespace digitize {
 	

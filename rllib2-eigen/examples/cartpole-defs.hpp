@@ -91,4 +91,7 @@ inline auto make_state_feature() {
 }
 
 
+// Our cartpole needs to be redefined, in order to handle enumerable actions.
+using cartpole = rl2::enumerable::discrete_a::system<S, S, A, gdyn::problem::cartpole::system>;
+
 
