@@ -60,11 +60,8 @@ int main(int argc, char *argv[]) {
 	    << std::ranges::count_if(transitions, [](auto& transition){return transition.is_terminal();})
 	    << " are terminal transitions)." << std::endl;
 
-  // // Let us iterate in order to apply lspi
-  // while(true) {
-  //   auto q = rl2::eigen::critic::disrcete_a::lstd<A>(s_phi, transitions.begin(), transitions.end());
-  // }
-       
+  // For lspi, we need a parametrized Q function, and related policies.
+  auto phi = make_features;
 
   
 
