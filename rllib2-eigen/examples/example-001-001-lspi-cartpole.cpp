@@ -15,8 +15,6 @@
 // Read the type definitions in this file
 #include "cartpole-defs.hpp"
 
-// Eigen::Vector<double, 4>;
-
 
 
 template<typename RANDOM_GENERATOR, typename POLICY, typename OutputIt>
@@ -39,6 +37,7 @@ void fill(RANDOM_GENERATOR& gen, cartpole& simulator, const POLICY& policy,
 
 #define NB_TRANSITIONS     1000
 #define MAX_EPOSODE_LENGTH   20
+#define NB_LSPI_ITERATIONS   10
 
 int main(int argc, char *argv[]) {
   std::random_device rd;
@@ -61,8 +60,19 @@ int main(int argc, char *argv[]) {
 	    << " are terminal transitions)." << std::endl;
 
   // For lspi, we need a parametrized Q function, and related policies.
-  auto phi = make_features;
+  Q q      {std::make_shared<s_feature>(make_state_feature()), std::make_shared<params>()};
+  Q next_q {std::make_shared<s_feature>(make_state_feature()), std::make_shared<params>()};
+  auto   greedy_on_q         = rl2::discrete::greedy_ify(q);
+  double epsilon             = .1;
+  auto   epsilon_greedy_on_q = rl2::discrete::epsilon_ify(greedy_on_q, std::cref(epsilon), gen);
 
+  // Let us initialize Q from the random policy.
+  rl2::eigen::critic::discrete_a::lstd(next_q, rl2::discrete::uniform_sampler<A>(gen), transitions.begin(), transitions.end());
+
+  // LSPI iteration
+  for(unsigned int i = 0; i < NB_LSPI_ITERATIONS; ++i) {
+    
+  }
   
 
   return 0;

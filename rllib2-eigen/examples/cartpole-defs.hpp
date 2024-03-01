@@ -51,7 +51,7 @@ constexpr unsigned int nb_x_bins         = 5;
 constexpr unsigned int nb_x_dot_bins     = 5;
 constexpr unsigned int nb_theta_bins     = 5;
 constexpr unsigned int nb_theta_dot_bins = 5;
-using rbf_feature = rl2::features::rbfs<nb_x_bins * nb_x_dot_bins * nb_theta_bins * nb_theta_dot_bins,
+using s_feature = rl2::features::rbfs<nb_x_bins * nb_x_dot_bins * nb_theta_bins * nb_theta_dot_bins,
 					rbf>;  // This is our feature type, the appropriate number of basis functions.
 
 auto make_bounds(double min, double max, unsigned int nb) {
@@ -68,8 +68,8 @@ inline auto make_state_feature() {
   mu_type sigmas {x_sigma, x_dot_sigma, theta_sigma, theta_dot_sigma};
   auto gammas_ptr = std::make_shared<mu_type>(rl2::functional::gaussian_gammas_of_sigmas(sigmas));
   
-  rbf_feature phi {};
-  phi.rbfs = std::make_shared<rbf_feature::rbfs_type>();
+  s_feature phi {};
+  phi.rbfs = std::make_shared<s_feature::rbfs_type>();
   auto rbf_out = phi.rbfs->begin();
   
   mu_type mu;
@@ -89,6 +89,14 @@ inline auto make_state_feature() {
 
   return phi;
 }
+
+
+// We will implement a linear parametrization of Q. We use eigen
+// vectors to implement nuplets.
+using params = rl2::eigen::nuplet::from<rl2::linear::discrete_a::q_dim_v<S, A, s_feature>>; 
+using Q      = rl2::linear::discrete_a::q<params, S, A, s_feature>;                        
+
+
 
 
 // Our cartpole needs to be redefined, in order to handle enumerable actions.
