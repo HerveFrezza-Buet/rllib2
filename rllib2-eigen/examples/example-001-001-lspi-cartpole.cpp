@@ -15,8 +15,7 @@
 // Read the type definitions in this file
 #include "cartpole-defs.hpp"
 
-
-
+// This fills a transition dataset.
 template<typename RANDOM_GENERATOR, typename POLICY, typename OutputIt>
 void fill(RANDOM_GENERATOR& gen, cartpole& simulator, const POLICY& policy,
 	  OutputIt out,
@@ -25,7 +24,7 @@ void fill(RANDOM_GENERATOR& gen, cartpole& simulator, const POLICY& policy,
   while(to_be_filled > 0) {
     simulator = gdyn::problem::cartpole::random_state(gen, gdyn::problem::cartpole::parameters());
     std::ranges::copy(gdyn::views::pulse(policy)
-     		      | gdyn::views::orbit(simulator)  
+		      | gdyn::views::orbit(simulator)  
 		      | rl2::views::sarsa
 		      | std::views::take(to_be_filled)
 		      | std::views::take(max_episode_length)
@@ -59,7 +58,7 @@ int main(int argc, char *argv[]) {
 	    << std::ranges::count_if(transitions, [](auto& transition){return transition.is_terminal();})
 	    << " are terminal transitions)." << std::endl;
 
-  // For lspi, we need a parametrized Q function, and related policies.
+  // For LSPI, we need a parametrized Q function, and related policies.
   Q q      {std::make_shared<s_feature>(make_state_feature()), std::make_shared<params>()};
   Q next_q {std::make_shared<s_feature>(make_state_feature()), std::make_shared<params>()};
   auto   greedy_on_q         = rl2::discrete::greedy_ify(q);

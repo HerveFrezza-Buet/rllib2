@@ -8,18 +8,12 @@
 // This is the state space.
 using S = gdyn::problem::cartpole::state;
 
-
 // The action space is a enumerable version of gdyn::problem::cartpole::direction.
 struct A_convertor {
   static constexpr std::size_t size() {return 2;} 
-  static gdyn::problem::cartpole::direction to (std::size_t index)
-  {
-    switch(index) {
-    case 0:
-        return gdyn::problem::cartpole::direction::Left;
-    default:
-      return gdyn::problem::cartpole::direction::Right;
-    }
+  static gdyn::problem::cartpole::direction to(std::size_t index) {
+    if(index ==  0) return gdyn::problem::cartpole::direction::Left;
+    else            return gdyn::problem::cartpole::direction::Right;
   }
   static std::size_t from(const gdyn::problem::cartpole::direction& d)  {
     return static_cast<std::size_t>(d);
@@ -28,20 +22,18 @@ struct A_convertor {
 using A = rl2::enumerable::set<gdyn::problem::cartpole::direction, A_convertor::size(), A_convertor>;
 
 
-// Let us set up the Gaussian RBF for states.
-// S is a struct with 4 double **contiguous** attributes.
+// Let us set up the Gaussian RBF for states.  S is a struct with 4
+// **contiguous** attributes with type double.
 
 struct wrapper {
   constexpr static std::size_t dim = 4; 
-  S data;
-  double* start;
-  double* sentinel;
-  wrapper(const S& data) : data(data) {
-    start = reinterpret_cast<double*>(&(this->data));
-    sentinel = start + dim;
-  }
-  const double* begin() const {return start;}
-  const double* end()   const {return sentinel;}
+  const double* start;
+  const double* sentinel;
+  wrapper(const S& data)
+    : start    (reinterpret_cast<const double*>(&data)),
+      sentinel (reinterpret_cast<const double*>(&data) + dim) {}
+  auto begin() const {return start;}
+  auto end()   const {return sentinel;}
 };
 
 using mu_type = rl2::nuplet::from<double, wrapper::dim>; 
@@ -51,8 +43,10 @@ constexpr unsigned int nb_x_bins         = 5;
 constexpr unsigned int nb_x_dot_bins     = 5;
 constexpr unsigned int nb_theta_bins     = 5;
 constexpr unsigned int nb_theta_dot_bins = 5;
+
+// This is our feature type, with the appropriate number of basis functions.
 using s_feature = rl2::features::rbfs<nb_x_bins * nb_x_dot_bins * nb_theta_bins * nb_theta_dot_bins,
-					rbf>;  // This is our feature type, the appropriate number of basis functions.
+				      rbf>;  
 
 auto make_bounds(double min, double max, unsigned int nb) {
   return std::make_tuple(min, max, .5*(max - min)/nb); // min, max, sigma
@@ -90,14 +84,11 @@ inline auto make_state_feature() {
   return phi;
 }
 
-
 // We will implement a linear parametrization of Q. We use eigen
-// vectors to implement nuplets.
+// vectors to implement nuplets. The size required for the parameters
+// is given at compiling time by rl2::linear::discrete_a::q_dim_v.
 using params = rl2::eigen::nuplet::from<rl2::linear::discrete_a::q_dim_v<S, A, s_feature>>; 
 using Q      = rl2::linear::discrete_a::q<params, S, A, s_feature>;                        
-
-
-
 
 // Our cartpole needs to be redefined, in order to handle enumerable actions.
 using cartpole = rl2::enumerable::discrete_a::system<S, S, A, gdyn::problem::cartpole::system>;
