@@ -7,6 +7,8 @@
 
 #include <rllib2.hpp>
 
+// This is a fake mountain car-like example.
+
 // Enumeration converter for actions.
 struct A2char {
   static char          to(std::size_t index) {return static_cast<char>(index + 60);       }
@@ -23,7 +25,7 @@ using A         = rl2::enumerable::set<char, 4, A2char>;                        
 using mu_type   = rl2::nuplet::from<double, 2>;                                                 // This is the radial centers, it must be a nuplet.
 using rbf       = rl2::functional::gaussian<mu_type, S>;                                        // This is our RBF functions type.
 using S_feature = rl2::features::rbfs<nb_rbfs, rbf>;                                            // This is our feature type for S.
-using params    = rl2::nuplet::from<double, rl2::linear::discrete_a::q_dim_v<S, A, S_feature>>; // This is for theta.
+using params    = rl2::nuplet::from<double, rl2::linear::discrete_a::q_dim_v<S, A, S_feature>>; // This is for theta... q_dim_v gives the appropriate parameter size.
 using Q         = rl2::linear::discrete_a::q<params, S, A, S_feature>;                          // functions such as Q(s,a) = thetaT.[0...phi(s)...0]
 
 
@@ -114,7 +116,7 @@ int main(int argc, char* argv[]) {
 
   auto q_s = q(s); // Q is partially callable.
   for(auto a_it = A::begin(); a_it != A::end(); ++a_it)
-    std::cout << "q_s(" << static_cast<A::base_type>(a_it) << ") = " << q_s(a_it) << std::endl;
+    std::cout << "q_s(" << static_cast<A::base_type>(*a_it) << ") = " << q_s(a_it) << std::endl;
   std::cout << std::endl;
   
   auto greedy_on_q = rl2::discrete::greedy_ify(q); // or rl2::discrete::argmax_ify(q)
@@ -127,7 +129,7 @@ int main(int argc, char* argv[]) {
 
   std::array<std::size_t, A::size()> hist;
   
-  for(std::size_t i = 0; i < 50; ++i)
+  for(std::size_t i = 0; i < 50; ++i) // We build up an histogram with 50 samples.
     ++hist[static_cast<std::size_t>(epsilon_greedy_on_q(s))];
   
   for(auto a_it = A::begin(); a_it != A::end(); ++a_it) 

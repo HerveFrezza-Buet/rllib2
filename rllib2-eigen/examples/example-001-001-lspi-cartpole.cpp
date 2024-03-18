@@ -35,7 +35,7 @@ void fill(RANDOM_GENERATOR& gen, cartpole& simulator, const POLICY& policy,
 
 
 #define NB_TRANSITIONS     1000
-#define MAX_EPOSODE_LENGTH   20
+#define MAX_EPISODE_LENGTH   20
 #define NB_LSPI_ITERATIONS   10
 
 int main(int argc, char *argv[]) {
@@ -53,7 +53,7 @@ int main(int argc, char *argv[]) {
   fill(gen, simulator,
        rl2::discrete::uniform_sampler<A>(gen),
        std::back_inserter(transitions),
-       NB_TRANSITIONS, MAX_EPOSODE_LENGTH);
+       NB_TRANSITIONS, MAX_EPISODE_LENGTH);
   std::cout << " got " << transitions.size() << " samples, (" 
 	    << std::ranges::count_if(transitions, [](auto& transition){return transition.is_terminal();})
 	    << " are terminal transitions)." << std::endl;
