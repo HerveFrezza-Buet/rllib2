@@ -10,6 +10,7 @@ using S = gdyn::problem::cartpole::state;
 
 // The action space is a enumerable version of gdyn::problem::cartpole::direction.
 struct A_convertor {
+  // TODO pourquoi ce 2 il est pas dans la def du probleme ??
   static constexpr std::size_t size() {return 2;} 
   static gdyn::problem::cartpole::direction to(std::size_t index) {
     if(index ==  0) return gdyn::problem::cartpole::direction::Left;
@@ -39,10 +40,10 @@ struct wrapper {
 using mu_type = rl2::nuplet::from<double, wrapper::dim>; 
 using rbf = rl2::functional::gaussian<mu_type, S, wrapper>;
 
-constexpr unsigned int nb_x_bins         = 5;
-constexpr unsigned int nb_x_dot_bins     = 5;
-constexpr unsigned int nb_theta_bins     = 5;
-constexpr unsigned int nb_theta_dot_bins = 5;
+constexpr unsigned int nb_x_bins         = 2;
+constexpr unsigned int nb_x_dot_bins     = 2;
+constexpr unsigned int nb_theta_bins     = 2;
+constexpr unsigned int nb_theta_dot_bins = 2;
 
 // This is our feature type, with the appropriate number of basis functions.
 using s_feature = rl2::features::rbfs<nb_x_bins * nb_x_dot_bins * nb_theta_bins * nb_theta_dot_bins,

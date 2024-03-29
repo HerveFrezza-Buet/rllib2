@@ -34,9 +34,9 @@ void fill(RANDOM_GENERATOR& gen, cartpole& simulator, const POLICY& policy,
 }
 
 
-#define NB_TRANSITIONS     1000
+#define NB_TRANSITIONS        2
 #define MAX_EPISODE_LENGTH   20
-#define NB_LSPI_ITERATIONS   10
+#define NB_LSPI_ITERATIONS    0
 
 int main(int argc, char *argv[]) {
   std::random_device rd;
@@ -64,6 +64,13 @@ int main(int argc, char *argv[]) {
   auto   greedy_on_q         = rl2::discrete::greedy_ify(q);
   double epsilon             = .1;
   auto   epsilon_greedy_on_q = rl2::discrete::epsilon_ify(greedy_on_q, std::cref(epsilon), gen);
+
+  std::cout << "__ Q est un combinaison linéaire de RBF" << std::endl;
+  // TODO pourquoi ce 2 il est pas quelque part dans la def du probleme
+  std::cout << "   with continuous state space and " << 2 << "discrete actions" << std::endl;
+  // TODO j'en ai chié, pk *(q.s_feature)(it->s) marche pas ??
+  std::cout << "   " << q.s_feature->dim << " features"<< std::endl;
+  std::cout << "   " << q.params->dim << " parameters" << std::endl;
 
   // Let us initialize Q from the random policy.
   rl2::eigen::critic::discrete_a::lstd(next_q,
