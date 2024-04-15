@@ -1,4 +1,5 @@
 #include <iostream>
+#include <iomanip>
 #include <vector>
 #include <random>
 #include <iterator>
@@ -34,9 +35,16 @@ void fill(RANDOM_GENERATOR& gen, cartpole& simulator, const POLICY& policy,
 }
 
 
-#define NB_TRANSITIONS        2
-#define MAX_EPISODE_LENGTH   20
-#define NB_LSPI_ITERATIONS    0
+#define NB_TRANSITIONS        200
+#define MAX_EPISODE_LENGTH    100
+#define NB_LSPI_ITERATIONS    100
+
+
+template<typename RANDOM_DEVICE, typename Q>
+void test_policy(RANDOM_DEVICE& gen, const Q& q);
+
+template<typename Q>
+void run_policy(S start, const Q& q);
 
 int main(int argc, char *argv[]) {
   std::random_device rd;
@@ -65,26 +73,87 @@ int main(int argc, char *argv[]) {
   double epsilon             = .1;
   auto   epsilon_greedy_on_q = rl2::discrete::epsilon_ify(greedy_on_q, std::cref(epsilon), gen);
 
-  std::cout << "__ Q est un combinaison linéaire de RBF" << std::endl;
-  // TODO pourquoi ce 2 il est pas quelque part dans la def du probleme
-  std::cout << "   with continuous state space and " << 2 << "discrete actions" << std::endl;
-  // TODO j'en ai chié, pk *(q.s_feature)(it->s) marche pas ??
-  std::cout << "   " << q.s_feature->dim << " features"<< std::endl;
-  std::cout << "   " << q.params->dim << " parameters" << std::endl;
+  std::cout << "Q is a linear combination of RBFs" << std::endl;
+  std::cout << "   - with continuous state space and " << A::size() << " discrete actions" << std::endl;
+  std::cout << "   - " << q.s_feature->dim << " features"<< std::endl;
+  std::cout << "   - " << q.params->dim << " parameters" << std::endl;
 
-  // Let us initialize Q from the random policy.
-  rl2::eigen::critic::discrete_a::lstd(next_q,
-				       rl2::discrete_a::random_policy<S, A>(gen),
-				       transitions.begin(), transitions.end());
+  // Let us initialize Q from the random policy. (true means that we
+  // want to actually compute the error. 0 is returned with false).
+  double gamma = .9;
+  double error = rl2::eigen::critic::discrete_a::lstd<true>(next_q,
+						      rl2::discrete_a::random_policy<S, A>(gen),
+						      gamma,
+						      transitions.begin(), transitions.end());
+  std::cout << "LSTD error of the random policy = " << error << std::endl;
 
-  // LSPI iteration
-  for(unsigned int i = 0; i < NB_LSPI_ITERATIONS; ++i) {
-    std::swap(q, next_q);
-    rl2::eigen::critic::discrete_a::lstd(next_q,
-					 epsilon_greedy_on_q,
-					 transitions.begin(), transitions.end());
-  }
+  test_policy(gen, next_q);
   
+  // LSPI iteration
+  std::cout << "Training using LSPI" << std::endl;
+  for(unsigned int i = 0; i < NB_LSPI_ITERATIONS; ++i) {
+    std::swap(q, next_q); // swapping q functions swaps their contents, which are share pointers.
 
+    // We re-sample the transition set, following the current q-values
+    // with an epsilon-greedy policy.
+    transitions.clear();
+    fill(gen, simulator,
+	 [&simulator, &epsilon_greedy_on_q](){return epsilon_greedy_on_q(*simulator);},
+	 std::back_inserter(transitions),
+	 NB_TRANSITIONS, MAX_EPISODE_LENGTH);
+    
+    auto error = rl2::eigen::critic::discrete_a::lstd<true>(next_q,
+							    epsilon_greedy_on_q,
+							    gamma,
+							    transitions.begin(), transitions.end());
+    std::cout << "  iteration " << std::setw(4) << i << " : error = " << error << std::endl;
+  }
+
+  test_policy(gen, next_q);
+
+  run_policy(S(), next_q);
+  
   return 0;
+}
+
+#define NB_TEST_EPISODES        1000
+#define MAX_TEST_EPISODE_LENGTH  MAX_EPISODE_LENGTH
+template<typename RANDOM_DEVICE, typename Q>
+void test_policy(RANDOM_DEVICE& gen, const Q& q) {
+  auto sim = gdyn::problem::cartpole::make();
+  cartpole simulator {sim}; // simulator is sim, but handling discrete actions.
+
+  unsigned int nb_success = 0;
+  unsigned int sum_length = 0;
+  for(unsigned int episode = 0; episode < NB_TEST_EPISODES; ++episode) {
+    std::cout << "episode " << std::setw(6) << episode + 1 << "/" << NB_TEST_EPISODES << "  \r" << std::flush;
+    unsigned int length = 0;
+    simulator = gdyn::problem::cartpole::random_state(gen, gdyn::problem::cartpole::parameters());
+    for([[maybe_unused]] const auto& unused
+			   : gdyn::views::controller(simulator, rl2::discrete::greedy_ify(q))
+			   | gdyn::views::orbit(simulator)
+			   | std::views::take(MAX_TEST_EPISODE_LENGTH))
+      ++length;
+    if(length == MAX_TEST_EPISODE_LENGTH)
+      nb_success ++;
+    sum_length += length;
+  }
+  std::cout << std::endl
+	    << "Success on " << int(100*nb_success/NB_TEST_EPISODES+.5) << "% of the episodes," << std::endl 
+	    << "           (average episode length is " << sum_length/NB_TEST_EPISODES << ")." << std::endl;
+
+}
+
+template<typename Q>
+void run_policy(S start, const Q& q) {
+  auto sim = gdyn::problem::cartpole::make();
+  cartpole simulator {sim}; // simulator is sim, but handling discrete actions.
+  simulator = start;
+  std::cout << "RUN:" << std::endl;
+  for(auto [s, a, r, next_s, next_a]
+        : gdyn::views::controller(simulator, rl2::discrete::greedy_ify(q))
+        | gdyn::views::orbit(simulator)
+        | rl2::views::sarsa
+        | std::views::take(MAX_TEST_EPISODE_LENGTH)) 
+    std::cout << "  " << s << " --> " << static_cast<A::base_type>(a) << std::endl;
 }
