@@ -47,7 +47,7 @@ constexpr unsigned int nb_theta_dot_bins = 2;
 
 // This is our feature type, with the appropriate number of basis functions.
 using s_feature = rl2::features::rbfs<nb_x_bins * nb_x_dot_bins * nb_theta_bins * nb_theta_dot_bins,
-				      rbf>;  
+                                      rbf>;
 
 auto make_bounds(double min, double max, unsigned int nb) {
   return std::make_tuple(min, max, .5*(max - min)/nb); // min, max, sigma
@@ -73,11 +73,11 @@ inline auto make_state_feature() {
     for(unsigned int j = 0; j < nb_x_dot_bins; ++j) {
       mu[1] = rl2::enumerable::utils::digitize::to_value(j, x_dot_min, x_dot_max, nb_x_dot_bins);
       for(unsigned int k = 0; k < nb_theta_bins; ++k) {
-	mu[2] = rl2::enumerable::utils::digitize::to_value(k, theta_min, theta_max, nb_theta_bins);
-	for(unsigned int l = 0; l < nb_theta_dot_bins; ++l) {
-	  mu[3] = rl2::enumerable::utils::digitize::to_value(l, theta_dot_min, theta_dot_max, nb_theta_dot_bins);
-	  *(rbf_out++) = {mu, gammas_ptr};
-	}
+        mu[2] = rl2::enumerable::utils::digitize::to_value(k, theta_min, theta_max, nb_theta_bins);
+        for(unsigned int l = 0; l < nb_theta_dot_bins; ++l) {
+          mu[3] = rl2::enumerable::utils::digitize::to_value(l, theta_dot_min, theta_dot_max, nb_theta_dot_bins);
+          *(rbf_out++) = {mu, gammas_ptr};
+        }
       }
     }
   }
@@ -85,13 +85,13 @@ inline auto make_state_feature() {
   return phi;
 }
 
-// We will implement a linear parametrization of Q. We use eigen
+// We will implement a linear parametrization of Q. We use Eigen
 // vectors to implement nuplets. The size required for the parameters
 // is given at compiling time by rl2::linear::discrete_a::q_dim_v.
 using params = rl2::eigen::nuplet::from<rl2::linear::discrete_a::q_dim_v<S, A, s_feature>>; 
 using Q      = rl2::linear::discrete_a::q<params, S, A, s_feature>;                        
 
-// Our cartpole needs to be redefined, in order to handle enumerable actions.
+// Our cartpole needs to be defined, in order to handle enumerable actions.
 using cartpole = rl2::enumerable::discrete_a::system<S, S, A, gdyn::problem::cartpole::system>;
 
 
