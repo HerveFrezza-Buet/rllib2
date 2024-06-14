@@ -72,9 +72,15 @@ namespace rl2 {
 	    auto phi_s_eigen  = rl2::eigen::discrete_a::from((*(q.s_feature))(it->s),  it->a);
 	    // std::cout << "**** Transition " << count_trans << std::endl;
 	    // std::cout << " phi_s = " << phi_s_eigen << std::endl;
-	    auto phi_ss_eigen = rl2::eigen::discrete_a::from((*(q.s_feature))(it->ss), pi(it->ss));
+	    // TODO effacer si ca marche
+	    // auto phi_ss_eigen = rl2::eigen::discrete_a::from((*(q.s_feature))(it->ss), pi(it->ss));
+	    // auto phi_jgj = (phi_s_eigen - gamma * phi_ss_eigen);
 
-	    auto phi_jgj = (phi_s_eigen - gamma * phi_ss_eigen);
+			auto phi_jgj = phi_s_eigen;
+			if (not it->is_terminal()) {
+				auto phi_ss_eigen = rl2::eigen::discrete_a::from((*(q.s_feature))(it->ss), pi(it->ss));
+				phi_jgj = phi_jgj - gamma * phi_ss_eigen;
+			}
 	    // std::cout << "  phi_jgj.shape=" << shape(phi_jgj)<< std::endl;
 	    auto phiphi = phi_s_eigen * phi_jgj.transpose();
 	    // std::cout << "  phiphi.shape=" << shape(phiphi)<< std::endl;
