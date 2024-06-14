@@ -85,11 +85,69 @@ inline auto make_state_feature() {
   return phi;
 }
 
+// TODO faire plus simple ? State -> Array -wrap-> nuplet --(lspi)-> Eigen::vec
+// FEATURE doit avoir un operator()() -> nuplet et ::dim
+// "Raw state" features are state.x, tanh(state.x_dot/10), state.theta, tanh(state.theta_dot/10)
+// struct rawstate_wrapper {
+//   // CONCEPTS: This is required by rl2::concepts::nuplet_wrapper.
+//   constexpr static std::size_t dim = 4; // This tells how many scalars are used to represent the state
+
+//   std::array<double, dim> data;         // This is a buffer for storing them when needed.
+
+//   // CONCEPTS: This is required by rl2::concepts::nuplet_wrapper.
+//   rawstate_wrapper(const S& state) {
+
+//     auto it = data.begin();
+//     *(it++) = state.x;
+//     *(it++) = std::tanh( state.x_dot / 10.0 );
+//     *(it++) = state.theta;
+//     *(it++) = std::tanh( state.theta_dot / 10.0 );
+//   }
+
+//   // CONCEPTS: These are required by rl2::concepts::nuplet_wrapper.
+//   auto begin() const {return data.begin();}
+//   auto end()   const {return data.end();}
+
+// }; // rawstate_wrapper
+
+
+
+// // TODO ce qui suit ne marche pas
+// // required for the satisfaction of ‘feature<S_FEATURE, S>’ [with S_FEATURE = raw_s_feature; S = gdyn::problem::cartpole::state]
+// // in requirements with ‘const FEATURE cf’, ‘const X cx’ [with X = gdyn::problem::cartpole::state; FEATURE = raw_s_feature]
+// // note: the required expression ‘cf(cx)’ is invalid
+// // {cf(cx)} -> std::ranges::input_range;
+// // TODO si j'ajoute const à operator()
+// // In member function ‘auto raw_s_feature::operator()(const S&) const’:
+// // error: assignment of read-only location ‘*(it ++)’
+// // *(it++) = state.x;
+
+// TODO features needs a REF to array
+struct raw_s_feature {
+  constexpr static std::size_t dim = 4;
+  std::shared_ptr<std::array<double, dim>> data;
+
+  auto operator()( const S& state ) const
+  {
+    auto it = data->begin();
+    *(it++) = state.x;
+    *(it++) = std::tanh( state.x_dot / 10.0 );
+    *(it++) = state.theta;
+    *(it++) = std::tanh( state.theta_dot / 10.0 );
+
+    return rl2::nuplet::make_from_iterator<dim>(data->begin());
+  }
+}; // raw_s_feature
+
+
 // We will implement a linear parametrization of Q. We use Eigen
 // vectors to implement nuplets. The size required for the parameters
 // is given at compiling time by rl2::linear::discrete_a::q_dim_v.
 using params = rl2::eigen::nuplet::from<rl2::linear::discrete_a::q_dim_v<S, A, s_feature>>; 
 using Q      = rl2::linear::discrete_a::q<params, S, A, s_feature>;                        
+
+using raw_params = rl2::eigen::nuplet::from<rl2::linear::discrete_a::q_dim_v<S, A, raw_s_feature>>;
+using raw_Q      = rl2::linear::discrete_a::q<raw_params, S, A, raw_s_feature>;
 
 // Our cartpole needs to be defined, in order to handle enumerable actions.
 using cartpole = rl2::enumerable::discrete_a::system<S, S, A, gdyn::problem::cartpole::system>;
