@@ -40,8 +40,13 @@ void fill(RANDOM_GENERATOR& gen, cartpole& simulator, const POLICY& policy,
 
 #define NB_TRANSITIONS        500
 #define MAX_EPISODE_LENGTH    100
-#define NB_LSPI_ITERATIONS    2000
+#define NB_LSPI_ITERATIONS    1
 
+#define NB_TEST_EPISODES        10
+#define MAX_TEST_EPISODE_LENGTH  MAX_EPISODE_LENGTH
+
+unsigned int nb_transitions = NB_TRANSITIONS;
+unsigned int nb_lspi_iterations = NB_LSPI_ITERATIONS;
 
 template<typename RANDOM_DEVICE, typename Q>
 void test_policy(RANDOM_DEVICE& gen, const Q& q);
@@ -55,7 +60,26 @@ void test_policy_with_trace(RANDOM_DEVICE& gen,
                             const std::string& trace_name,
                             utils::Trace& g_trace, int ite_nb);
 
+template<typename Q>
+void store_weights(const Q& q,
+                   utils::Trace& trace,
+                   int current_it);
+
 int main(int argc, char *argv[]) {
+
+  // TODO with arguments : nb_trans, nb_iter, alpha, tau_epsilon
+  if (argc != 5) {
+    std::cout << "usage: " << argv[0] << " nb_trans nb_iter alpha tau_epsilon" << std::endl;
+    return 1;
+  }
+
+  nb_transitions = std::stoi( argv[1] );
+  nb_lspi_iterations = std::stoi( argv[2] );
+  double alpha = std::stod( argv[3] );
+  double epsilon = 1.0;
+  double tau_epsilon = std::stod( argv[4] );
+  double epsilon_threshold    = 0.0001;
+
   std::random_device rd;
   std::mt19937 gen(rd());
 
@@ -70,7 +94,7 @@ int main(int argc, char *argv[]) {
   fill(gen, simulator,
        rl2::discrete::uniform_sampler<A>(gen),
        std::back_inserter(transitions),
-       NB_TRANSITIONS, MAX_EPISODE_LENGTH);
+       nb_transitions, MAX_EPISODE_LENGTH);
   std::cout << " got " << transitions.size() << " samples, (" 
 	    << std::ranges::count_if(transitions, [](auto& transition){return transition.is_terminal();})
 	    << " are terminal transitions)." << std::endl;
@@ -88,9 +112,6 @@ int main(int argc, char *argv[]) {
 
 
   auto   greedy_on_q         = rl2::discrete::greedy_ify(q);
-  double epsilon             = 1.0;
-  double tau_epsilon         = 100.0;
-  double epsilon_threshold    = 0.0001;
   auto   epsilon_greedy_on_q = rl2::discrete::epsilon_ify(greedy_on_q, std::cref(epsilon), gen);
 
   std::cout << "Q is a linear combination of RBFs" << std::endl;
@@ -100,14 +121,29 @@ int main(int argc, char *argv[]) {
 
 
   // Trace to log test statistics
-  utils::Trace global_trace;
-  std::stringstream header;
-  header << "it\tep\tlen";
-  global_trace.add_header( header.str() );
+  std::stringstream header_len;
+  header_len << "it\tep\tlen";
+  utils::Trace global_trace; // log of Q perf
+  global_trace.add_header( header_len.str() );
+  utils::Trace next_trace; // lof of next_Q perd
+  next_trace.add_header( header_len.str() );
 
-  // test random policy
-  test_policy_with_trace(gen, rl2::discrete_a::random_policy<S, A>(gen),
-                         "test_rnd", global_trace, -2);
+  // Trace for weights
+  std::stringstream header_w;
+  header_w << "it";
+  for (unsigned int i = 0; i < q.params->dim; ++i) {
+    header_w << "\tw_" << i;
+  }
+  utils::Trace w_trace; // log of Q params
+  w_trace.add_header( header_w.str() );
+
+
+  // TODO change in logic : update Q after each LSTD
+  // => test next_q AND q
+
+  // // test random policy
+  // test_policy_with_trace(gen, rl2::discrete_a::random_policy<S, A>(gen),
+  //                       "test_rnd", global_trace, -2);
 
   // Let us initialize Q from the random policy. (true means that we
   // want to actually compute the error. 0 is returned with false).
@@ -118,22 +154,34 @@ int main(int argc, char *argv[]) {
 						      transitions.begin(), transitions.end());
   std::cout << "LSTD error of the random policy = " << error << std::endl;
 
-  // test_policy(gen, next_q);
+  // TODO copy weights from next_q  to q can be achieved with a swap
+  std::swap(q, next_q); // swapping q functions swaps their contents, which are share pointers.
+  // test_policies
+  test_policy_with_trace(gen, rl2::discrete::greedy_ify(q),
+                         "test_global_init", global_trace, -1);
   test_policy_with_trace(gen, rl2::discrete::greedy_ify(next_q),
-                         "test_init", global_trace, -1);
-  
+                         "test_next_init", next_trace, -1);
+
+    store_weights(q, w_trace, -1);
+
   // LSPI iteration
   std::cout << "Training using LSPI" << std::endl;
-  for(unsigned int i = 0; i < NB_LSPI_ITERATIONS; ++i) {
-    std::swap(q, next_q); // swapping q functions swaps their contents, which are share pointers.
+  for(unsigned int i = 0; i < nb_lspi_iterations; ++i) {
+    // TODO copy weights from next_q  to q can be achieved with a swap
+    // std::swap(q, next_q); // swapping q functions swaps their contents, which are share pointers.
+
+
+    // TODO debug
+    // std::cout << "AVANT LSPI - q.params" << std::endl;
+    // std::cout << *(q.params) << std::endl;
 
     // We re-sample the transition set, following the current q-values
     // with an epsilon-greedy policy.
     transitions.clear();
     fill(gen, simulator,
-	 [&simulator, &epsilon_greedy_on_q](){return epsilon_greedy_on_q(*simulator);},
-	 std::back_inserter(transitions),
-	 NB_TRANSITIONS, MAX_EPISODE_LENGTH);
+         [&simulator, &epsilon_greedy_on_q](){return epsilon_greedy_on_q(*simulator);},
+         std::back_inserter(transitions),
+         nb_transitions, MAX_EPISODE_LENGTH);
     
     auto error = rl2::eigen::critic::discrete_a::lstd<true>(next_q,
 							    epsilon_greedy_on_q,
@@ -141,26 +189,52 @@ int main(int argc, char *argv[]) {
 							    transitions.begin(), transitions.end());
     std::cout << "  iteration " << std::setw(4) << i << " : error = " << error << std::endl;
 
+    // TODO but it is also possible to use a progressive change in params
+    // q.params <- alpha x q.params + (1 - alpha) x next_q.params
+    // q.params are nupplet
+    // TODO use range to do the following ?
+    auto q_params_it = q.params->begin();
+    auto next_q_params_it = next_q.params->begin();
+    for ( ; q_params_it != q.params->end(); ) {
+      *q_params_it = alpha * (*q_params_it) + (1.0 - alpha) * (*next_q_params_it);
+      ++q_params_it;
+      ++next_q_params_it;
+    }
+
+    store_weights(q, w_trace, i);
+
+    // TODO debug
+    // std::cout << "APRES LSPI - q.params" << std::endl;
+    // std::cout << *(q.params) << std::endl;
+
+    test_policy_with_trace(gen, rl2::discrete::greedy_ify(q),
+                           "test_global_lspi_"+std::to_string(i), global_trace, i);
     test_policy_with_trace(gen, rl2::discrete::greedy_ify(next_q),
-                           "test_lspi_"+std::to_string(i), global_trace, i);
+                           "test_next_lspi_"+std::to_string(i), next_trace, i);
 
     epsilon *= 1.0 / tau_epsilon;
     epsilon = std::max( epsilon, epsilon_threshold );
   }
 
-  std::cout << "Saving global_trace in lerning.csv" << std::endl;
-  std::ofstream outfile( "learning.csv" );
-  utils::Trace::write( outfile, global_trace );
-  outfile.close();
+  std::cout << "Saving global_trace in lerning_xxx.csv" << std::endl;
+  std::ofstream outfile_q( "learning_global.csv" );
+  utils::Trace::write( outfile_q, global_trace );
+  outfile_q.close();
+  std::ofstream outfile_n( "learning_next.csv" );
+  utils::Trace::write( outfile_n, next_trace );
+  outfile_n.close();
+
+  std::cout << "Saving weights.csv" << std::endl;
+  std::ofstream outfile_w( "weights.csv" );
+  utils::Trace::write( outfile_w, w_trace );
+  outfile_w.close();
 
   // test_policy(gen, next_q);
-  run_policy(S(), next_q);
+  // TODO run_policy(S(), next_q);
   
   return 0;
 }
 
-#define NB_TEST_EPISODES        10
-#define MAX_TEST_EPISODE_LENGTH  MAX_EPISODE_LENGTH
 template<typename RANDOM_DEVICE, typename Q>
 void test_policy(RANDOM_DEVICE& gen, const Q& q) {
   auto sim = gdyn::problem::cartpole::make();
@@ -269,4 +343,17 @@ void test_policy_with_trace(RANDOM_DEVICE& gen,
   std::ofstream outfile( trace_name+".csv" );
   utils::Trace::write( outfile, local_trace );
   outfile.close();
+}
+
+template<typename Q>
+void store_weights(const Q& q,
+                   utils::Trace& trace,
+                   int current_it)
+
+{
+  trace.push_to_state(static_cast<double>(current_it));
+  for( auto w: *(q.params)) {
+    trace.push_to_state( w );
+  }
+  trace.store_state();
 }

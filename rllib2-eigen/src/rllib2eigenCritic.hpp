@@ -118,8 +118,14 @@ namespace rl2 {
 	  
 	  */
 
+		// TODO vérifier qu'on copie bien les poids !!!
 	  Eigen::Vector<double, Q::params_type::dim>& theta = *(q.params);
+		// std::cout << "q.params BEFORE" << std::endl;
+		// std::cout << *(q.params) << std::endl;
 	  theta = sum_phiphi.completeOrthogonalDecomposition().solve(sum_phir);
+		// std::cout << "q.params AFTER" << std::endl;
+		// std::cout << *(q.params) << std::endl;
+
 
 	  if(compute_error)
 	    return (sum_phiphi*theta - sum_phir).norm() / sum_phir.norm();
