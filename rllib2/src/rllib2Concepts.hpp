@@ -114,6 +114,7 @@ namespace rl2 {
     /**
      * @short A RL policy
      */
+    // TODO apporte quoi de plus que gdyn::controller [gdyn/src/gdynConcepts.hpp]
     template<typename POLICY, typename S, typename A>
     concept policy =
       std::invocable<POLICY, S>

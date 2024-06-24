@@ -3,7 +3,7 @@
 // A very simple 2x5 grid world.
 // The state is the number of the cell (0 to 9).
 // The actions are U,D,L,R
-// The reward is 1 in cell N°8
+// The reward is 1 in cell N°8, -1 if bumping into wall
 
 // This class fits the gdyn::concepts::system
 
@@ -25,7 +25,7 @@ struct gridworld {
 
   template<typename RANDOM_GENERATOR>
   static state_type random_state(RANDOM_GENERATOR& gen) {
-    return std::uniform_int_distribution<int>(0, NB_STATE)(gen);
+    return std::uniform_int_distribution<int>(0, (NB_STATE - 1))(gen);
   }
 
   template<typename RANDOM_GENERATOR>
@@ -51,7 +51,9 @@ struct gridworld {
   // This is for initializing the state of the system.
   gridworld& operator=(const state_type& init_state) {
     state = init_state;
-    compute_reward();
+    reward = 0.0;
+    if (state == GOAL_STATE)
+      reward = 1.0;
     return *this;
   }
 
@@ -71,30 +73,41 @@ struct gridworld {
   // This performs a state transition.
   report_type operator()(command_type command)
   {
+    reward = 0.0;
     switch (command) {
       case dir::U:
         if (state >= NB_STATE / 2)
           state -= NB_STATE / 2;
+        else
+          reward = -1.0;
         break;
       case dir::D:
         if (state < NB_STATE / 2)
           state += NB_STATE / 2;
+        else
+          reward = -1.0;
         break;
       case dir::L:
         if (state > NB_STATE / 2)
           state -= 1;
         else if (state > 0)
           state -= 1;
+        else
+          reward = -1.0;
         break;
       case dir::R:
-        if (state < NB_STATE / 2)
+        if (state < (NB_STATE / 2) - 1)
           state += 1;
-        else if (state < NB_STATE)
+        else if (state < (NB_STATE - 1))
           state += 1;
+        else
+          reward = -1.0;
         break;
     }
 
-    compute_reward();
+    if (state == GOAL_STATE)
+      reward += 1.0;
+
     return reward;
   }
 }; // struct gridworld

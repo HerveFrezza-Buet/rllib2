@@ -131,8 +131,50 @@ namespace rl2 {
 	    return (sum_phiphi*theta - sum_phir).norm() / sum_phir.norm();
 	  else
 	    return 0;
-	}
-      }
-    }
-  }
-}
+	} // lstq()
+
+// template<bool compute_error,
+// 				 rl2::concepts::discrete_a::linear_qfunction Q,
+// 				 rl2::concepts::policy<typename Q::state_type, typename Q::action_type> POLICY,
+// 				 std::input_iterator TransitionIter, std::sentinel_for<TransitionIter> TransitionSentinel>
+// requires rl2::concepts::sarsa<std::iter_value_t<TransitionIter>, typename Q::state_type, typename Q::action_type>
+// double fitted(Q q, const POLICY& pi, double gamma,
+// 							TransitionIter begin, TransitionSentinel end)
+// {
+// 	Eigen::Matrix<double, Q::params_type::dim, Q::params_type::dim> sum_phiphi;
+// 	sum_phiphi.setZero();
+// 	Eigen::Vector<double, Q::params_type::dim> sum_phir;
+// 	sum_phir.setZero();
+
+// 	// FittedQ solves nw = argmin_w
+// 	//      ie       SUM(Phi_j (Phi_j).trans()) * nw = SUM(Phi_j (r_j + gamma*Pji_j+1).trans()
+// 	// with j the indices in the replay buffer
+
+// 	// for_each_transition
+// 	for (auto it=begin; it!=end; ++it) {
+// 		auto phi_s_eigen  = rl2::eigen::discrete_a::from((*(q.s_feature))(it->s),  it->a);
+
+// 		auto phi_jgj = phi_s_eigen;
+// 		if (not it->is_terminal()) {
+// 			auto phi_ss_eigen = rl2::eigen::discrete_a::from((*(q.s_feature))(it->ss), pi(it->ss));
+// 			phi_jgj = phi_jgj - gamma * phi_ss_eigen;
+// 		}
+// 		auto phiphi = phi_s_eigen * phi_s_eigen.transpose();
+
+// 		sum_phiphi += phiphi;
+
+// 		sum_phir += phi_s_eigen * (it->r + gamma * q(it->ss, pi(it->ss)));
+// 	  }
+
+// 	Eigen::Vector<double, Q::params_type::dim>& theta = *(q.params);
+// 	theta = sum_phiphi.completeOrthogonalDecomposition().solve(sum_phir);
+
+// 	if(compute_error)
+// 		return (sum_phiphi*theta - sum_phir).norm() / sum_phir.norm();
+// 	else
+// 		return 0;
+// } // fitted()
+      } // namespace discrete_a
+    } // namespace critic
+  } // namespace eigen
+} // namespace rl2
