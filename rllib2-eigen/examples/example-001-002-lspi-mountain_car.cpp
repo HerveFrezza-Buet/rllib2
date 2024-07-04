@@ -1,3 +1,9 @@
+// TODO uniform sampling of the problem
+// example-001-002-lspi-mountain_car 1000 40 0.0 20.0
+//
+// R> run_mountain( nb_trans=1000, nb_lspi=40, tau_epsilon=20, alpha=0.0)
+// R> make_plots( "mountain", 39 )
+
 #include <iostream>
 #include <iomanip>
 #include <vector>
@@ -43,6 +49,24 @@ void fill_uniform(RANDOM_GENERATOR& gen, mountain_car& simulator, const POLICY& 
                       out);
   }
 }
+// This fills a transition dataset.
+// starting points are taken from the problem settings
+template<typename RANDOM_GENERATOR, typename POLICY, typename OutputIt>
+void fill(RANDOM_GENERATOR& gen, mountain_car& simulator, const POLICY& policy,
+          OutputIt out,
+          unsigned int nb_samples, unsigned int max_episode_length) {
+  unsigned int to_be_filled = nb_samples;
+  while(to_be_filled > 0) {
+    simulator = gdyn::problem::mountain_car::random_state(gen, gdyn::problem::mountain_car::parameters());
+    std::ranges::copy(gdyn::views::pulse(policy)
+                      | gdyn::views::orbit(simulator)
+                      | rl2::views::sarsa
+                      | std::views::take(to_be_filled)
+                      | std::views::take(max_episode_length)
+                      | std::views::filter([&to_be_filled](const auto&){--to_be_filled; return true;}),
+                      out);
+  }
+}
 
 
 #define NB_TRANSITIONS        500
@@ -78,11 +102,18 @@ void sample_V_and_pi(const Q& q,
                      const std::string& trace_name,
                      int nb_bins);
 
-int main(int argc, char *argv[]) {
+void store_transitions(const std::vector<rl2::sarsa<S, A>>& transitions,
+                       const std::string& trace_name );
+
+// *****************************************************************************
+//                                                                          MAIN
+// *****************************************************************************
+int main(int argc, char *argv[])
+{
 
   // TODO with arguments : nb_trans, nb_iter, alpha, tau_epsilon
-  if (argc != 5) {
-    std::cout << "usage: " << argv[0] << " nb_trans nb_iter alpha tau_epsilon" << std::endl;
+  if (argc < 5) {
+    std::cout << "usage: " << argv[0] << " nb_trans nb_iter alpha tau_epsilon ['on_traj']" << std::endl;
     return 1;
   }
 
@@ -92,26 +123,41 @@ int main(int argc, char *argv[]) {
   double epsilon = 1.0;
   double tau_epsilon = std::stod( argv[4] );
   double epsilon_threshold    = 0.0001;
+  bool uniform_sampling = true;
+  if (argc == 6) {
+    uniform_sampling = false;
+  }
 
   std::random_device rd;
   std::mt19937 gen(rd());
 
   // This will store transitions for LSTDQ computation.
   std::vector<rl2::sarsa<S, A>> transitions;
-  
+
   auto sim = gdyn::problem::mountain_car::make();
   mountain_car simulator {sim}; // simulator is sim, but handling discrete actions.
 
   // First, we fill the dataset with a random policy
-  // applied on 'nb_transition' uniformly sampled starting points
   std::cout << "Filling the dataset... " << std::flush;
-  fill_uniform(gen, simulator,
-       rl2::discrete::uniform_sampler<A>(gen),
-       std::back_inserter(transitions),
-       nb_transitions, MAX_SAMPLE_LENGTH);
-  std::cout << " got " << transitions.size() << " samples, (" 
-	    << std::ranges::count_if(transitions, [](auto& transition){return transition.is_terminal();})
-	    << " are terminal transitions)." << std::endl;
+  if (uniform_sampling) {
+    // applied on 'nb_transition' uniformly sampled starting points
+    fill_uniform(gen, simulator,
+                 rl2::discrete::uniform_sampler<A>(gen),
+                 std::back_inserter(transitions),
+                 nb_transitions, MAX_SAMPLE_LENGTH);
+  }
+  else {
+    // applied on 'nb_transition' starting points chosen according to problem
+    fill(gen, simulator,
+         rl2::discrete::uniform_sampler<A>(gen),
+         std::back_inserter(transitions),
+         nb_transitions, MAX_EPISODE_LENGTH);
+  }
+  std::cout << " got " << transitions.size() << " samples, ("
+            << std::ranges::count_if(transitions, [](auto& transition){return transition.is_terminal();})
+            << " are terminal transitions)." << std::endl;
+  store_transitions( transitions,
+                     "test_transitions_start");
 
   // For LSPI, we need a parametrized Q function, and related policies.
   Q q      {std::make_shared<s_feature>(make_state_feature()), std::make_shared<params>()};
@@ -189,7 +235,24 @@ int main(int argc, char *argv[]) {
     // std::cout << "AVANT LSPI - q.params" << std::endl;
     // std::cout << *(q.params) << std::endl;
 
-    // TODO no need to re-sample the transitions set, as they can be re-used.
+    if (uniform_sampling) {
+      // TODO no need to re-sample the transitions set, as they can be re-used.
+    }
+    else {
+      // sample using random policy AND epsilon_greedy
+      transitions.clear();
+      fill(gen, simulator,
+           rl2::discrete::uniform_sampler<A>(gen),
+           std::back_inserter(transitions),
+           nb_transitions/2, MAX_EPISODE_LENGTH);
+      fill(gen, simulator,
+           [&simulator, &epsilon_greedy_on_q](){return epsilon_greedy_on_q(*simulator);},
+           std::back_inserter(transitions),
+           nb_transitions/2, MAX_EPISODE_LENGTH);
+
+      store_transitions( transitions,
+                         "test_transitions_"+std::to_string(i));
+    }
 
     auto error = rl2::eigen::critic::discrete_a::lstd<true>(next_q,
 							     // epsilon_greedy_on_q,
@@ -205,8 +268,11 @@ int main(int argc, char *argv[]) {
     // TODO use range to do the following ?
     auto q_params_it = q.params->begin();
     auto next_q_params_it = next_q.params->begin();
+    // TODO double delta_weight {0.0};
     for ( ; q_params_it != q.params->end(); ) {
-      *q_params_it = alpha * (*q_params_it) + (1.0 - alpha) * (*next_q_params_it);
+      auto new_w = alpha * (*q_params_it) + (1.0 - alpha) * (*next_q_params_it);
+      // delta_weight += std::abs((*q_params_it) - new_w);
+      *q_params_it = new_w;
       ++q_params_it;
       ++next_q_params_it;
     }
@@ -403,6 +469,37 @@ void sample_V_and_pi(const Q& q,
   }
 
   std::cout << "Saving trace in " << trace_name << ".csv" << std::endl;
+  std::ofstream outfile( trace_name+".csv" );
+  utils::Trace::write( outfile, local_trace );
+  outfile.close();
+}
+
+void store_transitions(const std::vector<rl2::sarsa<S, A>>& transitions,
+                       const std::string& trace_name )
+{
+    // for(auto [s, a, r, next_s, next_a]
+    //       : gdyn::views::controller(simulator, policy)
+    //       | gdyn::views::orbit(simulator)
+    //       | rl2::views::sarsa
+    //       | std::views::take(MAX_TEST_EPISODE_LENGTH)) {
+
+  // trace with header
+  std::stringstream header;
+  header << "pos\tvel\tact\tn_pos\tn_vel";
+  utils::Trace local_trace;
+  local_trace.add_header( header.str() );
+
+  for (auto t : transitions ) {
+    local_trace.push_to_state( t.s.position );
+    local_trace.push_to_state( t.s.velocity );
+    local_trace.push_to_state( static_cast<double>(t.a) );
+    local_trace.push_to_state( t.ss.position );
+    local_trace.push_to_state( t.ss.velocity );
+    local_trace.push_to_state( t.r );
+    local_trace.store_state();
+  }
+
+  std::cout << "Saving transitions in " << trace_name << ".csv" << std::endl;
   std::ofstream outfile( trace_name+".csv" );
   utils::Trace::write( outfile, local_trace );
   outfile.close();
