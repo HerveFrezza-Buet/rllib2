@@ -1,5 +1,5 @@
 // TODO uniform sampling of the problem
-// example-001-002-lspi-mountain_car 1000 40 0.0 20.0
+// example-001-002-lspi-mountain-car 1000 40 0.0 20.0
 //
 // R> run_mountain( nb_trans=1000, nb_lspi=40, tau_epsilon=20, alpha=0.0)
 // R> make_plots( "mountain", 39 )
@@ -83,6 +83,8 @@ void fill(RANDOM_GENERATOR& gen, mc_system& simulator, const POLICY& policy,
 #define NB_TEST_EPISODES        50
 #define MAX_TEST_EPISODE_LENGTH  MAX_EPISODE_LENGTH
 
+#define Q_SAMPLE_DENSITY       100
+
 #define GAMMA                  0.95
 
 #define EPSILON_START          1.0
@@ -94,13 +96,13 @@ void fill(RANDOM_GENERATOR& gen, mc_system& simulator, const POLICY& policy,
 template<typename RANDOM_DEVICE, typename POLICY>
 void test_policy(RANDOM_DEVICE& gen,
                    const POLICY& policy,
-                   std::ostream& test_csv,
+                   std::ostream& file_csv,
                    utils::trace::csv<>& g_trace, int ite_nb);
 
-// template<typename Q>
-// void sample_V_and_pi(const Q& q,
-//                      const std::string& trace_name,
-//                      int nb_bins);
+template<typename Q>
+void sample_V_and_pi(const Q& q,
+                     std::ostream& file_csv,
+                     int nb_bins);
 
 // void store_transitions(const std::vector<rl2::sarsa<S, A>>& transitions,
 //                        const std::string& trace_name );
@@ -111,7 +113,7 @@ void test_policy(RANDOM_DEVICE& gen,
 int main(int argc, char *argv[])
 {
 
-double epsilon = EPSILON_START;
+  double epsilon = EPSILON_START;
 
   std::random_device rd;
   std::mt19937 gen(rd());
@@ -121,10 +123,27 @@ double epsilon = EPSILON_START;
   
   auto sim = gdyn::problem::mountain_car::make();
   mc_system simulator {sim}; // simulator is sim, but handling discrete actions.
-  
-  // First, we fill the dataset with a random policy
-  std::cout << "Filling the dataset with " << NB_TRANSITIONS << "..." << std::flush;
-  // applied on 'nb_transition' uniformly sampled starting points
+
+  // For LSPI, we need a parametrized Q function, and related policies.
+  mc_Q q      {std::make_shared<mc_s_feature>(utils::mountain_car::make_state_feature()), std::make_shared<mc_params>()};
+  mc_Q next_q {std::make_shared<mc_s_feature>(utils::mountain_car::make_state_feature()), std::make_shared<mc_params>()};
+
+  auto   greedy_on_q         = rl2::discrete::greedy_ify(q);
+  auto   epsilon_greedy_on_q = rl2::discrete::epsilon_ify(greedy_on_q, std::cref(epsilon), gen);
+
+  std::cout << "Q is a linear combination of RBFs" << std::endl;
+  std::cout << "   - with continuous state space and " << mc_A::size() << " discrete actions" << std::endl;
+  std::cout << "   - " << q.s_feature->dim << " feature"<< std::endl;
+  std::cout << "   - " << q.params->dim << " parameters" << std::endl;
+
+  // ***************************************************************************
+  // First, an easy scenario.
+  std::cout << "***** EASY SETTING : offline sampling **************************" << std::endl;
+  // The transition buffer is sampled once from the entire space state, uniformely.
+  // At each of the NB_TRANSITIONS starting point,
+  // we store MAX_SAMPLE_LENGTH transitions using a random policy,
+  // this transition buffer is used in every iteration of LSPI.
+  std::cout << "Filling the dataset with " << NB_TRANSITIONS << " sampled starting states..." << std::flush;
   fill_uniform(gen, simulator,
                rl2::discrete::uniform_sampler<mc_A>(gen),
                std::back_inserter(transitions),
@@ -140,31 +159,19 @@ double epsilon = EPSILON_START;
             << std::ranges::count_if(transitions, [](auto& transition){return transition.is_terminal();})
             << " are terminal transitions)." << std::endl;
   
-  // For LSPI, we need a parametrized Q function, and related policies.
-  mc_Q q      {std::make_shared<mc_s_feature>(utils::mountain_car::make_state_feature()), std::make_shared<mc_params>()};
-  mc_Q next_q {std::make_shared<mc_s_feature>(utils::mountain_car::make_state_feature()), std::make_shared<mc_params>()};
-
-  auto   greedy_on_q         = rl2::discrete::greedy_ify(q);
-  auto   epsilon_greedy_on_q = rl2::discrete::epsilon_ify(greedy_on_q, std::cref(epsilon), gen);
-
-  std::cout << "Q is a linear combination of RBFs" << std::endl;
-  std::cout << "   - with continuous state space and " << mc_A::size() << " discrete actions" << std::endl;
-  std::cout << "   - " << q.s_feature->dim << " feature"<< std::endl;
-  std::cout << "   - " << q.params->dim << " parameters" << std::endl;
-  
   // utils::Trace w_trace; // log of Q params
   // w_trace.add_header( header_w.str() );
 
-  std::ofstream global_file {"global.csv"};
+  std::ofstream global_file {"global_offline.csv"};
   utils::trace::csv<> global_trace {global_file};
 
-  std::array<std::string, 3> header {"nb", "ep", "len"};
+  std::array<std::string, 3> header {"## it", "ep", "len"};
   global_trace += header;
 
   {
-    std::ofstream local_file {"test_global_random.csv"};
+    std::ofstream test_file {"test_offline_random.csv"};
     test_policy(gen, rl2::discrete_a::random_policy<mc_S, mc_A>(gen),
-                local_file, global_trace, -1);
+                test_file, global_trace, -1);
   }
   
   // {
@@ -173,7 +180,7 @@ double epsilon = EPSILON_START;
   //             local_file, next_trace, -1);
   // }
   
-  // Let us initialize Q from the random policy. (true means that we
+  // Let us initialize q from the random policy. (true means that we
   // want to actually compute the error. 0 is returned with false).
   double error = rl2::eigen::critic::discrete_a::lstd<true>(q,
                       rl2::discrete_a::random_policy<mc_S, mc_A>(gen),
@@ -181,11 +188,13 @@ double epsilon = EPSILON_START;
                       transitions.begin(), transitions.end());
   std::cout << "LSTD error of the random policy = " << error << std::endl;
 
-  // test_policies
+  // test this initial policy
   {
-    std::ofstream local_file {"test_global_init.csv"};
+    std::ofstream local_file {"test_offline_init.csv"};
     test_policy(gen, greedy_on_q,
                 local_file, global_trace, -1);
+    std::ofstream qval_file {"qval_offline_init.csv"};
+    sample_V_and_pi(q, qval_file, Q_SAMPLE_DENSITY);
   }
 
 //   store_weights(q, w_trace, -1);
@@ -246,13 +255,12 @@ double epsilon = EPSILON_START;
 //     store_weights(q, w_trace, i);
 
   {
-    std::ofstream local_file {std::string("test_global_lspi_")+std::to_string(i)+".csv"};
+    std::ofstream local_file {std::string("test_offline_lspi_")+std::to_string(i)+".csv"};
     test_policy(gen, greedy_on_q,
                 local_file, global_trace, i);
+    std::ofstream qval_file {std::string("qval_offline_lspi_")+std::to_string(i)+".csv"};
+    sample_V_and_pi(q, qval_file, Q_SAMPLE_DENSITY);
   }
-//     test_policy_with_trace(gen, rl2::discrete::greedy_ify(next_q),
-//                            "test_next_lspi_"+std::to_string(i), next_trace, i);
-//     sample_V_and_pi(q, "test_qval_lspi_"+std::to_string(i), 50 );
 
     // TODO ne need to change epsilon in uniform setting
     // epsilon *= 1.0 / TAU_EPSILON;
@@ -277,7 +285,7 @@ double epsilon = EPSILON_START;
 
 
 
-/** Run episods and store results in file
+/** Run episods and trace results in file_csv
  *
  * episode_nb t s.x s.x_dot s.theta s.theta_dot a next_s.x ... next_s.theta_dot r
  *
@@ -286,15 +294,15 @@ double epsilon = EPSILON_START;
 template<typename RANDOM_DEVICE, typename POLICY>
 void test_policy(RANDOM_DEVICE& gen,
                  const POLICY& policy,
-                 std::ostream& test_csv,
+                 std::ostream& file_csv,
                  utils::trace::csv<>& g_trace, int ite_nb)
 {
   auto sim = gdyn::problem::mountain_car::make();
   mc_system simulator {sim}; // simulator is sim, but handling discrete actions.
 
   // trace with header
-  utils::trace::csv<> test {test_csv};
-  std::array<std::string, 8> header {"ep", "t", "s.pos", "s.vel", "a", "next_s.pos", "next_s.vel", "r"};
+  utils::trace::csv<> test {file_csv};
+  std::array<std::string, 8> header {"## ep", "t", "s.pos", "s.vel", "a", "next_s.pos", "next_s.vel", "r"};
   test += header;
 
   unsigned int nb_success = 0;
@@ -309,18 +317,18 @@ void test_policy(RANDOM_DEVICE& gen,
           | rl2::views::sarsa
           | std::views::take(MAX_TEST_EPISODE_LENGTH)) {
       std::array<double, 8> line  { static_cast<double>(episode),
-      static_cast<double>(length),
-      s.position,
-      s.velocity,
-      static_cast<double>(a),
-      next_s.position,
-      next_s.velocity,
-      r };
+                                    static_cast<double>(length),
+                                    s.position,
+                                    s.velocity,
+                                    static_cast<double>(a),
+                                    next_s.position,
+                                    next_s.velocity,
+                                    r };
       test += line;
       
       ++length;
-      
     }
+
     std::array<int, 3> line { ite_nb, episode, length };
     g_trace += line;
     
@@ -329,8 +337,8 @@ void test_policy(RANDOM_DEVICE& gen,
     sum_length += length;
   }
   std::cout << std::endl
-	    << "Success on " << int(100*nb_success/NB_TEST_EPISODES+.5) << "% of the episodes," << std::endl
-	    << "           (average episode length is " << sum_length/NB_TEST_EPISODES << ")." << std::endl;
+            << "Success on " << int(100*nb_success/NB_TEST_EPISODES+.5) << "% of the episodes," << std::endl
+            << "           (average episode length is " << sum_length/NB_TEST_EPISODES << ")." << std::endl;
 
 }
 
@@ -347,48 +355,43 @@ void test_policy(RANDOM_DEVICE& gen,
 //   trace.store_state();
 // }
 
-// template<typename Q>
-// void sample_V_and_pi(const Q& q,
-//                      const std::string& trace_name,
-//                      int nb_bins)
-// {
-//   // trace with header
-//   std::stringstream header;
-//   header << "pos\tvel\tqval\ta_best";
-//   utils::Trace local_trace;
-//   local_trace.add_header( header.str() );
+template<typename Q>
+void sample_V_and_pi(const Q& q,
+                     std::ostream& file_csv,
+                     int nb_bins)
+{
+  // trace with header
+  utils::trace::csv<> traceqval {file_csv};
+  std::array<std::string, 4> header {"## s.pos", "s.vel", "qval", "a_best"};
+  traceqval += header;
 
-//   // sample uniformly the state
-//   auto [pos_min, pos_max] = std::make_tuple( -1.2, 0.6 );
-//   auto [vel_min, vel_max] = std::make_tuple( -0.07, 0.07 );
+  // sample uniformly the state
+  auto [pos_min, pos_max] = std::make_tuple( -1.2, 0.6 );
+  auto [vel_min, vel_max] = std::make_tuple( -0.07, 0.07 );
 
-//   auto greedy_on_q = rl2::discrete::greedy_ify(q); // or rl2::discrete::argmax_ify(q)
+  auto greedy_on_q = rl2::discrete::greedy_ify(q); // or rl2::discrete::argmax_ify(q)
 
-//   double pos = 0.0;
-//   double vel = 0.0;
-//   for(int i = 0; i < nb_bins; ++i) {
-//     pos = rl2::enumerable::utils::digitize::to_value(i, pos_min, pos_max, nb_bins);
-//     for(int j = 0; j < nb_bins; ++j) {
-//       vel = rl2::enumerable::utils::digitize::to_value(j, vel_min, vel_max, nb_bins);
+  double pos = 0.0;
+  double vel = 0.0;
+  for(int i = 0; i < nb_bins; ++i) {
+    pos = rl2::enumerable::utils::digitize::to_value(i, pos_min, pos_max, nb_bins);
+    for(int j = 0; j < nb_bins; ++j) {
+      vel = rl2::enumerable::utils::digitize::to_value(j, vel_min, vel_max, nb_bins);
 
-//       // Get value of best action, and best action as int
-//       S s{pos, vel};
-//       auto qval = q( s, greedy_on_q(s));
-//       int id_best_a = static_cast<std::size_t>(greedy_on_q(s));
+      // Get value of best action, and best action as int
+      mc_S s{pos, vel};
+      auto qval = q( s, greedy_on_q(s));
+      int id_best_a = static_cast<std::size_t>(greedy_on_q(s));
 
-//       local_trace.push_to_state( pos );
-//       local_trace.push_to_state( vel );
-//       local_trace.push_to_state( qval );
-//       local_trace.push_to_state( static_cast<double>(id_best_a) );
-//       local_trace.store_state();
-//     }
-//   }
-
-//   std::cout << "Saving trace in " << trace_name << ".csv" << std::endl;
-//   std::ofstream outfile( trace_name+".csv" );
-//   utils::Trace::write( outfile, local_trace );
-//   outfile.close();
-// }
+      std::array<double, 4> line {
+        pos,
+        vel,
+        qval,
+        static_cast<double>(id_best_a) };
+      traceqval += line;
+    }
+  }
+}
 
 // void store_transitions(const std::vector<rl2::sarsa<S, A>>& transitions,
 //                        const std::string& trace_name )
