@@ -83,6 +83,8 @@ void fill(RANDOM_GENERATOR& gen, mc_system& simulator, const POLICY& policy,
 #define NB_TEST_EPISODES        50
 #define MAX_TEST_EPISODE_LENGTH  MAX_EPISODE_LENGTH
 
+#define GAMMA                  0.95
+
 #define EPSILON_START          1.0
 #define EPSILON_TAU            0.1
 #define EPSILON_THRESHOLD      0.0001
@@ -153,14 +155,13 @@ double epsilon = EPSILON_START;
   // utils::Trace w_trace; // log of Q params
   // w_trace.add_header( header_w.str() );
 
-std::ofstream global_file {"global.csv"};
-utils::trace::csv<> global_trace {global_file}; 
+  std::ofstream global_file {"global.csv"};
+  utils::trace::csv<> global_trace {global_file};
 
-std::array<std::string, 3> header {"nb", "ep", "len"};
-global_trace += header;
+  std::array<std::string, 3> header {"nb", "ep", "len"};
+  global_trace += header;
 
-{
-  
+  {
     std::ofstream local_file {"test_global_random.csv"};
     test_policy(gen, rl2::discrete_a::random_policy<mc_S, mc_A>(gen),
                 local_file, global_trace, -1);
@@ -172,30 +173,28 @@ global_trace += header;
   //             local_file, next_trace, -1);
   // }
   
-//   // Let us initialize Q from the random policy. (true means that we
-//   // want to actually compute the error. 0 is returned with false).
-//   double gamma = .95;
-//   double error = rl2::eigen::critic::discrete_a::lstd<true>(next_q,
-// 						      rl2::discrete_a::random_policy<S, A>(gen),
-// 						      gamma,
-// 						      transitions.begin(), transitions.end());
-//   std::cout << "LSTD error of the random policy = " << error << std::endl;
+  // Let us initialize Q from the random policy. (true means that we
+  // want to actually compute the error. 0 is returned with false).
+  double error = rl2::eigen::critic::discrete_a::lstd<true>(q,
+                      rl2::discrete_a::random_policy<mc_S, mc_A>(gen),
+                      GAMMA,
+                      transitions.begin(), transitions.end());
+  std::cout << "LSTD error of the random policy = " << error << std::endl;
 
-//   test_policy_with_trace(gen, rl2::discrete::greedy_ify(next_q),
-//                          "test_next_init", next_trace, -1);
-//   // TODO copy weights from next_q  to q can be achieved with a swap
-//   std::swap(q, next_q); // swapping q functions swaps their contents, which are share pointers.
-//   // test_policies
-//   test_policy_with_trace(gen, rl2::discrete::greedy_ify(q),
-//                          "test_global_init", global_trace, -1);
+  // test_policies
+  {
+    std::ofstream local_file {"test_global_init.csv"};
+    test_policy(gen, greedy_on_q,
+                local_file, global_trace, -1);
+  }
 
 //   store_weights(q, w_trace, -1);
 
 //   sample_V_and_pi(q, "test_qval_init", 50);
 
-//   // LSPI iteration
-//   std::cout << "Training using LSPI" << std::endl;
-//   for(unsigned int i = 0; i < nb_lspi_iterations; ++i) {
+  // LSPI iteration
+  std::cout << "Training using LSPI" << std::endl;
+  for(unsigned int i = 0; i < NB_LSPI_ITERATIONS; ++i) {
 //     // TODO copy weights from next_q  to q can be achieved with a swap
 //     // std::swap(q, next_q); // swapping q functions swaps their contents, which are share pointers.
 
@@ -223,44 +222,42 @@ global_trace += header;
 //                          "test_transitions_"+std::to_string(i));
 //     }
 
-//     auto error = rl2::eigen::critic::discrete_a::lstd<true>(next_q,
-// 							     // epsilon_greedy_on_q,
-// 							    greedy_on_q,
-// 							    gamma,
-// 							    transitions.begin(), transitions.end());
-//     std::cout << "  iteration " << std::setw(4) << i << " : error = " << error << std::endl;
+    auto error = rl2::eigen::critic::discrete_a::lstd<true>(next_q,
+                      greedy_on_q,
+                      GAMMA,
+                      transitions.begin(), transitions.end());
+    std::cout << "  iteration " << std::setw(4) << i << " : error = " << error << std::endl;
 
-//     // std::swap(q, next_q); // swapping q functions swaps their contents, which are share pointers.
-//     // TODO but it is also possible to use a progressive change in params
-//     // q.params <- alpha x q.params + (1 - alpha) x next_q.params
-//     // q.params are nupplet
-//     // TODO use range to do the following ?
-//     auto q_params_it = q.params->begin();
-//     auto next_q_params_it = next_q.params->begin();
-//     // TODO double delta_weight {0.0};
-//     for ( ; q_params_it != q.params->end(); ) {
-//       auto new_w = alpha * (*q_params_it) + (1.0 - alpha) * (*next_q_params_it);
-//       // delta_weight += std::abs((*q_params_it) - new_w);
-//       *q_params_it = new_w;
-//       ++q_params_it;
-//       ++next_q_params_it;
-//     }
+    // We could simply update 'q' using the weights of 'next_q' using
+    std::swap(q, next_q);
+    // TODO but here we use a progressive change in weights/params
+    // q.params <- alpha x q.params + (1 - alpha) x next_q.params
+    // q.params are nupplet
+    // TODO use range to do the following ?
+    // auto q_params_it = q.params->begin();
+    // auto next_q_params_it = next_q.params->begin();
+    // for ( ; q_params_it != q.params->end(); ) {
+    //   auto new_w = ALPHA * (*q_params_it) + (1.0 - ALPHA) * (*next_q_params_it);
+    //   *q_params_it = new_w;
+    //   ++q_params_it;
+    //   ++next_q_params_it;
+    // }
 
 //     store_weights(q, w_trace, i);
 
-//     // TODO debug
-//     // std::cout << "APRES LSPI - q.params" << std::endl;
-//     // std::cout << *(q.params) << std::endl;
-
-//     test_policy_with_trace(gen, rl2::discrete::greedy_ify(q),
-//                            "test_global_lspi_"+std::to_string(i), global_trace, i);
+  {
+    std::ofstream local_file {std::string("test_global_lspi_")+std::to_string(i)+".csv"};
+    test_policy(gen, greedy_on_q,
+                local_file, global_trace, i);
+  }
 //     test_policy_with_trace(gen, rl2::discrete::greedy_ify(next_q),
 //                            "test_next_lspi_"+std::to_string(i), next_trace, i);
 //     sample_V_and_pi(q, "test_qval_lspi_"+std::to_string(i), 50 );
 
-//     epsilon *= 1.0 / tau_epsilon;
-//     epsilon = std::max( epsilon, epsilon_threshold );
-//   }
+    // TODO ne need to change epsilon in uniform setting
+    // epsilon *= 1.0 / TAU_EPSILON;
+    // epsilon = std::max( epsilon, EPSILON_THRESHOLD );
+  }
 
 // std::cout << "Saving global_trace in lerning_xxx.csv" << std::endl;
 // std::ofstream outfile_q( "learning_global.csv" );
