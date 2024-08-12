@@ -1,8 +1,10 @@
-// TODO uniform sampling of the problem
-// example-001-002-lspi-mountain-car 1000 40 0.0 20.0
+// Using this example
 //
-// R> run_mountain( nb_trans=1000, nb_lspi=40, tau_epsilon=20, alpha=0.0)
-// R> make_plots( "mountain", 39 )
+// * generate CVS file for offline and online LSPI
+// example-001-002-lspi-mountain-car
+//
+// * make nice plot using R => fig_offline.png and fig_online.png and some more...
+// Rscript $PATH_TO_SCRIPTS/view_results.R
 
 #include <iostream>
 #include <iomanip>
@@ -151,7 +153,7 @@ int main(int argc, char *argv[])
                std::back_inserter(transitions),
                NB_TRANSITIONS, MAX_SAMPLE_LENGTH);
   {
-    std::ofstream local_file {"transition_offline_init.csv"};
+    std::ofstream local_file {"transition_offline_lspi_0.csv"};
     store_transitions( transitions, local_file );
   }
 
@@ -166,12 +168,6 @@ int main(int argc, char *argv[])
   std::array<std::string, 3> header {"## it", "ep", "len"};
   global_trace += header;
 
-  {
-    std::ofstream test_file {"test_offline_random.csv"};
-    test_policy(gen, rl2::discrete_a::random_policy<mc_S, mc_A>(gen),
-                test_file, global_trace, -1);
-  }
-  
   // Let us initialize q from the random policy. (true means that we
   // want to actually compute the error. 0 is returned with false).
   double error = rl2::eigen::critic::discrete_a::lstd<true>(q,
@@ -182,16 +178,16 @@ int main(int argc, char *argv[])
 
   // test this initial policy
   {
-    std::ofstream local_file {"test_offline_init.csv"};
+    std::ofstream local_file {"test_offline_lspi_0.csv"};
     test_policy(gen, greedy_on_q,
-                local_file, global_trace, -1);
-    std::ofstream qval_file {"qval_offline_init.csv"};
+                local_file, global_trace, 0);
+    std::ofstream qval_file {"qval_offline_lspi_0.csv"};
     sample_V_and_pi(q, qval_file, Q_SAMPLE_DENSITY);
   }
 
   // LSPI iteration
   std::cout << "Training using LSPI" << std::endl;
-  for(unsigned int i = 0; i < NB_LSPI_ITERATIONS; ++i) {
+  for(unsigned int i = 1; i <= NB_LSPI_ITERATIONS; ++i) {
 
     auto error = rl2::eigen::critic::discrete_a::lstd<true>(next_q,
                       greedy_on_q,
@@ -229,7 +225,7 @@ int main(int argc, char *argv[])
        std::back_inserter(transitions),
        NB_TRANSITIONS * MAX_SAMPLE_LENGTH, MAX_EPISODE_LENGTH);
   {
-    std::ofstream local_file {"transition_online_init.csv"};
+    std::ofstream local_file {"transition_online_lspi_0.csv"};
     store_transitions( transitions, local_file );
   }
 
@@ -243,12 +239,6 @@ int main(int argc, char *argv[])
   std::array<std::string, 3> header {"## it", "ep", "len"};
   global_trace += header;
 
-  {
-    std::ofstream test_file {"test_online_random.csv"};
-    test_policy(gen, rl2::discrete_a::random_policy<mc_S, mc_A>(gen),
-                test_file, global_trace, -1);
-  }
-
   // Let us initialize q from the random policy. (true means that we
   // want to actually compute the error. 0 is returned with false).
   double error = rl2::eigen::critic::discrete_a::lstd<true>(q,
@@ -259,16 +249,16 @@ int main(int argc, char *argv[])
 
   // test this initial policy
   {
-    std::ofstream local_file {"test_online_init.csv"};
+    std::ofstream local_file {"test_online_lspi_0.csv"};
     test_policy(gen, greedy_on_q,
-                local_file, global_trace, -1);
-    std::ofstream qval_file {"qval_online_init.csv"};
+                local_file, global_trace, 0);
+    std::ofstream qval_file {"qval_online_lspi_0.csv"};
     sample_V_and_pi(q, qval_file, Q_SAMPLE_DENSITY);
   }
 
   // LSPI iteration
   std::cout << "Training using LSPI" << std::endl;
-  for(unsigned int i = 0; i < NB_LSPI_ITERATIONS; ++i) {
+  for(unsigned int i = 1; i <= NB_LSPI_ITERATIONS; ++i) {
 
       // resample transition using epsilon_greedy
       transitions.clear();
