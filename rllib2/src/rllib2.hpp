@@ -26,3 +26,4 @@
 
 // Problem definitions
 #include <rllib2-defs-mountain-car.hpp>
+#include <rllib2-defs-cartpole.hpp>
