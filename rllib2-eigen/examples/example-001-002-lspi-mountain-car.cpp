@@ -26,25 +26,25 @@
 #include "mountain-car-utils.hpp"
 #include "trace-utils.hpp"
 
-using mc_system = utils::mountain_car::system;
-using mc_S = mc_system::state_type;
-using mc_A = mc_system::command_type;
+using mc_system    = utils::mountain_car::system;
+using mc_S         = mc_system::state_type;
+using mc_A         = mc_system::command_type;
 using mc_s_feature = utils::mountain_car::s_feature;
-using mc_params = utils::mountain_car::params;
-using mc_Q = utils::mountain_car::Q;
+using mc_params    = utils::mountain_car::params;
+using mc_Q         = utils::mountain_car::Q;
 
 // This fills a transition dataset.
 // Draw 'nb_samples' starting states
 // and apply a random policy for at most 'max_episode_length' steps
 template<typename RANDOM_GENERATOR, typename POLICY, typename OutputIt>
 void fill_uniform(RANDOM_GENERATOR& gen, mc_system& simulator, const POLICY& policy,
-                   OutputIt out,
-                   unsigned int nb_samples, unsigned int max_episode_length) {
+		  OutputIt out,
+		  unsigned int nb_samples, unsigned int max_episode_length) {
 
   // parameters, defines starting point range as the maximal range
   auto params_uniform = gdyn::problem::mountain_car::parameters{};
-  params_uniform.start_position_min = params_uniform.min_position;
-  params_uniform.start_position_max = params_uniform.max_position;
+  params_uniform.start_position_min =  params_uniform.min_position;
+  params_uniform.start_position_max =  params_uniform.max_position;
   params_uniform.start_velocity_min = -params_uniform.max_speed;
   params_uniform.start_velocity_max =  params_uniform.max_speed;
 
@@ -98,9 +98,9 @@ void fill(RANDOM_GENERATOR& gen, mc_system& simulator, const POLICY& policy,
 // Declaration of some helpers function to trace activity ***********************
 template<typename RANDOM_DEVICE, typename POLICY>
 void test_policy(RANDOM_DEVICE& gen,
-                   const POLICY& policy,
-                   std::ostream& file_csv,
-                   utils::trace::csv<>& g_trace, int ite_nb);
+		 const POLICY& policy,
+		 std::ostream& file_csv,
+		 utils::trace::csv<>& g_trace, int ite_nb);
 
 template<typename Q>
 void sample_V_and_pi(const Q& q,
@@ -108,7 +108,7 @@ void sample_V_and_pi(const Q& q,
                      int nb_bins);
 
 void store_transitions(const std::vector<rl2::sarsa<mc_S, mc_A>>& transitions,
-                     std::ostream& file_csv );
+		       std::ostream& file_csv );
 
 // *****************************************************************************
 //                                                                          MAIN
@@ -142,123 +142,123 @@ int main(int argc, char *argv[])
   // ***************************************************************************
   // First, an easy scenario.
   {
-  std::cout << "***** EASY SETTING : offline sampling **************************" << std::endl;
-  // The transition buffer is sampled once from the entire space state, uniformely.
-  // At each of the NB_TRANSITIONS starting point,
-  // we store MAX_SAMPLE_LENGTH transitions using a random policy,
-  // this transition buffer is used in every iteration of LSPI.
-  std::cout << "Filling the dataset with " << NB_TRANSITIONS << " sampled starting states..." << std::flush;
-  fill_uniform(gen, simulator,
-               rl2::discrete::uniform_sampler<mc_A>(gen),
-               std::back_inserter(transitions),
-               NB_TRANSITIONS, MAX_SAMPLE_LENGTH);
-  {
-    std::ofstream local_file {"transition_offline_lspi_0.csv"};
-    store_transitions( transitions, local_file );
-  }
+    std::cout << "***** EASY SETTING : offline sampling **************************" << std::endl;
+    // The transition buffer is sampled once from the entire space state, uniformely.
+    // At each of the NB_TRANSITIONS starting point,
+    // we store MAX_SAMPLE_LENGTH transitions using a random policy,
+    // this transition buffer is used in every iteration of LSPI.
+    std::cout << "Filling the dataset with " << NB_TRANSITIONS << " sampled starting states..." << std::flush;
+    fill_uniform(gen, simulator,
+		 rl2::discrete::uniform_sampler<mc_A>(gen),
+		 std::back_inserter(transitions),
+		 NB_TRANSITIONS, MAX_SAMPLE_LENGTH);
+    {
+      std::ofstream local_file {"transition_offline_lspi_0.csv"};
+      store_transitions( transitions, local_file );
+    }
 
-  std::cout << " got " << transitions.size() << " samples, ("
-            << std::ranges::count_if(transitions, [](auto& transition){return transition.is_terminal();})
-            << " are terminal transitions)." << std::endl;
+    std::cout << " got " << transitions.size() << " samples, ("
+	      << std::ranges::count_if(transitions, [](auto& transition){return transition.is_terminal();})
+	      << " are terminal transitions)." << std::endl;
   
 
-  std::ofstream global_file {"global_offline.csv"};
-  utils::trace::csv<> global_trace {global_file};
+    std::ofstream global_file {"global_offline.csv"};
+    utils::trace::csv<> global_trace {global_file};
 
-  std::array<std::string, 3> header {"## it", "ep", "len"};
-  global_trace += header;
+    std::array<std::string, 3> header {"## it", "ep", "len"};
+    global_trace += header;
 
-  // Let us initialize q from the random policy. (true means that we
-  // want to actually compute the error. 0 is returned with false).
-  double error = rl2::eigen::critic::discrete_a::lstd<true>(q,
-                      rl2::discrete_a::random_policy<mc_S, mc_A>(gen),
-                      GAMMA,
-                      transitions.begin(), transitions.end());
-  std::cout << "LSTD error of the random policy = " << error << std::endl;
+    // Let us initialize q from the random policy. (true means that we
+    // want to actually compute the error. 0 is returned with false).
+    double error = rl2::eigen::critic::discrete_a::lstd<true>(q,
+							      rl2::discrete_a::random_policy<mc_S, mc_A>(gen),
+							      GAMMA,
+							      transitions.begin(), transitions.end());
+    std::cout << "LSTD error of the random policy = " << error << std::endl;
 
-  // test this initial policy
-  {
-    std::ofstream local_file {"test_offline_lspi_0.csv"};
-    test_policy(gen, greedy_on_q,
-                local_file, global_trace, 0);
-    std::ofstream qval_file {"qval_offline_lspi_0.csv"};
-    sample_V_and_pi(q, qval_file, Q_SAMPLE_DENSITY);
-  }
-
-  // LSPI iteration
-  std::cout << "Training using LSPI" << std::endl;
-  for(unsigned int i = 1; i <= NB_LSPI_ITERATIONS; ++i) {
-
-    auto error = rl2::eigen::critic::discrete_a::lstd<true>(next_q,
-                      greedy_on_q,
-                      GAMMA,
-                      transitions.begin(), transitions.end());
-    std::cout << "  iteration " << std::setw(4) << i << " : error = " << error << std::endl;
-
-    // We could simply update 'q' using the weights of 'next_q' using
-    std::swap(q, next_q);
-
+    // test this initial policy
     {
-      std::ofstream local_file {std::string("test_offline_lspi_")+std::to_string(i)+".csv"};
+      std::ofstream local_file {"test_offline_lspi_0.csv"};
       test_policy(gen, greedy_on_q,
-                  local_file, global_trace, i);
-      std::ofstream qval_file {std::string("qval_offline_lspi_")+std::to_string(i)+".csv"};
+		  local_file, global_trace, 0);
+      std::ofstream qval_file {"qval_offline_lspi_0.csv"};
       sample_V_and_pi(q, qval_file, Q_SAMPLE_DENSITY);
     }
 
-  }
+    // LSPI iteration
+    std::cout << "Training using LSPI" << std::endl;
+    for(unsigned int i = 1; i <= NB_LSPI_ITERATIONS; ++i) {
+
+      auto error = rl2::eigen::critic::discrete_a::lstd<true>(next_q,
+							      greedy_on_q,
+							      GAMMA,
+							      transitions.begin(), transitions.end());
+      std::cout << "  iteration " << std::setw(4) << i << " : error = " << error << std::endl;
+
+      // We could simply update 'q' using the weights of 'next_q' using
+      std::swap(q, next_q);
+
+      {
+	std::ofstream local_file {std::string("test_offline_lspi_")+std::to_string(i)+".csv"};
+	test_policy(gen, greedy_on_q,
+		    local_file, global_trace, i);
+	std::ofstream qval_file {std::string("qval_offline_lspi_")+std::to_string(i)+".csv"};
+	sample_V_and_pi(q, qval_file, Q_SAMPLE_DENSITY);
+      }
+
+    }
   } // end of easy setting
 
   // ***************************************************************************
   // Then a difficult scenario
   {
-  std::cout << "***** HARD SETTING : online sampling ***************************" << std::endl;
-  // The transition buffer is sampled using an 'exploration' policy.
-  // At start, this is a random policy.
-  // Then a epsilon-greedy policy on the current QValue estimation.
-  // We repeat sampling until we get MAX_SAMPLE_LENGTH * NB_TRANSITION samples
-  // this transition buffer is *updated* after every iteration of LSPI.
-  std::cout << "Filling the dataset with " << MAX_SAMPLE_LENGTH*NB_TRANSITIONS << " sampled..." << std::flush;
-  transitions.clear();
-  fill(gen, simulator,
-       rl2::discrete::uniform_sampler<mc_A>(gen),
-       std::back_inserter(transitions),
-       NB_TRANSITIONS * MAX_SAMPLE_LENGTH, MAX_EPISODE_LENGTH);
-  {
-    std::ofstream local_file {"transition_online_lspi_0.csv"};
-    store_transitions( transitions, local_file );
-  }
+    std::cout << "***** HARD SETTING : online sampling ***************************" << std::endl;
+    // The transition buffer is sampled using an 'exploration' policy.
+    // At start, this is a random policy.
+    // Then a epsilon-greedy policy on the current QValue estimation.
+    // We repeat sampling until we get MAX_SAMPLE_LENGTH * NB_TRANSITION samples
+    // this transition buffer is *updated* after every iteration of LSPI.
+    std::cout << "Filling the dataset with " << MAX_SAMPLE_LENGTH*NB_TRANSITIONS << " sampled..." << std::flush;
+    transitions.clear();
+    fill(gen, simulator,
+	 rl2::discrete::uniform_sampler<mc_A>(gen),
+	 std::back_inserter(transitions),
+	 NB_TRANSITIONS * MAX_SAMPLE_LENGTH, MAX_EPISODE_LENGTH);
+    {
+      std::ofstream local_file {"transition_online_lspi_0.csv"};
+      store_transitions( transitions, local_file );
+    }
 
-  std::cout << " got " << transitions.size() << " samples, ("
-            << std::ranges::count_if(transitions, [](auto& transition){return transition.is_terminal();})
-            << " are terminal transitions)." << std::endl;
+    std::cout << " got " << transitions.size() << " samples, ("
+	      << std::ranges::count_if(transitions, [](auto& transition){return transition.is_terminal();})
+	      << " are terminal transitions)." << std::endl;
 
-  std::ofstream global_file {"global_online.csv"};
-  utils::trace::csv<> global_trace {global_file};
+    std::ofstream global_file {"global_online.csv"};
+    utils::trace::csv<> global_trace {global_file};
 
-  std::array<std::string, 3> header {"## it", "ep", "len"};
-  global_trace += header;
+    std::array<std::string, 3> header {"## it", "ep", "len"};
+    global_trace += header;
 
-  // Let us initialize q from the random policy. (true means that we
-  // want to actually compute the error. 0 is returned with false).
-  double error = rl2::eigen::critic::discrete_a::lstd<true>(q,
-                      rl2::discrete_a::random_policy<mc_S, mc_A>(gen),
-                      GAMMA,
-                      transitions.begin(), transitions.end());
-  std::cout << "LSTD error of the random policy = " << error << std::endl;
+    // Let us initialize q from the random policy. (true means that we
+    // want to actually compute the error. 0 is returned with false).
+    double error = rl2::eigen::critic::discrete_a::lstd<true>(q,
+							      rl2::discrete_a::random_policy<mc_S, mc_A>(gen),
+							      GAMMA,
+							      transitions.begin(), transitions.end());
+    std::cout << "LSTD error of the random policy = " << error << std::endl;
 
-  // test this initial policy
-  {
-    std::ofstream local_file {"test_online_lspi_0.csv"};
-    test_policy(gen, greedy_on_q,
-                local_file, global_trace, 0);
-    std::ofstream qval_file {"qval_online_lspi_0.csv"};
-    sample_V_and_pi(q, qval_file, Q_SAMPLE_DENSITY);
-  }
+    // test this initial policy
+    {
+      std::ofstream local_file {"test_online_lspi_0.csv"};
+      test_policy(gen, greedy_on_q,
+		  local_file, global_trace, 0);
+      std::ofstream qval_file {"qval_online_lspi_0.csv"};
+      sample_V_and_pi(q, qval_file, Q_SAMPLE_DENSITY);
+    }
 
-  // LSPI iteration
-  std::cout << "Training using LSPI" << std::endl;
-  for(unsigned int i = 1; i <= NB_LSPI_ITERATIONS; ++i) {
+    // LSPI iteration
+    std::cout << "Training using LSPI" << std::endl;
+    for(unsigned int i = 1; i <= NB_LSPI_ITERATIONS; ++i) {
 
       // resample transition using epsilon_greedy
       transitions.clear();
@@ -272,23 +272,20 @@ int main(int argc, char *argv[])
       }
 
       auto error = rl2::eigen::critic::discrete_a::lstd<true>(next_q,
-                      greedy_on_q,
-                      GAMMA,
-                      transitions.begin(), transitions.end());
+							      greedy_on_q,
+							      GAMMA,
+							      transitions.begin(), transitions.end());
       std::cout << "  iteration " << std::setw(4) << i << " : error = " << error << std::endl;
 
       // We could simply update 'q' using the weights of 'next_q' using std::swap(q, next_q);
       // here we use a progressive change in weights/params
       // q.params <- alpha x q.params + (1 - alpha) x next_q.params
       // q.params are nupplet
-      // TODO use range to do the following ?
       auto q_params_it = q.params->begin();
       auto next_q_params_it = next_q.params->begin();
-      for ( ; q_params_it != q.params->end(); ) {
-        auto new_w = ALPHA * (*q_params_it) + (1.0 - ALPHA) * (*next_q_params_it);
-        *q_params_it = new_w;
-        ++q_params_it;
-        ++next_q_params_it;
+      while(q_params_it != q.params->end()) {
+        auto new_w = ALPHA * (*q_params_it) + (1.0 - ALPHA) * (*next_q_params_it++);
+        *q_params_it++ = new_w;
       }
 
       {
@@ -302,7 +299,7 @@ int main(int argc, char *argv[])
       // descrease epsilon
       epsilon *= 1.0 / EPSILON_TAU;
       epsilon = std::max( epsilon, EPSILON_THRESHOLD );
-  }
+    }
   } // end of hard setting
 
   return 0;
@@ -323,7 +320,7 @@ void test_policy(RANDOM_DEVICE& gen,
                  utils::trace::csv<>& g_trace, int ite_nb)
 {
   auto sim = gdyn::problem::mountain_car::make();
-  mc_system simulator {sim}; // simulator is sim, but handling discrete actions.
+  mc_system simulator {sim}; // simulator is sim, but handling enumerable actions.
 
   // trace with header
   utils::trace::csv<> test {file_csv};
@@ -423,12 +420,12 @@ void store_transitions(const std::vector<rl2::sarsa<mc_S, mc_A>>& transitions,
   trace += header;
 
   for (auto t : transitions ) {
-      std::array<double, 5> line {
-        t.s.position,
-        t.s.velocity,
-        static_cast<double>(t.a),
-        t.ss.position,
-        t.ss.velocity };
-      trace += line;
+    std::array<double, 5> line {
+      t.s.position,
+      t.s.velocity,
+      static_cast<double>(t.a),
+      t.ss.position,
+      t.ss.velocity };
+    trace += line;
   }
 }

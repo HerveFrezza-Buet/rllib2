@@ -14,7 +14,6 @@ foreach(f ${usage_examples})
   target_include_directories(${exampleName} PUBLIC ${CMAKE_SOURCE_DIR}/src)
   target_include_directories(${exampleName} PUBLIC ${RLLIB2_INCLUDE_DIRS})
   target_include_directories(${exampleName} PUBLIC ${EIGEN3_INCLUDE_DIRS})
-  target_include_directories(${exampleName} PUBLIC ${CPPUTILS_INCLUDE_DIRS})
 
   target_link_libraries (${exampleName} PUBLIC ${RLLIB2_LIBRARIES})
   target_link_libraries (${exampleName} PUBLIC ${EIGEN3_LIBRARIES})

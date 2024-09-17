@@ -114,13 +114,8 @@ namespace rl2 {
     /**
      * @short A RL policy
      */
-    // TODO apporte quoi de plus que gdyn::controller [gdyn/src/gdynConcepts.hpp]
     template<typename POLICY, typename S, typename A>
-    concept policy =
-      std::invocable<POLICY, S>
-      && requires(POLICY const cp, S const cs){
-      {cp(cs)} -> std::convertible_to<A>;
-    };
+    concept policy = gdyn::concepts::controller<POLICY, S, A>;
 
     /**
      * @short A function f(a, b), for which f(a) is a function : f(a,b) = f(a)(b).

@@ -13,8 +13,6 @@ SET(INCLUDE_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/include/${CMAKE_PROJECT_NAME}/"
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(RLLIB2 rllib2 REQUIRED)
-pkg_check_modules(CPPUTILS cpp_utils REQUIRED)
-set(PKG_CONFIG_DEPENDS "rllib2 cpp_utils")
 
 find_package (Eigen3 3.3 REQUIRED NO_MODULE)
 message("Eigen is in ${EIGEN3_INCLUDE_DIR}")
