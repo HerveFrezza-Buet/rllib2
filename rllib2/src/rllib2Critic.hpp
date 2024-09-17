@@ -3,6 +3,13 @@
 #include <rllib2Transition.hpp>
 #include <rllib2Functional.hpp>
 
+// TODO
+// discrete, tabular, discrete_a...  nota: discrete est le nom de namespace associé au concept enumerable.
+// enumerable... renomer en finite ? Du coup enumerable devient dispo comme nom de namespace pour discrete.
+
+
+
+
 namespace rl2 {
   namespace critic {
     namespace td {
@@ -39,7 +46,7 @@ namespace rl2 {
       
       
       template<typename S, typename A, concepts::q_function<S, A> Q>
-      requires concepts::tabular_two_args_function<Q>
+      requires concepts::tabular::two_args_function<Q>
       double update(Q& q, const S& s, const A& a, double alpha, double td_error) {
 	auto delta = alpha * td_error;
 	auto it = q.params_it + static_cast<std::size_t>(typename Q::arg_type(typename Q::first_entry_type(s), typename Q::second_entry_type(a)));

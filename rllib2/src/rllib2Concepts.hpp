@@ -135,17 +135,19 @@ namespace rl2 {
       {ct(cs)} -> std::invocable<typename TWO_ARGS_FUNCTION::second_entry_type>;
     };
 
-    /**
-     * @short A two-args function whose types are enumerable.
-     */
-    template<typename TWO_ARGS_FUNCTION>
-    concept tabular_two_args_function =
-      two_args_function<TWO_ARGS_FUNCTION>
-      && requires {
-      typename TWO_ARGS_FUNCTION::params_iterator_type;
+    namespace tabular {
+      /**
+       * @short A two-args function whose types are enumerable.
+       */
+      template<typename TWO_ARGS_FUNCTION>
+      concept two_args_function =
+      rl2::concepts::two_args_function<TWO_ARGS_FUNCTION>
+	&& requires {
+	typename TWO_ARGS_FUNCTION::params_iterator_type;
+      }
+	&& enumerable<typename TWO_ARGS_FUNCTION::first_entry_type>
+      && enumerable<typename TWO_ARGS_FUNCTION::second_entry_type>;
     }
-      && enumerable<typename TWO_ARGS_FUNCTION::first_entry_type>
-    && enumerable<typename TWO_ARGS_FUNCTION::second_entry_type>;
 
     namespace discrete_a {
       /**
