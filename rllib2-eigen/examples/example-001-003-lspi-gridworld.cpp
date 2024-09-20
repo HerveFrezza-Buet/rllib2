@@ -57,19 +57,19 @@ using enum_system = rl2::enumerable::system<enum_S, enum_S, enum_A, g_system>;
 enum_A optimal_policy(const g_system::state_type& s)
 {
   switch(static_cast<int>(s)) {
-    case 3:
-      return enum_A{gdyn::problem::grid_world::dir::South};
-      break;
-    case 4:
-    case 9:
-      return enum_A{gdyn::problem::grid_world::dir::West};
-      break;
-    case 8:
-      return enum_A{gdyn::problem::grid_world::dir::North};
-      break;
-    default:
-      return enum_A{gdyn::problem::grid_world::dir::East};
-      break;
+  case 3:
+    return enum_A{gdyn::problem::grid_world::dir::South};
+    break;
+  case 4:
+  case 9:
+    return enum_A{gdyn::problem::grid_world::dir::West};
+    break;
+  case 8:
+    return enum_A{gdyn::problem::grid_world::dir::North};
+    break;
+  default:
+    return enum_A{gdyn::problem::grid_world::dir::East};
+    break;
   }
 }
 
@@ -84,6 +84,7 @@ inline std::string nice_double(double val)
 
   return nice.str();
 }
+
 template<typename QTABLE>
 void print_qval(const QTABLE& q)
 {
@@ -95,23 +96,25 @@ void print_qval(const QTABLE& q)
     std::cout << std::endl;
   }
 }
+
 template<typename QTABLE>
 std::string qval_in_line(const QTABLE& q, const enum_S& s)
 {
   std::stringstream line;
   bool starting {true};
   for( auto a: enum_A() ) {
-      if (starting) {
-        starting = false;
-      }
-      else {
-        std::cout << " / ";
-      }
-      std::cout << nice_double(q(s,a));
+    if (starting) {
+      starting = false;
     }
+    else {
+      std::cout << " / ";
+    }
+    std::cout << nice_double(q(s,a));
+  }
 
   return line.str();
 }
+
 template<typename QTABLE>
 void print_qval_policy(const QTABLE& q)
 {
@@ -172,13 +175,13 @@ struct enum_s_features {
     return rl2::nuplet::make_from_iterator<dim>(data->begin());
   }
 }; // struct enum_s_features
-using enum_params = rl2::eigen::nuplet::from<rl2::linear::discrete_a::q_dim_v<enum_S, enum_A,
-                                                                              enum_s_features>>;
-using params = rl2::eigen::nuplet::from<rl2::linear::discrete_a::q_dim_v<g_system::state_type,
-                                                                         enum_A,
-                                                                         s_features>>;
-using QLinear = rl2::linear::discrete_a::q<params, g_system::state_type, enum_A, s_features>;
-using EnumQLinear = rl2::linear::discrete_a::q<enum_params, enum_S, enum_A, enum_s_features>;
+using enum_params = rl2::eigen::nuplet::from<rl2::linear::enumerable::action::q_dim_v<enum_S, enum_A,
+										      enum_s_features>>;
+using params = rl2::eigen::nuplet::from<rl2::linear::enumerable::action::q_dim_v<g_system::state_type,
+										 enum_A,
+										 s_features>>;
+using QLinear = rl2::linear::enumerable::action::q<params, g_system::state_type, enum_A, s_features>;
+using EnumQLinear = rl2::linear::enumerable::action::q<enum_params, enum_S, enum_A, enum_s_features>;
 
 template<typename QLINEAR>
 std::string qlin_params_in_line(const QLINEAR& q_lin)
@@ -219,8 +222,7 @@ template<typename QTABLE>
 void q_learning(QTABLE& q, enum_system& simulator, int nb_epoch)
 {
   // using bellman optimality operator
-  auto bellman_op = rl2::critic::td::discrete::bellman::optimality<enum_S,
-                                                                   enum_A, QTABLE>;
+  auto bellman_op = rl2::critic::td::enumerable::action::bellman::optimality<enum_S, enum_A, QTABLE>;
 
   for (int epoch=0; epoch < nb_epoch; ++epoch) {
     simulator = g_system::random_state(gen);
@@ -230,18 +232,18 @@ void q_learning(QTABLE& q, enum_system& simulator, int nb_epoch)
            | gdyn::views::orbit(simulator)
            | rl2::views::sarsa
            | std::views::take(MAX_EPOCH_LENGTH)) {
-    std::cout << ": s=" << static_cast<unsigned int>(transition.s) << " a=" << static_cast<int>(transition.a);
-    std::cout << " --> [" << transition.r << "]";
-    std::cout << " ns=" << static_cast<unsigned int>(transition.ss);
-    if (transition.aa)
-      std::cout << " na=" << static_cast<unsigned int>(transition.aa.value());
-    else
-      std::cout << " na=NULL";
-    std::cout << " => Q(" << static_cast<unsigned int>(transition.s) << ", UDLR)=";
-    std::cout << qval_in_line(q, transition.s);
-    std::cout << std::endl;
-    rl2::critic::td::update(q, transition.s, transition.a, ALPHA_QLEARNING,
-                            rl2::critic::td::error(q, GAMMA, transition, bellman_op));
+      std::cout << ": s=" << static_cast<unsigned int>(transition.s) << " a=" << static_cast<int>(transition.a);
+      std::cout << " --> [" << transition.r << "]";
+      std::cout << " ns=" << static_cast<unsigned int>(transition.ss);
+      if (transition.aa)
+	std::cout << " na=" << static_cast<unsigned int>(transition.aa.value());
+      else
+	std::cout << " na=NULL";
+      std::cout << " => Q(" << static_cast<unsigned int>(transition.s) << ", UDLR)=";
+      std::cout << qval_in_line(q, transition.s);
+      std::cout << std::endl;
+      rl2::critic::td::update(q, transition.s, transition.a, ALPHA_QLEARNING,
+			      rl2::critic::td::error(q, GAMMA, transition, bellman_op));
     }
   }
 }
@@ -275,7 +277,7 @@ int main(int argc, char *argv[])
   // FIRST : evaluate optimal Q/Policy using TABULAR QLearning
   // store Q in a Qtable
   std::array<double, g_system::NB_STATES * 4> table_values{}; // all elements = 0
-  auto Q = rl2::tabular::make_two_args_function<enum_S, enum_A>(table_values.begin());
+  auto Q = rl2::enumerable::make_two_args_tabular<enum_S, enum_A>(table_values.begin());
 
   std::cout << "__Qval at Start" << std::endl;
   print_qval(Q);
@@ -312,14 +314,14 @@ int main(int argc, char *argv[])
        [&enum_simulator](){return optimal_policy(*enum_simulator);},
        std::back_inserter(buffer), BUFFER_SIZE, MAX_EPOCH_LENGTH);
   std::cout << " got " << buffer.size() << " samples, ("
-	          << std::ranges::count_if(buffer,
-                               [](auto& buffer){return buffer.is_terminal();})
+	    << std::ranges::count_if(buffer,
+				     [](auto& buffer){return buffer.is_terminal();})
             << " are terminal transitions)." << std::endl;
 
-  auto error = rl2::eigen::critic::discrete_a::lstd<true>(q_lin,
-                                                          optimal_policy,
-                                                          GAMMA,
-                                                          buffer.begin(), buffer.end());
+  auto error = rl2::eigen::critic::enumerable::action::lstd<true>(q_lin,
+								  optimal_policy,
+								  GAMMA,
+								  buffer.begin(), buffer.end());
   std::cout << " error = " << error << std::endl;
   std::cout << ">> parameters of the estimated optimal policy" << std::endl;
   std::cout << "W=" << qlin_params_in_line(q_lin) << std::endl;
@@ -337,17 +339,17 @@ int main(int argc, char *argv[])
   // init q_lin with random policy
   buffer.clear();
   fill(gen, enum_simulator,
-       rl2::discrete::uniform_sampler<enum_A>(gen),
+       rl2::enumerable::uniform_sampler<enum_A>(gen),
        std::back_inserter(buffer), BUFFER_SIZE, MAX_EPOCH_LENGTH);
-  rl2::eigen::critic::discrete_a::lstd<false>(q_lin,
-                                              rl2::discrete_a::random_policy<enum_S, enum_A>(gen),
-                                              GAMMA,
-                                              buffer.begin(), buffer.end());
+  rl2::eigen::critic::enumerable::action::lstd<false>(q_lin,
+						      rl2::enumerable::action::random_policy<enum_S, enum_A>(gen),
+						      GAMMA,
+						      buffer.begin(), buffer.end());
   print_qval_policy(q_lin);
 
   double epsilon = 0.1;
-  auto   greedy_on_q         = rl2::discrete::greedy_ify(q_lin);
-  auto   epsilon_greedy_on_q = rl2::discrete::epsilon_ify(greedy_on_q, std::cref(epsilon), gen);
+  auto   greedy_on_q         = rl2::enumerable::greedy_ify(q_lin);
+  auto   epsilon_greedy_on_q = rl2::enumerable::epsilon_ify(greedy_on_q, std::cref(epsilon), gen);
   std::cout << "Training using LSPI" << std::endl;
   for(unsigned int i = 0; i < MAX_LSPI_ITER; ++i) {
     // We re-sample the transition set, following the current q-values
@@ -357,10 +359,10 @@ int main(int argc, char *argv[])
          [&epsilon_greedy_on_q, &enum_simulator](){return epsilon_greedy_on_q(*enum_simulator);},
          std::back_inserter(buffer), BUFFER_SIZE, MAX_EPOCH_LENGTH);
 
-    auto error = rl2::eigen::critic::discrete_a::lstd<true>(q_lin_next,
-                                                            greedy_on_q,
-                                                            GAMMA,
-                                                            buffer.begin(), buffer.end());
+    auto error = rl2::eigen::critic::enumerable::action::lstd<true>(q_lin_next,
+								    greedy_on_q,
+								    GAMMA,
+								    buffer.begin(), buffer.end());
     std::cout << "  iteration " << std::setw(4) << i << " : error = " << error << std::endl;
 
     std::swap(q_lin, q_lin_next); // swapping q functions swaps their contents, which are share pointers.
@@ -373,10 +375,10 @@ int main(int argc, char *argv[])
        [&greedy_on_q, &enum_simulator](){return greedy_on_q(*enum_simulator);},
        std::back_inserter(buffer), BUFFER_SIZE, MAX_EPOCH_LENGTH);
 
-  rl2::eigen::critic::discrete_a::lstd<false>(q_lin_next,
-                                             greedy_on_q,
-                                             GAMMA,
-                                             buffer.begin(), buffer.end());
+  rl2::eigen::critic::enumerable::action::lstd<false>(q_lin_next,
+						      greedy_on_q,
+						      GAMMA,
+						      buffer.begin(), buffer.end());
 
   print_qval_policy(q_lin_next);
 

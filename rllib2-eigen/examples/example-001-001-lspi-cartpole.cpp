@@ -29,8 +29,8 @@ using c_Q = utils::cartpole::Q;
 // and apply a random policy for at most 'max_episode_length' steps
 template<typename RANDOM_GENERATOR, typename POLICY, typename OutputIt>
 void fill_uniform(RANDOM_GENERATOR& gen, c_system& simulator, const POLICY& policy,
-                   OutputIt out,
-                   unsigned int nb_samples, unsigned int max_episode_length) {
+		  OutputIt out,
+		  unsigned int nb_samples, unsigned int max_episode_length) {
 
   // parameters, defines starting point range as the maximal range
   auto params = gdyn::problem::cartpole::parameters{};
@@ -66,12 +66,12 @@ void fill_uniform(RANDOM_GENERATOR& gen, c_system& simulator, const POLICY& poli
 // Declaration of some helpers function to trace activity ***********************
 template<typename RANDOM_DEVICE, typename POLICY>
 void test_policy(RANDOM_DEVICE& gen,
-                   const POLICY& policy,
-                   std::ostream& file_csv,
-                   utils::trace::csv<>& g_trace, int ite_nb);
+		 const POLICY& policy,
+		 std::ostream& file_csv,
+		 utils::trace::csv<>& g_trace, int ite_nb);
 
 void store_transitions(const std::vector<rl2::sarsa<c_S, c_A>>& transitions,
-                     std::ostream& file_csv );
+		       std::ostream& file_csv );
 
 // *****************************************************************************
 //                                                                          MAIN
@@ -91,7 +91,7 @@ int main(int argc, char *argv[]) {
   c_Q q      {std::make_shared<c_s_feature>(utils::cartpole::make_state_feature()), std::make_shared<c_params>()};
   c_Q next_q {std::make_shared<c_s_feature>(utils::cartpole::make_state_feature()), std::make_shared<c_params>()};
 
-  auto   greedy_on_q         = rl2::discrete::greedy_ify(q);
+  auto   greedy_on_q = rl2::enumerable::greedy_ify(q);
 
   std::cout << "Q is a linear combination of RBFs" << std::endl;
   std::cout << "   - with continuous state space and " << c_A::size() << " discrete actions" << std::endl;
@@ -104,7 +104,7 @@ int main(int argc, char *argv[]) {
   // this transition buffer is used in every iteration of LSPI.
   std::cout << "Filling the dataset with " << NB_TRANSITIONS << " sampled starting states..." << std::flush;
   fill_uniform(gen, simulator,
-               rl2::discrete::uniform_sampler<c_A>(gen),
+               rl2::enumerable::uniform_sampler<c_A>(gen),
                std::back_inserter(transitions),
                NB_TRANSITIONS, MAX_SAMPLE_LENGTH);
   {
@@ -124,10 +124,10 @@ int main(int argc, char *argv[]) {
 
   // Let us initialize q from the random policy. (true means that we
   // want to actually compute the error. 0 is returned with false).
-  double error = rl2::eigen::critic::discrete_a::lstd<true>(q,
-                      rl2::discrete_a::random_policy<c_S, c_A>(gen),
-                      GAMMA,
-                      transitions.begin(), transitions.end());
+  double error = rl2::eigen::critic::enumerable::action::lstd<true>(q,
+								    rl2::enumerable::action::random_policy<c_S, c_A>(gen),
+								    GAMMA,
+								    transitions.begin(), transitions.end());
   std::cout << "LSTD error of the random policy = " << error << std::endl;
 
   // test this initial policy
@@ -142,10 +142,10 @@ int main(int argc, char *argv[]) {
   std::cout << "Training using LSPI" << std::endl;
   for(unsigned int i = 1; i <= NB_LSPI_ITERATIONS; ++i) {
 
-    auto error = rl2::eigen::critic::discrete_a::lstd<true>(next_q,
-                      greedy_on_q,
-                      GAMMA,
-                      transitions.begin(), transitions.end());
+    auto error = rl2::eigen::critic::enumerable::action::lstd<true>(next_q,
+								    greedy_on_q,
+								    GAMMA,
+								    transitions.begin(), transitions.end());
     std::cout << "  iteration " << std::setw(4) << i << " : error = " << error << std::endl;
 
     // We can simply update 'q' using the weights of 'next_q' using
@@ -184,9 +184,9 @@ void test_policy(RANDOM_DEVICE& gen,
   // trace with header
   utils::trace::csv<> test {file_csv};
   std::array<std::string, 12> header {"## ep", "t", "s.x", "s.x_dot", "s.theta", "s.theta_dot",
-                                     "a",
-                                     "next_s.x", "next_s.x_dot", "next_s.theta", "next_s.theta_dot",
-                                     "r"};
+				      "a",
+				      "next_s.x", "next_s.x_dot", "next_s.theta", "next_s.theta_dot",
+				      "r"};
   test += header;
 
   unsigned int nb_success = 0;
@@ -201,13 +201,13 @@ void test_policy(RANDOM_DEVICE& gen,
           | rl2::views::sarsa
           | std::views::take(MAX_TEST_EPISODE_LENGTH)) {
       std::array<double, 12> line  { static_cast<double>(episode),
-                                    static_cast<double>(length),
-                                    s.x, s.x_dot,
-                                    s.theta, s.theta_dot,
-                                    static_cast<double>(a),
-                                    next_s.x, next_s.x_dot,
-                                    next_s.theta, next_s.theta_dot,
-                                    r };
+				     static_cast<double>(length),
+				     s.x, s.x_dot,
+				     s.theta, s.theta_dot,
+				     static_cast<double>(a),
+				     next_s.x, next_s.x_dot,
+				     next_s.theta, next_s.theta_dot,
+				     r };
       test += line;
 
       ++length;
@@ -241,13 +241,13 @@ void store_transitions(const std::vector<rl2::sarsa<c_S, c_A>>& transitions,
   trace += header;
 
   for (auto t : transitions ) {
-      std::array<double, 9> line {
-        t.s.x, t.s.x_dot,
-        t.s.theta, t.s.theta_dot,
-        static_cast<double>(t.a),
-        t.ss.x, t.ss.x_dot,
-        t.ss.theta, t.ss.theta_dot };
+    std::array<double, 9> line {
+      t.s.x, t.s.x_dot,
+      t.s.theta, t.s.theta_dot,
+      static_cast<double>(t.a),
+      t.ss.x, t.ss.x_dot,
+      t.ss.theta, t.ss.theta_dot };
 
-      trace += line;
+    trace += line;
   }
 }

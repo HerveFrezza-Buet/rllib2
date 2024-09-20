@@ -9,7 +9,8 @@
 
 namespace rl2 {
   namespace eigen {
-    namespace discrete_a {
+    namespace enumerable {
+    namespace action {
 
       /* return an Eigen::Vector from
        * - phi(s), rl2::nuplet of double
@@ -18,7 +19,7 @@ namespace rl2 {
        * returned vector is Zero everywhere, except between size(a)*N::s
        * dim and (size(a)+1)*N::dim where phi(s) is copied
        */
-      template<rl2::concepts::nuplet N, rl2::concepts::enumerable A>
+      template<rl2::concepts::nuplet N, rl2::concepts::enumerable::finite A>
       auto from(const N& ns, const A& a) {
 	Eigen::Vector<double, N::dim*A::size()> vec;
 	vec.setZero(); // eigen vectors are not initialized by the default constructor.
@@ -29,12 +30,14 @@ namespace rl2 {
 	return vec;
       }
     }
+    }
 
     namespace critic {
-      namespace discrete_a {
+      namespace enumerable {
+      namespace action {
 
 	template<bool compute_error,
-		 rl2::concepts::discrete_a::linear_qfunction Q,
+		 rl2::concepts::enumerable::action::linear_qfunction Q,
 		 rl2::concepts::policy<typename Q::state_type, typename Q::action_type> POLICY,
 		 std::input_iterator TransitionIter, std::sentinel_for<TransitionIter> TransitionSentinel>
 	requires rl2::concepts::sarsa<std::iter_value_t<TransitionIter>, typename Q::state_type, typename Q::action_type>
@@ -53,13 +56,13 @@ namespace rl2 {
 	  for (auto it=begin; it!=end; ++it) {
 	    // Build sum_phiphi from transitions, with Iter and Sentinel iterators
 	    // reminder : std::vector<rl2::sarsa<S, A>> transitions;
-	    // reminder : using Q = rl2::linear::discrete_a::q<params, S, A, s_feature>;
+	    // reminder : using Q = rl2::linear::enumerable::action::q<params, S, A, s_feature>;
 	    //    *(Q.s_features)(t.s) - gamma * *(Q.s_features)(t.ss)
-	    auto phi_s_eigen  = rl2::eigen::discrete_a::from((*(q.s_feature))(it->s),  it->a);
+	    auto phi_s_eigen  = rl2::eigen::enumerable::action::from((*(q.s_feature))(it->s),  it->a);
 
 	    auto phi_jgj = phi_s_eigen;
 	    if (not it->is_terminal()) {
-	      auto phi_ss_eigen = rl2::eigen::discrete_a::from((*(q.s_feature))(it->ss), pi(it->ss));
+	      auto phi_ss_eigen = rl2::eigen::enumerable::action::from((*(q.s_feature))(it->ss), pi(it->ss));
 	      phi_jgj = phi_jgj - gamma * phi_ss_eigen;
 	    }
 	    auto phiphi = phi_s_eigen * phi_jgj.transpose();
@@ -78,7 +81,8 @@ namespace rl2 {
 	  else
 	    return 0;
 	} // lstq()
-      } // namespace discrete_a
+      } // namespace action
+      } // namespace enumerable
     } // namespace critic
   } // namespace eigen
 } // namespace rl2

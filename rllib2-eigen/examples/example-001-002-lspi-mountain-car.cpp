@@ -131,8 +131,8 @@ int main(int argc, char *argv[])
   mc_Q q      {std::make_shared<mc_s_feature>(utils::mountain_car::make_state_feature()), std::make_shared<mc_params>()};
   mc_Q next_q {std::make_shared<mc_s_feature>(utils::mountain_car::make_state_feature()), std::make_shared<mc_params>()};
 
-  auto   greedy_on_q         = rl2::discrete::greedy_ify(q);
-  auto   epsilon_greedy_on_q = rl2::discrete::epsilon_ify(greedy_on_q, std::cref(epsilon), gen);
+  auto   greedy_on_q         = rl2::enumerable::greedy_ify(q);
+  auto   epsilon_greedy_on_q = rl2::enumerable::epsilon_ify(greedy_on_q, std::cref(epsilon), gen);
 
   std::cout << "Q is a linear combination of RBFs" << std::endl;
   std::cout << "   - with continuous state space and " << mc_A::size() << " discrete actions" << std::endl;
@@ -149,7 +149,7 @@ int main(int argc, char *argv[])
     // this transition buffer is used in every iteration of LSPI.
     std::cout << "Filling the dataset with " << NB_TRANSITIONS << " sampled starting states..." << std::flush;
     fill_uniform(gen, simulator,
-		 rl2::discrete::uniform_sampler<mc_A>(gen),
+		 rl2::enumerable::uniform_sampler<mc_A>(gen),
 		 std::back_inserter(transitions),
 		 NB_TRANSITIONS, MAX_SAMPLE_LENGTH);
     {
@@ -170,10 +170,10 @@ int main(int argc, char *argv[])
 
     // Let us initialize q from the random policy. (true means that we
     // want to actually compute the error. 0 is returned with false).
-    double error = rl2::eigen::critic::discrete_a::lstd<true>(q,
-							      rl2::discrete_a::random_policy<mc_S, mc_A>(gen),
-							      GAMMA,
-							      transitions.begin(), transitions.end());
+    double error = rl2::eigen::critic::enumerable::action::lstd<true>(q,
+								      rl2::enumerable::action::random_policy<mc_S, mc_A>(gen),
+								      GAMMA,
+								      transitions.begin(), transitions.end());
     std::cout << "LSTD error of the random policy = " << error << std::endl;
 
     // test this initial policy
@@ -189,10 +189,10 @@ int main(int argc, char *argv[])
     std::cout << "Training using LSPI" << std::endl;
     for(unsigned int i = 1; i <= NB_LSPI_ITERATIONS; ++i) {
 
-      auto error = rl2::eigen::critic::discrete_a::lstd<true>(next_q,
-							      greedy_on_q,
-							      GAMMA,
-							      transitions.begin(), transitions.end());
+      auto error = rl2::eigen::critic::enumerable::action::lstd<true>(next_q,
+								      greedy_on_q,
+								      GAMMA,
+								      transitions.begin(), transitions.end());
       std::cout << "  iteration " << std::setw(4) << i << " : error = " << error << std::endl;
 
       // We could simply update 'q' using the weights of 'next_q' using
@@ -221,7 +221,7 @@ int main(int argc, char *argv[])
     std::cout << "Filling the dataset with " << MAX_SAMPLE_LENGTH*NB_TRANSITIONS << " sampled..." << std::flush;
     transitions.clear();
     fill(gen, simulator,
-	 rl2::discrete::uniform_sampler<mc_A>(gen),
+	 rl2::enumerable::uniform_sampler<mc_A>(gen),
 	 std::back_inserter(transitions),
 	 NB_TRANSITIONS * MAX_SAMPLE_LENGTH, MAX_EPISODE_LENGTH);
     {
@@ -241,10 +241,10 @@ int main(int argc, char *argv[])
 
     // Let us initialize q from the random policy. (true means that we
     // want to actually compute the error. 0 is returned with false).
-    double error = rl2::eigen::critic::discrete_a::lstd<true>(q,
-							      rl2::discrete_a::random_policy<mc_S, mc_A>(gen),
-							      GAMMA,
-							      transitions.begin(), transitions.end());
+    double error = rl2::eigen::critic::enumerable::action::lstd<true>(q,
+								      rl2::enumerable::action::random_policy<mc_S, mc_A>(gen),
+								      GAMMA,
+								      transitions.begin(), transitions.end());
     std::cout << "LSTD error of the random policy = " << error << std::endl;
 
     // test this initial policy
@@ -271,10 +271,10 @@ int main(int argc, char *argv[])
         store_transitions( transitions, local_file );
       }
 
-      auto error = rl2::eigen::critic::discrete_a::lstd<true>(next_q,
-							      greedy_on_q,
-							      GAMMA,
-							      transitions.begin(), transitions.end());
+      auto error = rl2::eigen::critic::enumerable::action::lstd<true>(next_q,
+								      greedy_on_q,
+								      GAMMA,
+								      transitions.begin(), transitions.end());
       std::cout << "  iteration " << std::setw(4) << i << " : error = " << error << std::endl;
 
       // We could simply update 'q' using the weights of 'next_q' using std::swap(q, next_q);
@@ -383,7 +383,7 @@ void sample_V_and_pi(const Q& q,
   auto [pos_min, pos_max] = std::make_tuple( -1.2, 0.6 );
   auto [vel_min, vel_max] = std::make_tuple( -0.07, 0.07 );
 
-  auto greedy_on_q = rl2::discrete::greedy_ify(q); // or rl2::discrete::argmax_ify(q)
+  auto greedy_on_q = rl2::enumerable::greedy_ify(q); // or rl2::enumerable::argmax_ify(q)
 
   double pos = 0.0;
   double vel = 0.0;

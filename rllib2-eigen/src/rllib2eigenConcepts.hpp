@@ -6,8 +6,6 @@
 namespace rl2 {
   namespace eigen {
     namespace concepts {
-
-      
     }
   }
 }
