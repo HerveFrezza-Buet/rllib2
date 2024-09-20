@@ -49,7 +49,7 @@ int main(int argc, char* argv[]) {
 	      << "-------------" << std::endl
 	      << std::endl;
     
-    auto random_policy = rl2::discrete_a::random_policy<weakest_link::S, weakest_link::A>(gen);
+    auto random_policy = rl2::enumerable::action::random_policy<weakest_link::S, weakest_link::A>(gen);
     weakest_link::S s {};
     for(int i = 0; i< 10; ++i)
       std::cout << static_cast<weakest_link::A::base_type>(random_policy(s)) << ' ';
@@ -80,7 +80,7 @@ int main(int argc, char* argv[]) {
     // We can make a tabular function (S -> quality) from the array of
     // values. The index of the state is the key, the content of the
     // array the returned value.
-    auto f = rl2::tabular::make_function<weakest_link::S>(values.begin());
+    auto f = rl2::enumerable::make_tabular<weakest_link::S>(values.begin());
     
     // Let us display the association
     std::cout << "Tabular quality function:" << std::endl;
@@ -96,7 +96,7 @@ int main(int argc, char* argv[]) {
     // that epsilon_f(x) = f(x) with a ration (1-epsilon) of the
     // epsilon_f(x) calls, and is a random result otherwise.
     double epsilon; // The values will be set later in the loop.
-    auto epsilon_f = rl2::discrete::epsilon_ify(f, std::cref(epsilon), gen);
+    auto epsilon_f = rl2::enumerable::epsilon_ify(f, std::cref(epsilon), gen);
 
     // Let us set how many times f and epsilon_f differ.
     
@@ -105,7 +105,7 @@ int main(int argc, char* argv[]) {
       epsilon = eps; // epsilon_f depends on this setting, thanks to std::cref(epsilon).
       std::size_t nb_mismatches = 0;
       for([[maybe_unused]] const auto& unused
-			     : gdyn::views::pulse(rl2::discrete::uniform_sampler<weakest_link::S>(gen))
+			     : gdyn::views::pulse(rl2::enumerable::uniform_sampler<weakest_link::S>(gen))
 			     | std::views::take(nb_trials)
 			     | std::views::filter([&f, &epsilon_f](const auto& s){return f(s) != epsilon_f(s);}))
 	++nb_mismatches;
@@ -131,14 +131,14 @@ int main(int argc, char* argv[]) {
     std::array<double, weakest_link::SA::size()> values;
     for(auto& value : values) value = std::uniform_real_distribution(0., 1.)(gen);
     
-    auto Q = rl2::tabular::make_two_args_function<weakest_link::S, weakest_link::A>(values.begin());
+    auto Q = rl2::enumerable::make_two_args_tabular<weakest_link::S, weakest_link::A>(values.begin());
 
     // From this table, we can build up a greedy policy, since weakest_link::A is enumerable (this is mandatory for internal argmax);
-    auto greedy_on_Q = rl2::discrete::greedy_ify(Q); // or rl2::discrete::argmax_ify(Q)
+    auto greedy_on_Q = rl2::enumerable::greedy_ify(Q); // or rl2::enumerable::argmax_ify(Q)
 
     // We can espilon-ize such things to get an epsilon greedy policy.
     double epsilon = .2;
-    auto epsilon_greedy_on_Q = rl2::discrete::epsilon_ify(rl2::discrete::argmax_ify(Q), epsilon, gen);
+    auto epsilon_greedy_on_Q = rl2::enumerable::epsilon_ify(rl2::enumerable::argmax_ify(Q), epsilon, gen);
 
     // Let us display the values.
     

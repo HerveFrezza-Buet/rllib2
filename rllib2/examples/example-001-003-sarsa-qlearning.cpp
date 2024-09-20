@@ -29,7 +29,7 @@ void display_greedy_policy(const QTABLE& Q) {
   // The questions for which the greedy policy says 'bank' are in upper case.
   std::cout << "  greedy: ";
   for(auto it = weakest_link::S::begin(); it != weakest_link::S::end(); ++it) {
-    bool a = static_cast<weakest_link::A::base_type>(rl2::discrete::algo::argmax<weakest_link::A>(Q(weakest_link::S(it))));
+    bool a = static_cast<weakest_link::A::base_type>(rl2::enumerable::algo::argmax<weakest_link::A>(Q(weakest_link::S(it))));
     char c = *it;
     if(!a) c += 32;
     std::cout << c;
@@ -38,7 +38,7 @@ void display_greedy_policy(const QTABLE& Q) {
 
 template<bool is_sarsa, typename MDP, typename QTABLE, typename POLICY, typename RANDOM_GENERATOR>
 void train(MDP& environment, QTABLE& q, const POLICY& exploration_policy, Params& params, RANDOM_GENERATOR& gen) {
-  auto random_state_generator = rl2::discrete::uniform_sampler<weakest_link::S>(gen);
+  auto random_state_generator = rl2::enumerable::uniform_sampler<weakest_link::S>(gen);
   for(unsigned int epoch=0; epoch < params.nb_epochs; ++epoch) {
     environment = random_state_generator(); // We implement exploring starts.
     for(auto transition
@@ -52,7 +52,7 @@ void train(MDP& environment, QTABLE& q, const POLICY& exploration_policy, Params
 				rl2::critic::td::error(q, params.gamma, transition, bellman_op)); // SARSA
       }
       else {
-	auto bellman_op = rl2::critic::td::discrete::bellman::optimality<typename MDP::state_type, typename MDP::command_type, QTABLE>;
+	auto bellman_op = rl2::critic::td::enumerable::action::bellman::optimality<typename MDP::state_type, typename MDP::command_type, QTABLE>;
 	rl2::critic::td::update(q, transition.s, transition.a, params.learning_rate,
 				rl2::critic::td::error(q, params.gamma, transition, bellman_op)); // Q-Learning
       }
@@ -95,11 +95,11 @@ int main(int argc, char* argv[]) {
   std::array<double, weakest_link::SA::size()> values;
 
   // This is the Q function.
-  auto Q = rl2::tabular::make_two_args_function<weakest_link::S, weakest_link::A>(values.begin());
+  auto Q = rl2::enumerable::make_two_args_tabular<weakest_link::S, weakest_link::A>(values.begin());
 
   // Let us define an epsilon and a epsilon-greedy policy.
-  auto greedy_policy         = rl2::discrete::greedy_ify(Q);
-  auto epsilon_greedy_policy = rl2::discrete::epsilon_ify(greedy_policy, std::cref(params.epsilon), gen);
+  auto greedy_policy         = rl2::enumerable::greedy_ify(Q);
+  auto epsilon_greedy_policy = rl2::enumerable::epsilon_ify(greedy_policy, std::cref(params.epsilon), gen);
   // The policy is sensitive to further modifications of params.epsilon, thanks to the use of std::cref.
 
   // This is the environment

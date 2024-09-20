@@ -20,13 +20,13 @@ struct A2char {
 constexpr unsigned int nb_gauss_x = 3;
 constexpr unsigned int nb_gauss_v = 5;
 constexpr unsigned int nb_rbfs    = nb_gauss_x * nb_gauss_v;
-using S         = std::array<double,  2>;                                                       // s = (x, dx/dt) in Position x Speed
-using A         = rl2::enumerable::set<char, 4, A2char>;                                        // a in {'<', '=', '>', '?'}
-using mu_type   = rl2::nuplet::from<double, 2>;                                                 // This is the radial centers, it must be a nuplet.
-using rbf       = rl2::functional::gaussian<mu_type, S>;                                        // This is our RBF functions type.
-using S_feature = rl2::features::rbfs<nb_rbfs, rbf>;                                            // This is our feature type for S.
-using params    = rl2::nuplet::from<double, rl2::linear::discrete_a::q_dim_v<S, A, S_feature>>; // This is for theta... q_dim_v gives the appropriate parameter size.
-using Q         = rl2::linear::discrete_a::q<params, S, A, S_feature>;                          // functions such as Q(s,a) = thetaT.[0...phi(s)...0]
+using S         = std::array<double,  2>;                                                               // s = (x, dx/dt) in Position x Speed
+using A         = rl2::enumerable::set<char, 4, A2char>;                                                // a in {'<', '=', '>', '?'}
+using mu_type   = rl2::nuplet::from<double, 2>;                                                         // This is the radial centers, it must be a nuplet.
+using rbf       = rl2::functional::gaussian<mu_type, S>;                                                // This is our RBF functions type.
+using S_feature = rl2::features::rbfs<nb_rbfs, rbf>;                                                    // This is our feature type for S.
+using params    = rl2::nuplet::from<double, rl2::linear::enumerable::action::q_dim_v<S, A, S_feature>>; // This is for theta... q_dim_v gives the appropriate parameter size.
+using Q         = rl2::linear::enumerable::action::q<params, S, A, S_feature>;                          // functions such as Q(s,a) = thetaT.[0...phi(s)...0]
 
 
 // Let us display the q-values
@@ -119,9 +119,9 @@ int main(int argc, char* argv[]) {
     std::cout << "q_s(" << static_cast<A::base_type>(*a_it) << ") = " << q_s(a_it) << std::endl;
   std::cout << std::endl;
   
-  auto greedy_on_q = rl2::discrete::greedy_ify(q); // or rl2::discrete::argmax_ify(q)
+  auto greedy_on_q = rl2::enumerable::greedy_ify(q); // or rl2::enumerable::argmax_ify(q)
   double epsilon = .5;
-  auto epsilon_greedy_on_q = rl2::discrete::epsilon_ify(greedy_on_q, epsilon, gen);
+  auto epsilon_greedy_on_q = rl2::enumerable::epsilon_ify(greedy_on_q, epsilon, gen);
   // None of these function creation invoked a copy of features or parameters.
 
   std::cout << "greedy_q(s) = " << static_cast<A::base_type>(greedy_on_q(s)) << std::endl

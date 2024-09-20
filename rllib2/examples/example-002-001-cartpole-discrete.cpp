@@ -335,11 +335,11 @@ void test_mdp(RANDOM& gen, bool verbose=false) {
 
   // Then a tabular Q
   std::array<double, SA::size()> values;
-  auto Q = rl2::tabular::make_two_args_function<S, A>(values.begin());
+  auto Q = rl2::enumerable::make_two_args_tabular<S, A>(values.begin());
 
   // And policies
-  auto greedy_policy         = rl2::discrete::greedy_ify(Q);
-  auto epsilon_greedy_policy = rl2::discrete::epsilon_ify(greedy_policy, learn_params.epsilon, gen);
+  auto greedy_policy         = rl2::enumerable::greedy_ify(Q);
+  auto epsilon_greedy_policy = rl2::enumerable::epsilon_ify(greedy_policy, learn_params.epsilon, gen);
 
   auto random_state = [param = continuous_mdp.param, &gen]() {return gdyn::problem::cartpole::random_state(gen, param);};
     
@@ -354,7 +354,7 @@ void test_mdp(RANDOM& gen, bool verbose=false) {
 	  | std::views::take(learn_params.epoch_length)) {
 
       // Q-Learning
-      auto bellman_op = rl2::critic::td::discrete::bellman::optimality<S, A, decltype(Q)>;
+      auto bellman_op = rl2::critic::td::enumerable::action::bellman::optimality<S, A, decltype(Q)>;
       double td_error = rl2::critic::td::error(Q, learn_params.gamma, transition, bellman_op);
       if (verbose) {
         std::cout << "    update s:" << static_cast<std::size_t>(transition.s)
