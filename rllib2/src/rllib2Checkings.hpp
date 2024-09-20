@@ -26,14 +26,14 @@ namespace rl2 {
       static std::size_t from(char base)          {return static_cast<std::size_t>(base) - 65;}
       static char        to  (std::size_t index)  {return static_cast<char>(index + 65);      }
     };
-    static_assert(concepts::static_index_conversion<index_conversion, char>);
+    static_assert(concepts::enumerable::static_index_conversion<index_conversion, char>);
 
     // Enumerable
     // ----------
     
     using enumerable_int  = enumerable::set<int,  10>;
     using enumerable_char = enumerable::set<char, 10>;
-    static_assert(concepts::enumerable<enumerable_int>);
+    static_assert(concepts::enumerable::finite<enumerable_int>);
 
     // MDP
     // ---
@@ -47,12 +47,11 @@ namespace rl2 {
     // -----------------
 
     using params_it_type = double*;
-    using critic = tabular::two_args_function<enumerable_char, enumerable_int, params_it_type>;
+    using critic = enumerable::two_args_tabular<enumerable_char, enumerable_int, params_it_type>;
     static_assert(concepts::two_args_function<critic>);
 
     // Linear approximation
     // --------------------
-    
 
     using q_state = double;
     using q_action = enumerable_int;
@@ -62,14 +61,14 @@ namespace rl2 {
     using theta_params = nuplet::from<double, s_feature::dim * q_action::size()>; 
     static_assert(concepts::nuplet<theta_params>);
 
-    using q_parametrized = linear::discrete_a::q<theta_params, q_state, q_action, s_feature>;
-    static_assert(concepts::discrete_a::linear_qfunction<q_parametrized>);
-    static_assert(concepts::discrete_a::two_args_function<q_parametrized>);
+    using q_parametrized = linear::enumerable::action::q<theta_params, q_state, q_action, s_feature>;
+    static_assert(concepts::enumerable::action::linear_qfunction<q_parametrized>);
+    static_assert(concepts::enumerable::action::two_args_function<q_parametrized>);
 
     using iterable = std::array<double, 10>;
     using nuplet_wrapper = nuplet::by_default::wrapper<nuplet::from_range<iterable, 10>, iterable>;
     static_assert(concepts::nuplet_wrapper<nuplet_wrapper, iterable>);
     
-    // To do : write bellman operator concept checking
+    // TODO : write bellman operator concept checking
   }
 }

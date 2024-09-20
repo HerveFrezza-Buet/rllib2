@@ -3,12 +3,6 @@
 #include <rllib2Transition.hpp>
 #include <rllib2Functional.hpp>
 
-// TODO
-// discrete, tabular, discrete_a...  nota: discrete est le nom de namespace associé au concept enumerable.
-// enumerable... renomer en finite ? Du coup enumerable devient dispo comme nom de namespace pour discrete.
-
-
-
 
 namespace rl2 {
   namespace critic {
@@ -26,27 +20,27 @@ namespace rl2 {
 	}
       }
       
-      
-      
-      namespace discrete {
-	namespace bellman {
-	  template<typename S, typename A, concepts::q_function<S, A> Q>
-	  requires concepts::enumerable<A>
-	  double optimality(const Q& q, double gamma, const sarsa<S, A>& transition) {
-	    auto [s, a, r, ss, aa] = transition;
-	    return r + gamma * rl2::discrete::algo::max<A>(q(ss));
+      namespace enumerable {
+	namespace action {
+	  namespace bellman {
+	    template<typename S, typename A, concepts::q_function<S, A> Q>
+	    requires concepts::enumerable::finite<A>
+	    double optimality(const Q& q, double gamma, const sarsa<S, A>& transition) {
+	      auto [s, a, r, ss, aa] = transition;
+	      return r + gamma * rl2::enumerable::algo::max<A>(q(ss));
+	    }
 	  }
 	}
       }
 	
-	template<typename S, typename A, concepts::q_function<S, A> Q, concepts::bellman_operator<Q, S, A, sarsa<S, A>> BELLMAN_OP>
+      template<typename S, typename A, concepts::q_function<S, A> Q, concepts::bellman_operator<Q, S, A, sarsa<S, A>> BELLMAN_OP>
       double error(const Q& q, double gamma, const sarsa<S, A>& transition, const BELLMAN_OP& bellman_op) {
 	return bellman_op(q, gamma, transition) - q(transition.s, transition.a);
       }
       
       
       template<typename S, typename A, concepts::q_function<S, A> Q>
-      requires concepts::tabular::two_args_function<Q>
+      requires concepts::enumerable::two_args_function<Q>
       double update(Q& q, const S& s, const A& a, double alpha, double td_error) {
 	auto delta = alpha * td_error;
 	auto it = q.params_it + static_cast<std::size_t>(typename Q::arg_type(typename Q::first_entry_type(s), typename Q::second_entry_type(a)));

@@ -11,7 +11,7 @@ namespace rl2 {
 
 
   namespace by_default {
-    template<concepts::indexed BASE>
+    template<concepts::enumerable::indexed BASE>
     struct IndexConversion {
       static std::size_t from(const BASE& base) {return static_cast<std::size_t>(base);}
       static BASE        to(std::size_t index)  {return static_cast<BASE>(index);      }
@@ -21,7 +21,7 @@ namespace rl2 {
   
   namespace enumerable {
     template<typename BASE, std::size_t NB,
-	     concepts::static_index_conversion<BASE> INDEX_CONVERSION = by_default::IndexConversion<BASE>>
+	     concepts::enumerable::static_index_conversion<BASE> INDEX_CONVERSION = by_default::IndexConversion<BASE>>
     struct set {
       using base_type = BASE;
       struct iterator {
@@ -75,7 +75,7 @@ namespace rl2 {
       constexpr static std::size_t size() {return NB;}
     };
   
-    template <concepts::enumerable FIRST, concepts::enumerable SECOND>
+    template <concepts::enumerable::finite FIRST, concepts::enumerable::finite SECOND>
     struct pair_index_conversion {
       static std::size_t from(const std::pair<typename FIRST::base_type, typename SECOND::base_type>& base) {
 	return static_cast<std::size_t>(FIRST(base.first)) * SECOND::size() + static_cast<std::size_t>(SECOND(base.second));
@@ -88,7 +88,7 @@ namespace rl2 {
       }
     };
     
-    template<concepts::enumerable FIRST, concepts::enumerable SECOND>
+    template<concepts::enumerable::finite FIRST, concepts::enumerable::finite SECOND>
     struct pair : public set<std::pair<typename FIRST::base_type, typename SECOND::base_type>, FIRST::size() * SECOND::size(), pair_index_conversion<FIRST, SECOND>> {
       using super_type = set<std::pair<typename FIRST::base_type, typename SECOND::base_type>, FIRST::size() * SECOND::size(), pair_index_conversion<FIRST, SECOND>>;
 
@@ -100,7 +100,7 @@ namespace rl2 {
 						    static_cast<typename SECOND::base_type>(second))) {}
     };
 
-    template<concepts::enumerable STATE, concepts::enumerable OBSERVATION, concepts::enumerable COMMAND,
+    template<concepts::enumerable::finite STATE, concepts::enumerable::finite OBSERVATION, concepts::enumerable::finite COMMAND,
       gdyn::concepts::system SYSTEM>
     requires
     std::same_as<typename STATE::base_type, typename SYSTEM::state_type>
@@ -127,8 +127,8 @@ namespace rl2 {
     };
 
 
-    namespace discrete_a {
-      template<typename STATE, typename OBSERVATION, concepts::enumerable COMMAND,
+    namespace action {
+      template<typename STATE, typename OBSERVATION, concepts::enumerable::finite COMMAND,
 	       gdyn::concepts::system SYSTEM>
       requires std::same_as<typename COMMAND::base_type, typename SYSTEM::command_type>
       struct system {
