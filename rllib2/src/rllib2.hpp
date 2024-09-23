@@ -1,3 +1,21 @@
+/*
+
+Copyright 2024 Herve FREZZA-BUET, Alain DUTECH
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+*/
+
 #pragma once
 
 /**
@@ -27,36 +45,3 @@
 // Problem definitions
 #include <rllib2-defs-mountain-car.hpp>
 #include <rllib2-defs-cartpole.hpp>
-
-
-/*
-
-  TODO : a virer
-
-  Tout ce qui est discret est dans le namespace enumerable
-  
-  Tout ce qui est discret seulement en action est dans le namespace
-  enumarable::action (remplace discrete_a). Nota: Le namespace action
-  n'est ouvert qu'au sein d'un namespace enumerable, donc il appraît
-  tout le temps sous la forme enumerable::action
-
-  le concept pour les ensembles finis est
-  concepts::enumerable::finite, mais le template pour les faire, c'est
-  un enumrable::set (on pourrait mettre enumerable::finite_set mais
-  comme tous les sets enumerables qu'on offre sont finis... je n'ai
-  pas trouvé ça utile).
-
-  tabular n'est plus un namespace, mais le nom d'une classe. En effet,
-  les fonctions à arguments énumérables suivent le concept
-  enumerable::two_args_function ou
-  enumerable::action::two_args_function, on n'a pas eu besoin de
-  concept general enumerable::function de fonction qui prendraient un
-  arg qui soit enumérable. Du coup, nous proposons des outils pour
-  construire des fonctions à arguments énumérable codées de façon
-  tabulaires. Mais toute fonction à argument énumerable n'est pas
-  tabulaire. Donc tabular, c'est le nom de l'outil qui fabrique des
-  fonctions enumérables tabulaires, ce n'est ni un concept ni un
-  namespace.
-
-  
- */
