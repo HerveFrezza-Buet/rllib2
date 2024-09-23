@@ -77,8 +77,10 @@ more efficient, can be used.
 
 ### Q functions
 
-Rllib2, as expected, offers the concept `q_function`, which are `S, A -> double` functions. It is often convenient to enable partial application for Q-functions (typically when argmax_a Q(s, a) = argmax_a Q_s(a), Q_s being a partial application of Q). This is implemented as the `two_args_function` concept. If f fits that concept,  f is a `X, Y -> Z` functon, f(x) is a `Y -> Z` function.
+RLlib2, as expected, offers the concept `q_function`, which are `S, A -> double` functions. It is often convenient to enable partial application for Q-functions (typically when argmax_a Q(s, a) = argmax_a Q_s(a), Q_s being a partial application of Q). This is implemented as the `two_args_function` concept. If f fits that concept,  f is a `X, Y -> Z` functon, f(x) is a `Y -> Z` function.
 
-We have `tabular::two_args_function` when both arguments are from an enumerable type, and `discrete_a::two_args_function` when only the second one is enumerable.
+We have `enumarable::two_args_function` when both arguments are from an enumerable type, and `enumarable::action::two_args_function` when only the second one is enumerable.
 
+### n-uplets
 
+In RL computations, aspecially when features (as Gaussian RBFs for example) are used, many parameters are scalar vectors. In this case, copies must be avoided as much as possible, for the sake of efficiency. This is why the `concepts::nuplet` is massively used in RLlib2. The n-uplets are scalar vectors whose components fit the STL iteration scheme ```[begin, end[```. If some type is not a scalar vector of that kind, you can implement "wrappers" to transform values into such n-uplets, and benefit from RLlib efficiency. Read the examples.
