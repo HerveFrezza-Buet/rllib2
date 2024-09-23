@@ -196,6 +196,7 @@ namespace rl2 {
     template<typename OP, typename Q, typename S, typename A, typename TRANS>
     concept bellman_operator =
     sarsa<TRANS, S, A>
+      && q_function<Q, S, A>
       && requires(const OP cop, const Q cq, double gamma, const TRANS ct) {
       {cop(cq, gamma, ct)} -> std::same_as<double>;
     };

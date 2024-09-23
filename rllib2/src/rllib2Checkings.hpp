@@ -35,7 +35,8 @@ namespace rl2 {
 
     // Transitions
     // -----------
-    static_assert(concepts::sarsa<sarsa<char, int>, char, int>);
+    using transition = sarsa<char, int>;
+    static_assert(concepts::sarsa<transition, char, int>);
     
     // Index conversion
     // ----------------
@@ -68,11 +69,17 @@ namespace rl2 {
     using critic = enumerable::two_args_tabular<enumerable_char, enumerable_int, params_it_type>;
     static_assert(concepts::two_args_function<critic>);
 
+    // Q functions
+    // -----------
+    
+    using q_state = double;
+    using q_action = enumerable_int;
+    using q_transition = sarsa<q_state, q_action>;
+    static_assert(concepts::q_function<double (q_state, q_action), q_state, q_action>);
+    
     // Linear approximation
     // --------------------
 
-    using q_state = double;
-    using q_action = enumerable_int;
     using s_feature = features::polynomial<8>;
     static_assert(concepts::feature<s_feature, double>);
     
@@ -80,6 +87,7 @@ namespace rl2 {
     static_assert(concepts::nuplet<theta_params>);
 
     using q_parametrized = linear::enumerable::action::q<theta_params, q_state, q_action, s_feature>;
+    static_assert(concepts::q_function<q_parametrized, q_state, q_action>);
     static_assert(concepts::enumerable::action::linear_qfunction<q_parametrized>);
     static_assert(concepts::enumerable::action::two_args_function<q_parametrized>);
 
@@ -87,6 +95,11 @@ namespace rl2 {
     using nuplet_wrapper = nuplet::by_default::wrapper<nuplet::from_range<iterable, 10>, iterable>;
     static_assert(concepts::nuplet_wrapper<nuplet_wrapper, iterable>);
     
-    // TODO : write bellman operator concept checking
+    // The Bellman operator
+    // ---------------------
+
+    double bellman_op(const q_parametrized&, double, const q_transition&);
+    using bellman_op_type = decltype(bellman_op);
+    static_assert(concepts::bellman_operator<bellman_op_type, q_parametrized, q_state, q_action, q_transition>);
   }
 }
