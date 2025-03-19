@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <iomanip>
 #include <array>
 #include <random>
@@ -43,9 +44,10 @@ int main(int argc, char* argv[]) {
 
   // Iterators enable to span all the enumerable state values.
   auto it = weakest_link::S::begin(); // 'it' refers to the first value of S.
-  ++it;               // 'it' is now the second value of S.
-  ++it;               // 'it' is now the third value of S.
-  weakest_link::S s3 {it};          // Enumerables can be constructed from an iterator.
+  ++it;                                   // 'it' is now the second value of S.
+  ++it;                                   // 'it' is now the third value of S.
+  weakest_link::S::base_type value {*it}; // Here, we get the value "referenced" by the current iterator.
+  weakest_link::S s3 {it};                // Enumerables can be constructed from an iterator. Here, static_cast<weakest_link::S::base_type>(s3) == value.
   std::cout << "State " << static_cast<weakest_link::S::base_type>(s3) << " has index " << static_cast<std::size_t>(s3) << std::endl;
   std::cout << "State " << *it                           << " has index " << static_cast<std::size_t>(it) << std::endl;
     
@@ -93,6 +95,31 @@ int main(int argc, char* argv[]) {
 
   weakest_link::SA s15 {std::size_t(15)};
   std::cout << "Index 15 : (" << static_cast<weakest_link::SA::base_type>(s15).first << ", " << static_cast<weakest_link::SA::base_type>(s15).second << ')' << std::endl;
+
+  // Serialization
+  
+  weakest_link::S A {'A'};
+  weakest_link::S B {'B'};
+  weakest_link::S C {'C'};
+  {
+    std::ofstream file {"states.txt"};
+    file << A << B << C;
+  }
+  
+  weakest_link::S AA;
+  weakest_link::S BB;
+  weakest_link::S CC;
+  {
+    std::ifstream file {"states.txt"};
+    file >> AA >> BB >> CC;
+  }
+  std::cout << static_cast<weakest_link::S::base_type>(AA)
+	    << static_cast<weakest_link::S::base_type>(BB)
+	    << static_cast<weakest_link::S::base_type>(CC)
+	    << std::endl;
+
+  
+  
   
   return 0;
 }

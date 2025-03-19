@@ -22,6 +22,7 @@ limitations under the License.
 #include <iterator>
 #include <random>
 #include <utility>
+#include <iostream>
 
 #include <rllib2Concepts.hpp>
 
@@ -117,6 +118,19 @@ namespace rl2 {
 	: super_type(typename super_type::base_type(static_cast<typename FIRST::base_type>(first),
 						    static_cast<typename SECOND::base_type>(second))) {}
     };
+
+    template<concepts::enumerable::finite SET>
+    std::ostream& operator<<(std::ostream& os, const SET& s) {return os << static_cast<std::size_t>(s) << ' ';}
+    
+    template<concepts::enumerable::finite SET>
+    std::istream& operator>>(std::istream& is, SET& s) {
+      std::size_t idx;
+      char sep;
+      is >> idx;
+      is.get(sep);
+      s = idx;
+      return is;
+    }
 
     template<concepts::enumerable::finite STATE, concepts::enumerable::finite OBSERVATION, concepts::enumerable::finite COMMAND,
       gdyn::concepts::system SYSTEM>

@@ -101,9 +101,14 @@ namespace rl2 {
 	{FINITE::end()}   -> std::convertible_to<typename FINITE::iterator>;
 	{FINITE::size()}  -> std::convertible_to<std::size_t>;
       } &&
-      requires (FINITE::iterator it) {
+      requires (FINITE elem, FINITE::iterator it, std::size_t idx, FINITE::base_type value) {
 	++it;
 	{*it} -> std::same_as<typename FINITE::base_type>;
+	static_cast<std::size_t>(it);
+	FINITE(idx);
+	elem = idx;
+	FINITE(value);
+	elem = value;
       };
     }
 
