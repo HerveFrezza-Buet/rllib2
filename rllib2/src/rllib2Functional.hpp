@@ -126,7 +126,7 @@ namespace rl2 {
       
       IT params_it; 
 
-      tabular()                           = delete;
+      tabular()                          = delete;
       tabular(const tabular&)            = default;
       tabular(tabular&&)                 = default;
       tabular& operator=(const tabular&) = default;
