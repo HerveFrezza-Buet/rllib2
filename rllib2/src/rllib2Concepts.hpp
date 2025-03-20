@@ -175,6 +175,22 @@ namespace rl2 {
 
       namespace action {
 	/**
+	 * @short A system with discrete actions wrapped over a borrowed system.
+	 */
+	template<typename DYNAMICAL_SYSTEM>
+	concept wrapped_system =
+	system<DYNAMICAL_SYSTEM>
+	  && requires {
+	  typename DYNAMICAL_SYSTEM::borrowed_system_type;
+	}
+	  && system<DYNAMICAL_SYSTEM::borrowed_system_type>
+	&& finite<DYNAMICAL_SYSTEM::command_type>
+	&& requires(DYNAMICAL_SYSTEM sys) {
+	  {sys.borrowed_system} -> std::same_as<DYNAMICAL_SYSTEM::borrowed_system_type>;
+	};
+	
+    
+	/**
 	 * @short A two-args function whose second type is finite.
 	 */
 	template<typename TWO_ARGS_FUNCTION>

@@ -143,6 +143,7 @@ namespace rl2 {
       using observation_type = OBSERVATION;
       using command_type = COMMAND;
       using report_type = typename SYSTEM::report_type;
+      using borrowed_system_type = SYSTEM;
       
       SYSTEM& borrowed_system;
       system(SYSTEM& borrowed_system) : borrowed_system(borrowed_system) {}
@@ -168,6 +169,7 @@ namespace rl2 {
 	using observation_type = OBSERVATION;
 	using command_type = COMMAND;
 	using report_type = typename SYSTEM::report_type;
+	using borrowed_system_type = SYSTEM;
       
 	SYSTEM& borrowed_system;
 	system(SYSTEM& borrowed_system) : borrowed_system(borrowed_system) {}
