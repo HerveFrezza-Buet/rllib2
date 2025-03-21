@@ -138,7 +138,7 @@ namespace rl2 {
 	    terminated = true;
 	  else if(system) {
 	    value.current_observation = *(system.borrowed_system);
-	    value.next_command = std::static_cast<typename SYSTEM::command_type::base_type>(*it);
+	    value.next_command = static_cast<typename SYSTEM::command_type::base_type>(*it);
 	  }
 	  else { // We are in a terminal state.
 	    value.current_observation = *(system.borrowed_system);
@@ -146,7 +146,7 @@ namespace rl2 {
 	  }
       }
       
-      bool operator==(terminal_t) const {return terminated;}
+      bool operator==(gdyn::iterators::terminal_t) const {return terminated;}
       auto& operator*() const {return value;}
       auto& operator++() {
 	if(value.next_command) {// we are not in a terminal state (the has been checked at previous iteration).
@@ -158,7 +158,7 @@ namespace rl2 {
 	  if(it == end || !(*system))
 	    value.next_command = std::nullopt;
 	  else
-	    value.next_command = std::static_cast<typename SYSTEM::command_type::base_type>(*it);
+	    value.next_command = static_cast<typename SYSTEM::command_type::base_type>(*it);
 	}
 	else // we are in a terminal state
 	  terminated = true;
@@ -167,14 +167,6 @@ namespace rl2 {
       auto  operator++(int) {auto res = *this; ++(*this); return res;}   
     };
 
-    template<concepts::borrowed_orbit_iterator BORROWED_ORBIT_ITERATOR>
-    using observation_t = typename BORROWED_ORBIT_ITERATOR::value_type::observation_type;
-				   
-    template<concepts::borrowed_orbit_iterator BORROWED_ORBIT_ITERATOR>
-    using command_t = typename BORROWED_ORBIT_ITERATOR::value_type::command_type;
-				   
-    template<concepts::borrowed_orbit_iterator BORROWED_ORBIT_ITERATOR>
-    using report_t = typename BORROWED_ORBIT_ITERATOR::value_type::report_type;
 
 
   }
