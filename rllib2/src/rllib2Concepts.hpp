@@ -179,14 +179,14 @@ namespace rl2 {
 	 */
 	template<typename DYNAMICAL_SYSTEM>
 	concept wrapped_system =
-	system<DYNAMICAL_SYSTEM>
+	gdyn::concepts::system<DYNAMICAL_SYSTEM>
 	  && requires {
 	  typename DYNAMICAL_SYSTEM::borrowed_system_type;
 	}
-	  && system<DYNAMICAL_SYSTEM::borrowed_system_type>
-	&& finite<DYNAMICAL_SYSTEM::command_type>
+	  && gdyn::concepts::system<typename DYNAMICAL_SYSTEM::borrowed_system_type>
+	&& finite<typename DYNAMICAL_SYSTEM::command_type>
 	&& requires(DYNAMICAL_SYSTEM sys) {
-	  {sys.borrowed_system} -> std::same_as<DYNAMICAL_SYSTEM::borrowed_system_type>;
+	  {sys.borrowed_system} -> std::same_as<typename DYNAMICAL_SYSTEM::borrowed_system_type>;
 	};
 	
     

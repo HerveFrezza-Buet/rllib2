@@ -89,7 +89,7 @@ static_assert(gdyn::concepts::transparent_system<discrete_transparent_circle>);
 int main(int argc, char* argv[]) {
 
   transparent_circle system;
-  discrete_transparent_circle dsystem(system);
+  discrete_transparent_circle dsystem {system};
 
   system = continuous::angle(0);
 
