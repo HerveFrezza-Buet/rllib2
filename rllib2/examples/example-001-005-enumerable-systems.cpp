@@ -107,7 +107,8 @@ int main(int argc, char* argv[]) {
     big_jump,
     };
 
-  // Let us run the discrete system and register transitions.
+  // Let us run the discrete system and register transitions (with
+  // discrete states and actions).
   system = .5; // continuous state initialization
   for(auto [s, a, r, ss, aa]
 	: actions
@@ -120,6 +121,10 @@ int main(int argc, char* argv[]) {
 	      << "s' = " << ss  << ", "
 	      << "a' = " << to_string(*aa) << std::endl;
 
+  // In such a wrapped system, we may be interested in what happens to
+  // the base system, i.e. collectig transitions corresponding to it
+  // (with continuous states and actions), while using the same
+  // policy (i.e the same actions table here).
 
   
   return 0;

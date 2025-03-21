@@ -103,15 +103,16 @@ int main(int argc, char* argv[]) {
   weakest_link::S C {'C'};
   {
     std::ofstream file {"states.txt"};
-    file << A << B << C;
+    file << A << ',' << B << ',' << C;
   }
   
   weakest_link::S AA;
   weakest_link::S BB;
   weakest_link::S CC;
   {
+    char sep;
     std::ifstream file {"states.txt"};
-    file >> AA >> BB >> CC;
+    file >> AA >> sep >> BB >> sep >> CC;
   }
   std::cout << static_cast<weakest_link::S::base_type>(AA)
 	    << static_cast<weakest_link::S::base_type>(BB)

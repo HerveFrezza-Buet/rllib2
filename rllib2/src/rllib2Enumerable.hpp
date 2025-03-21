@@ -120,14 +120,12 @@ namespace rl2 {
     };
 
     template<concepts::enumerable::finite SET>
-    std::ostream& operator<<(std::ostream& os, const SET& s) {return os << static_cast<std::size_t>(s) << ' ';}
+    std::ostream& operator<<(std::ostream& os, const SET& s) {return os << static_cast<std::size_t>(s);}
     
     template<concepts::enumerable::finite SET>
     std::istream& operator>>(std::istream& is, SET& s) {
       std::size_t idx;
-      char sep;
       is >> idx;
-      is.get(sep);
       s = idx;
       return is;
     }
