@@ -2,10 +2,12 @@
 #include <cstddef>
 #include <numbers>
 #include <iostream>
+#include <iomanip>
 #include <sstream>
 #include <iomanip>
 #include <tuple>
 #include <ranges>
+#include <string>
 	
 
 #include <rllib2.hpp>
@@ -20,7 +22,7 @@ struct decay_system {
   using state_type       = double;
   using command_type     = double;
   using observation_type = double;
-  using report_type      = gdyn::no_report;
+  using report_type      = double; // RL system must provide a reward.
 
   state_type x = 0;
 
@@ -28,7 +30,7 @@ struct decay_system {
   observation_type operator*() const {return x;}
   report_type operator()(command_type a) {
     x = ALPHA * x + a;
-    return {};
+    return 0.; // We always return a null reward.
   }
   operator bool() const {return true;}
 };
@@ -37,13 +39,14 @@ struct decay_system {
 // From this system, we what to set up a discrete system. Let us
 // consider enumerable state as well as enumerable actions.
 
+#define MAX_X 10.
 struct S_convertor {
   static constexpr std::size_t nb_bins {10};
-  static double to(std::size_t index)   {return rl2::enumerable::utils::digitize::to_value(index, 0., 100., nb_bins);}
+  static double to(std::size_t index)   {return rl2::enumerable::utils::digitize::to_value(index, 0., MAX_X, nb_bins);}
   static std::size_t from(double value) {
-    if(value < 0)     return 0;
-    if(value >= 100.) return nb_bins - 1;
-    return rl2::enumerable::utils::digitize::to_index(value, 0., 100., nb_bins);}
+    if(value < 0)      return 0;
+    if(value >= MAX_X) return nb_bins - 1;
+    return rl2::enumerable::utils::digitize::to_index(value, 0., MAX_X, nb_bins);}
 };
 using S = rl2::enumerable::set<double, S_convertor::nb_bins, S_convertor>;
 
@@ -62,6 +65,16 @@ struct A_convertor {
 };
 
 using A = rl2::enumerable::set<double, 3, A_convertor>;
+// A is serializable already (into a integer, which is the index). Let
+// us provide a more informative serialization.
+std::string to_string(A a) {
+  switch(static_cast<std::size_t>(a)) {
+  case 0: return "none";
+  case 1: return "small-jump";
+  default: return "big-jump";
+  }
+}
+
 
 // We can then define a discrete system from the continuous decay_system type.
 using discrete_decay_system = rl2::enumerable::system<S, S, A, decay_system>;
@@ -91,17 +104,21 @@ int main(int argc, char* argv[]) {
     small_jump,
     none,
     none,
-    big_jump
+    big_jump,
     };
 
   // Let us run the discrete system and register transitions.
   system = .5; // continuous state initialization
-  for(auto a
+  for(auto [s, a, r, ss, aa]
 	: actions
-	// | gdyn::views::orbit(dsystem) 
-	// | rl2::views::sarsa
+	| gdyn::views::orbit(dsystem) 
+	| rl2::views::sarsa
 	| std::views::take(NB_ACTIONS))
-    std::cout << a << std::endl;
+    std::cout << "s = " << std::setw(3) << s << ", "
+	      << "a = " << std::setw(10) << to_string(a) << ", "
+	      << "r = " << r << ", "
+	      << "s' = " << ss  << ", "
+	      << "a' = " << to_string(*aa) << std::endl;
 
 
   
