@@ -29,7 +29,7 @@ namespace rl2 {
   namespace iterators {
 
     
-    // transition
+    // sarsa
     
     template<concepts::mdp_orbit_iterator ORBIT_ITERATOR,
 	     typename ORBIT_SENTINEL>
@@ -80,6 +80,101 @@ namespace rl2 {
       const auto& operator*() const {return *value;} 
       auto  operator++(int)         {auto res = *this; ++(*this); return res;}   
     };
+
+
+
+
+    // This is for iterating on system borrowed_orbits.
+    
+    template<concepts::enumerable::action::wrapped_system SYSTEM,
+	     gdyn::concepts::command_iterator<typename SYSTEM::command_type> COMMAND_ITERATOR,
+	     typename COMMAND_SENTINEL>
+    struct borrowed_orbit {
+      
+    private:
+      SYSTEM* system = nullptr;
+      COMMAND_ITERATOR it;
+      COMMAND_SENTINEL end;
+
+    public:
+
+      using difference_type = std::ptrdiff_t;
+
+      
+      struct value_type {
+	using observation_type = typename SYSTEM::borrowed_system_type::observation_type;
+	using command_type     = typename SYSTEM::borrowed_system_type::command_type;
+	using report_type      = typename SYSTEM::report_type;
+	observation_type            current_observation;
+	std::optional<command_type> next_command;
+	std::optional<report_type>  previous_report;
+	
+	
+	value_type()                             = default;
+	value_type(const value_type&)            = default;
+	value_type& operator=(const value_type&) = default;
+	value_type(value_type&&)                 = default;
+	value_type& operator=(value_type&&)      = default;
+      };
+      
+    private:
+      
+      value_type value;
+      bool terminated = false;
+      
+    public:
+      
+      
+      borrowed_orbit()                        = delete;
+      borrowed_orbit(const borrowed_orbit&)            = default;
+      borrowed_orbit(borrowed_orbit&&)                 = default;
+      borrowed_orbit& operator=(const borrowed_orbit&) = default;
+      borrowed_orbit& operator=(borrowed_orbit&&     ) = default;
+
+      borrowed_orbit(SYSTEM& system, COMMAND_ITERATOR it, COMMAND_SENTINEL end)
+	: system(&system), it(it), end(end),
+	  value(), terminated() {
+	  if(it == end)
+	    terminated = true;
+	  else if(system) {
+	    value.current_observation = *(system.borrowed_system);
+	    value.next_command = std::static_cast<typename SYSTEM::command_type::base_type>(*it);
+	  }
+	  else { // We are in a terminal state.
+	    value.current_observation = *(system.borrowed_system);
+	    value.next_command = std::nullopt;
+	  }
+      }
+      
+      bool operator==(terminal_t) const {return terminated;}
+      auto& operator*() const {return value;}
+      auto& operator++() {
+	if(value.next_command) {// we are not in a terminal state (the has been checked at previous iteration).
+	  // We perform a transition.
+	  value.previous_report = (system->borrowed_system)(*(value.next_command));
+	  value.current_observation = *(system->borrowed_system);
+	  
+	  ++it; // We get next command
+	  if(it == end || !(*system))
+	    value.next_command = std::nullopt;
+	  else
+	    value.next_command = std::static_cast<typename SYSTEM::command_type::base_type>(*it);
+	}
+	else // we are in a terminal state
+	  terminated = true;
+	return *this;
+      }
+      auto  operator++(int) {auto res = *this; ++(*this); return res;}   
+    };
+
+    template<concepts::borrowed_orbit_iterator BORROWED_ORBIT_ITERATOR>
+    using observation_t = typename BORROWED_ORBIT_ITERATOR::value_type::observation_type;
+				   
+    template<concepts::borrowed_orbit_iterator BORROWED_ORBIT_ITERATOR>
+    using command_t = typename BORROWED_ORBIT_ITERATOR::value_type::command_type;
+				   
+    template<concepts::borrowed_orbit_iterator BORROWED_ORBIT_ITERATOR>
+    using report_t = typename BORROWED_ORBIT_ITERATOR::value_type::report_type;
 
 
   }
