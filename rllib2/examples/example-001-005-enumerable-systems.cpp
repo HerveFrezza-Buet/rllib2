@@ -115,16 +115,34 @@ int main(int argc, char* argv[]) {
 	| gdyn::views::orbit(dsystem) 
 	| rl2::views::sarsa
 	| std::views::take(NB_ACTIONS))
-    std::cout << "s = " << std::setw(3) << s << ", "
-	      << "a = " << std::setw(10) << to_string(a) << ", "
-	      << "r = " << r << ", "
-	      << "s' = " << ss  << ", "
-	      << "a' = " << to_string(*aa) << std::endl;
+    std::cout << "s = "  << std::setw( 3) << s << ", "
+	      << "a = "  << std::setw(10) << to_string(a) << ", "
+	      << "r = "  << r << ", "
+	      << "s' = " << std::setw( 3) << ss  << ", "
+	      << "a' = " << std::setw(10) << to_string(*aa) << std::endl;
 
+  std::cout << std::endl
+	    << std::endl
+	    << "----------"  << std::endl
+	    << std::endl
+	    << std::endl;
+  
   // In such a wrapped system, we may be interested in what happens to
   // the base system, i.e. collectig transitions corresponding to it
   // (with continuous states and actions), while using the same
   // policy (i.e the same actions table here).
+  
+  system = .5; // continuous state initialization
+  for(auto [s, a, r, ss, aa]
+	: actions
+	| rl2::views::borrowed_orbit(dsystem) // The change from previous loop is here !
+	| rl2::views::sarsa
+	| std::views::take(NB_ACTIONS))
+    std::cout << "s = "  << std::setw(10) << s << ", "
+	      << "a = "  << std::setw(10) << a << ", "
+	      << "r = "  << r << ", "
+	      << "s' = " << std::setw(10) << ss  << ", "
+	      << "a' = " << std::setw(10) << *aa << std::endl;
 
   
   return 0;

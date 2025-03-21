@@ -186,7 +186,7 @@ namespace rl2 {
 	  && gdyn::concepts::system<typename DYNAMICAL_SYSTEM::borrowed_system_type>
 	&& finite<typename DYNAMICAL_SYSTEM::command_type>
 	&& requires(DYNAMICAL_SYSTEM sys) {
-	  {sys.borrowed_system} -> std::same_as<typename DYNAMICAL_SYSTEM::borrowed_system_type>;
+	  {sys.borrowed_system} -> std::same_as<typename DYNAMICAL_SYSTEM::borrowed_system_type&>;
 	};
 	
     

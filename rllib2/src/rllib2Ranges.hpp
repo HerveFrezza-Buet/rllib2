@@ -86,7 +86,7 @@ namespace rl2 {
     template<std::ranges::input_range R,
 	     concepts::enumerable::action::wrapped_system SYSTEM>
     requires std::ranges::view<R> &&
-    concepts::command_iterator<std::ranges::iterator_t<R>, typename SYSTEM::command_type>
+    gdyn::concepts::command_iterator<std::ranges::iterator_t<R>, typename SYSTEM::command_type>
     class borrowed_orbit_view : public std::ranges::view_interface<borrowed_orbit_view<R, SYSTEM>> {
     private:
       
@@ -106,11 +106,11 @@ namespace rl2 {
 
       constexpr auto begin() const {
 	return iterators::borrowed_orbit<SYSTEM,
-				std::ranges::iterator_t<R>,
-				std::ranges::sentinel_t<R>>(*system, from.begin(), from.end());
+					 std::ranges::iterator_t<R>,
+					 std::ranges::sentinel_t<R>>(*system, from.begin(), from.end());
       }
 
-      constexpr auto end()   const {return iterators::terminal;}
+      constexpr auto end()   const {return gdyn::iterators::terminal;}
     };
     
     template<typename R, typename SYSTEM> borrowed_orbit_view(R&&, SYSTEM&) -> borrowed_orbit_view<std::ranges::views::all_t<R>, SYSTEM>;
