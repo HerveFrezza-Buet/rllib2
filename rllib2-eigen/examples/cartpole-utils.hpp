@@ -24,8 +24,7 @@ namespace utils {
       auto [theta_dot_min, theta_dot_max, theta_dot_sigma] = rbf::make_bounds( -5.,  5., nb_theta_dot_bins);
 
       rl2::problem::defs::cartpole::mu_type sigmas {x_sigma, x_dot_sigma, theta_sigma, theta_dot_sigma};
-      auto gammas_ptr = std::make_shared<rl2::problem::defs::cartpole::mu_type>(
-										rl2::functional::gaussian_gammas_of_sigmas(sigmas));
+      auto gammas_ptr = std::make_shared<rl2::problem::defs::cartpole::mu_type>(rl2::functional::gaussian_gammas_of_sigmas(sigmas));
   
       s_feature phi {};
       phi.rbfs = std::make_shared<s_feature::rbfs_type>();
