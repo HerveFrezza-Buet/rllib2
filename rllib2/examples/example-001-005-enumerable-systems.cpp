@@ -44,6 +44,8 @@ struct S_convertor {
   static constexpr std::size_t nb_bins {10};
   static double to(std::size_t index)   {return rl2::enumerable::utils::digitize::to_value(index, 0., MAX_X, nb_bins);}
   static std::size_t from(double value) {
+    // Do not forget to test bounds, the
+    // rl2::enumerable::utils::digitize do not handle this.
     if(value < 0)      return 0;
     if(value >= MAX_X) return nb_bins - 1;
     return rl2::enumerable::utils::digitize::to_index(value, 0., MAX_X, nb_bins);}
