@@ -21,6 +21,7 @@ limitations under the License.
 /**
  * @example weakest-link-problem.hpp
  * @example discrete-rocket-problem.hpp
+ * @example my-rocket-config.hpp
  * @example example-001-000-understanding-enumerables.cpp
  * @example example-001-001-getting-started.cpp
  * @example example-001-002-functionals.cpp
