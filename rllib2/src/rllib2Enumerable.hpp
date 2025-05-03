@@ -212,6 +212,26 @@ namespace rl2 {
 	  return to_value(index, 0., 1., nb_bins);
 	}
 
+	/**
+	 * This builds a enumerable set for digitized scalar.
+	 */
+	template<std::size_t NB, double MIN, double MAX>
+	struct scalar {
+	public:
+	  struct convertor {
+	    static constexpr size_t size() {return NB;}; 
+	    static double to(std::size_t index) {
+	      return to_value(index, MIN, MAX, NB);
+	    }
+	    static std::size_t from(double value) {
+	      if(value < MIN) return 0;
+	      if(value >= MAX) return NB-1;
+	      return to_index(value, MIN, MAX, NB);
+	    }
+	  };
+	public:
+	  using set = rl2::enumerable::set<double, NB, convertor>; 
+	};
       }
     }
   }
