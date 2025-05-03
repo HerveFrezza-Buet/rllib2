@@ -20,6 +20,7 @@ limitations under the License.
 
 /**
  * @example weakest-link-problem.hpp
+ * @example discrete-rocket-problem.hpp
  * @example example-001-000-understanding-enumerables.cpp
  * @example example-001-001-getting-started.cpp
  * @example example-001-002-functionals.cpp
@@ -29,6 +30,7 @@ limitations under the License.
  * @example example-002-001-cartpole-discrete.cpp
  * @example example-003-001-linear-features.cpp
  * @example example-003-002-linear-q.cpp
+ * @example example-004-001-rocket.cpp
  */
 
 #include <rllib2Checkings.hpp>
