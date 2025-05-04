@@ -55,6 +55,8 @@ namespace rocket {
       using A = rl2::enumerable::set<rocket_command, A_convertor::size(), A_convertor>;
       using SA = rl2::enumerable::pair<S, A>;
 
+      using base_continuous_system = gdyn::problem::rocket::system;
+      
       using continuous_system = gdyn::problem::rocket::relative::system;
       
       // The continuous_system has error only as observation. This is

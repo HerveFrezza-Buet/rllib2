@@ -1,5 +1,6 @@
 #include <iostream>
 #include <iomanip>
+#include <fstream>
 #include <array>
 #include <random>
 #include <algorithm>
@@ -11,7 +12,9 @@
 #include "discrete-rocket-problem.hpp"
 #include "my_rocket_config.hpp"
 
-#define NB_PASSES 1000
+#define NB_PASSES 10000
+#define GAMMA .95
+#define ALPHA .05
 
 int main(int argc, char* argv[]) {
   std::random_device rd;
@@ -19,10 +22,9 @@ int main(int argc, char* argv[]) {
 
   // Let us build up the encapsulations of our rocket.
   auto params = make_params();
-  auto rocket = gdyn::problem::rocket::system(params);
-  auto relative_rocket = gdyn::problem::rocket::relative::system(rocket, [target = params.ceiling_height/2](){return target;});
-  auto exposed_rocket  = types::exposed_system(relative_rocket);
-  // auto discrete_rocket = types::discrete_system(exposed_rocket); This one is useless here.
+  auto rocket = types::base_continuous_system(params);
+  auto relative_rocket = types::continuous_system(rocket, [target = params.ceiling_height/2](){return target;});
+  auto exposed_rocket = types::exposed_system(relative_rocket);
 
   // We apply Q-learning to get the best controller, using a simple
   // tabular Q function.
@@ -44,16 +46,62 @@ int main(int argc, char* argv[]) {
     for(auto [init_state, command]
 	  : permutation
 	  | std::views::transform([](auto sa_idx) {types::SA::iterator it {sa_idx}; return *it;})) {
-      relative_rocket = init_state;
-      auto reward = relative_rocket(command);
-      auto next_state = *relative_rocket;
-      // Nota : we do not need discrete_rocket since making transition
+      exposed_rocket = init_state;
+      auto reward = exposed_rocket(command);
+      auto next_state = *exposed_rocket;
+      
+      // Nota : we do not need discrete_rocket simulator since making transition
       // will do the cast into dicrete states and actions.
       rl2::sarsa<types::S, types::A> transition {init_state, command, reward, next_state};
-      
+
+      // We apply the Q-learning update.
+      double td_error = rl2::critic::td::error(Q, GAMMA, transition,
+					       rl2::critic::td::enumerable::action::bellman::optimality<types::S, types::A, decltype(Q)>);
+      rl2::critic::td::update(Q, transition.s, transition.a, ALPHA, td_error);
     }
   }
   std::cout << "Done.                   " << std::endl;
+
+
+  {
+    std::string filename {"rocket-discrete-controller.dat"};
+    std::ofstream file {filename};
+
+    // Now we have optimal Q, let us get the optimal policy and save it.
+    auto controller = rl2::enumerable::greedy_ify(Q);
+    
+    // Let us save this policy as a dataset for further regression.
+    for(auto it = types::S::begin(); it != types::S::end(); ++it) {
+      auto s = *it;
+
+      // s is casted into a discrete state when passed to the
+      // controller, we get a discrete actionb from which we retrieve
+      // the actual thrust, thanks to the static_cast.
+      auto a = static_cast<types::A::base_type>(controller(s));
+      file << s.error << ' ' << s.speed << ' ' << a.value << std::endl;
+    }
+
+    std::cout << "File " << filename << " generated." << std::endl;
+  }
+
+  {
+    std::string filename {"rocket-discrete-controller.plot"};
+    std::ofstream file {filename};
+
+    file << "set xlabel 'error'" << std::endl
+	 << "set ylabel 'speed'" << std::endl
+	 << "set zlabel 'thrust'" << std::endl
+	 << "set title  'best discrete rocket controller'" << std::endl
+	 << "splot 'rocket-discrete-controller.dat' with points notitle" << std::endl;
+
+    std::cout << "File " << filename << " generated." << std::endl
+	      << std::endl
+	      << "Run : gnuplot -p " << filename << std::endl
+	      << std::endl
+	      << std::endl;
+  }
+								   
+    
 
   return 0;
 }
