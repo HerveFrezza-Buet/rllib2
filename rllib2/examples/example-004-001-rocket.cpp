@@ -13,7 +13,7 @@
 #include "discrete-rocket-problem.hpp"
 #include "my_rocket_config.hpp"
 
-#define NB_PASSES 1000
+#define NB_PASSES 100
 #define GAMMA .99
 #define ALPHA .05
 
@@ -72,6 +72,7 @@ int main(int argc, char* argv[]) {
     auto controller = rl2::enumerable::greedy_ify(Q);
     
     // Let us save this policy as a dataset for further regression.
+    unsigned int line = 0;
     for(auto s_it = types::S::begin(); s_it != types::S::end(); ++s_it) {
       auto s = *s_it;
 
@@ -82,8 +83,8 @@ int main(int argc, char* argv[]) {
       file << s.error << ' ' << s.speed << ' ' << a.value;
       for(auto a_it = types::A::begin(); a_it != types::A::end(); ++a_it)
 	file <<  ' ' << Q(s, a_it);
-      file << ' ' << (Q(s, 0) - Q(s, 1)) << std::endl;
       file << std::endl;
+      if(++line == types::nb_speeds) file << std::endl;
     }
 
     std::cout << "File " << filename << " generated." << std::endl;
@@ -97,7 +98,9 @@ int main(int argc, char* argv[]) {
 	 << "set ylabel 'speed'" << std::endl
 	 << "set zlabel 'thrust'" << std::endl
 	 << "set title  'best discrete rocket controller'" << std::endl
-	 << "splot 'rocket-discrete-controller.dat' using 1:2:3 with points pt 7 ps .5 notitle" << std::endl;
+	 << "set hidden3d" << std::endl
+	 << "set dgrid3d " << types::nb_speeds << ',' << types::nb_errors << std::endl
+	 << "splot 'rocket-discrete-controller.dat' using 1:2:3 with lines notitle" << std::endl;
 
     std::cout << "File " << filename << " generated." << std::endl
 	      << std::endl
@@ -114,7 +117,9 @@ int main(int argc, char* argv[]) {
 	 << "set ylabel 'speed'" << std::endl
 	 << "set zlabel 'Q'" << std::endl
 	 << "set title  'Q(s, a = " << a.value << ")'" << std::endl
-	 << "splot 'rocket-discrete-controller.dat' using 1:2:" << static_cast<std::size_t>(a_it)+4 << " with points pt 7 ps .5 notitle" << std::endl;
+	 << "set hidden3d" << std::endl
+	 << "set dgrid3d " << types::nb_speeds << ',' << types::nb_errors << std::endl
+	 << "splot 'rocket-discrete-controller.dat' using 1:2:" << static_cast<std::size_t>(a_it)+4 << " with lines notitle" << std::endl;
 
     std::cout << "Run : gnuplot -p " << filename.str() << std::endl;
   }

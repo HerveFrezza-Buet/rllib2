@@ -32,6 +32,7 @@ limitations under the License.
  * @example example-003-001-linear-features.cpp
  * @example example-003-002-linear-q.cpp
  * @example example-004-001-rocket.cpp
+ * @example example-004-002-rocket.cpp
  */
 
 #include <rllib2Checkings.hpp>
