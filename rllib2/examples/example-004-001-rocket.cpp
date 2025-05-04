@@ -17,6 +17,8 @@
 #define GAMMA .99
 #define ALPHA .05
 
+// In this example, we use Q-learning to learn (and save) the best policy.
+
 int main(int argc, char* argv[]) {
   std::random_device rd;
   std::mt19937 gen(rd());
