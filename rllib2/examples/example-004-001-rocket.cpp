@@ -1,6 +1,7 @@
 #include <iostream>
 #include <iomanip>
 #include <fstream>
+#include <sstream>
 #include <array>
 #include <random>
 #include <algorithm>
@@ -71,14 +72,18 @@ int main(int argc, char* argv[]) {
     auto controller = rl2::enumerable::greedy_ify(Q);
     
     // Let us save this policy as a dataset for further regression.
-    for(auto it = types::S::begin(); it != types::S::end(); ++it) {
-      auto s = *it;
+    for(auto s_it = types::S::begin(); s_it != types::S::end(); ++s_it) {
+      auto s = *s_it;
 
       // s is casted into a discrete state when passed to the
       // controller, we get a discrete actionb from which we retrieve
       // the actual thrust, thanks to the static_cast.
       auto a = static_cast<types::A::base_type>(controller(s));
-      file << s.error << ' ' << s.speed << ' ' << a.value << std::endl;
+      file << s.error << ' ' << s.speed << ' ' << a.value;
+      for(auto a_it = types::A::begin(); a_it != types::A::end(); ++a_it)
+	file <<  ' ' << Q(s, a_it);
+      file << ' ' << (Q(s, 0) - Q(s, 1)) << std::endl;
+      file << std::endl;
     }
 
     std::cout << "File " << filename << " generated." << std::endl;
@@ -92,15 +97,30 @@ int main(int argc, char* argv[]) {
 	 << "set ylabel 'speed'" << std::endl
 	 << "set zlabel 'thrust'" << std::endl
 	 << "set title  'best discrete rocket controller'" << std::endl
-	 << "splot 'rocket-discrete-controller.dat' with points notitle" << std::endl;
+	 << "splot 'rocket-discrete-controller.dat' using 1:2:3 with points pt 7 ps .5 notitle" << std::endl;
 
     std::cout << "File " << filename << " generated." << std::endl
 	      << std::endl
-	      << "Run : gnuplot -p " << filename << std::endl
-	      << std::endl
-	      << std::endl;
+	      << "Run : gnuplot -p " << filename << std::endl;
   }
-								   
+  
+  for(auto a_it = types::A::begin(); a_it != types::A::end(); ++a_it) {
+    std::ostringstream filename;
+    filename << "rocket-discrete-Q-A" << static_cast<std::size_t>(a_it) << ".plot";
+    std::ofstream file {filename.str()};
+    auto a = *a_it;
+
+    file << "set xlabel 'error'" << std::endl
+	 << "set ylabel 'speed'" << std::endl
+	 << "set zlabel 'Q'" << std::endl
+	 << "set title  'Q(s, a = " << a.value << ")'" << std::endl
+	 << "splot 'rocket-discrete-controller.dat' using 1:2:" << static_cast<std::size_t>(a_it)+4 << " with points pt 7 ps .5 notitle" << std::endl;
+
+    std::cout << "Run : gnuplot -p " << filename.str() << std::endl;
+  }
+			
+  std::cout << std::endl
+	    << std::endl;					   
     
 
   return 0;

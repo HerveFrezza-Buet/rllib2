@@ -12,7 +12,14 @@ namespace rocket {
       unsigned int NB_SPEEDS, double MIN_SPEED, double MAX_SPEED,
       double COMMAND_VALUE, double COMMAND_DURATION>
     struct types {
-      constexpr static double dt {COMMAND_DURATION};
+      constexpr static double       thrust     {COMMAND_VALUE};
+      constexpr static double       dt         {COMMAND_DURATION};
+      constexpr static unsigned int nb_errors  {NB_ERRORS};
+      constexpr static double       min_errors {MIN_ERROR};
+      constexpr static double       max_errors {MAX_ERROR};
+      constexpr static unsigned int nb_speeds  {NB_SPEEDS};
+      constexpr static double       min_speeds {MIN_SPEED};
+      constexpr static double       max_speeds {MAX_SPEED};
       
       using rocket_phase   = gdyn::problem::rocket::relative::phase;
       using rocket_command = gdyn::problem::rocket::thrust;
