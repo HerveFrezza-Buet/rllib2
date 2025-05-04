@@ -16,7 +16,9 @@
 
 // In this example, we load the controller learned previously and apply it.
 
-// Let us implement a moving target
+// Let us implement a moving target. It consists of changing a height
+// periodically (see ++). The hight is kept far from the floor and
+// ceiling, this is what margin means.
 struct target {
 private:
   std::mt19937& gen;
@@ -56,6 +58,8 @@ int main(int argc, char* argv[]) {
   std::random_device rd;
   std::mt19937 gen(rd());
 
+  // This stores the thrusts associated to each (error, speed)
+  // computed previously. We get them from a .dat file.
   std::array<double, types::S::size()> optimal_thrusts;
   
   {
@@ -77,8 +81,16 @@ int main(int argc, char* argv[]) {
   auto params = make_params();
   auto tgt = target(gen, MARGIN, TARGET_PERIOD, params);
   auto rocket = types::base_continuous_system(params);
+
+  // The relative rocket reads the current target from tgt.
   auto relative_rocket = types::continuous_system(rocket, [&tgt](){return tgt.height;});
-  
+
+  // The controller computes the thrust from height and speed
+  // observations. To do so, it uses relative_rocket (that knows the
+  // target) to convert (height, speed) into (error, speed). Then it
+  // retrieves the corresponding discrete state. The index of that
+  // discrete states is tne indext of the thrust value in the
+  // optimal_thrust array we have loaded from previous example.
   auto controller =
     [&optimal_thrusts, &relative_rocket] (const types::base_continuous_system::observation_type& obs) -> types::base_continuous_system::command_type {
       types::S current {relative_rocket.convert(obs)};
@@ -86,6 +98,9 @@ int main(int argc, char* argv[]) {
     };
 
   std::cout << std::endl;
+
+  // Controlling the rocket is now very easy...
+  
   {
     std::string filename {"rocket-orbit.dat"};
     std::ofstream datafile {filename};
