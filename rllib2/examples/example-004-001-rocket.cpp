@@ -12,8 +12,8 @@
 #include "discrete-rocket-problem.hpp"
 #include "my_rocket_config.hpp"
 
-#define NB_PASSES 10000
-#define GAMMA .95
+#define NB_PASSES 100
+#define GAMMA .99
 #define ALPHA .05
 
 int main(int argc, char* argv[]) {
