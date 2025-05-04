@@ -10,6 +10,7 @@
 #include <gdyn.hpp>
 #include <rllib2.hpp>
 
+// Read these files.
 #include "discrete-rocket-problem.hpp"
 #include "my_rocket_config.hpp"
 

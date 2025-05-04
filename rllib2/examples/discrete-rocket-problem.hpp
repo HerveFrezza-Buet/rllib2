@@ -7,6 +7,9 @@ namespace rocket {
   
   namespace enumerable {
 
+    // This sets all the types needed for a specific rocket
+    // implementation.
+    
     template<
       unsigned int NB_ERRORS, double MIN_ERROR, double MAX_ERROR,
       unsigned int NB_SPEEDS, double MIN_SPEED, double MAX_SPEED,
@@ -31,7 +34,8 @@ namespace rocket {
       using error_speed = rl2::enumerable::pair<error, speed>;
       
       struct S_convertor {
-	static constexpr std::size_t size() {return error_speed::size();} 
+	static constexpr std::size_t size() {return error_speed::size();}
+	
 	static rocket_phase to(std::size_t index) {
 	  error_speed es {index};
 	  auto [e, s] = static_cast<error_speed::base_type>(es);
@@ -48,7 +52,8 @@ namespace rocket {
 
       // We consider two thrust values only, 0 and COMMAND_VALUE.
       struct A_convertor {
-	static constexpr std::size_t size() {return 2;} 
+	static constexpr std::size_t size() {return 2;}
+	
 	static rocket_command to (std::size_t index) {
 	  if(index == 0) return {.value = 0., .duration = COMMAND_DURATION};
 	  return {.value = COMMAND_VALUE, .duration = COMMAND_DURATION};   
@@ -60,6 +65,7 @@ namespace rocket {
       };
       
       using A = rl2::enumerable::set<rocket_command, A_convertor::size(), A_convertor>;
+      
       using SA = rl2::enumerable::pair<S, A>;
 
       using base_continuous_system = gdyn::problem::rocket::system;

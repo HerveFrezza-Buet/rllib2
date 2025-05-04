@@ -2,7 +2,7 @@
 
 #include "discrete-rocket-problem.hpp"
 
-// This configures the rocket discretization.
+// This configures the rocket discretization for all our examples.
 
 using types = rocket::enumerable::types<
   51, -100., 100., // nb errors, min, max

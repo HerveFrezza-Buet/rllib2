@@ -10,6 +10,7 @@
 #include <gdyn.hpp>
 #include <rllib2.hpp>
 
+// Read these files.
 #include "discrete-rocket-problem.hpp"
 #include "my_rocket_config.hpp"
 
@@ -104,8 +105,7 @@ int main(int argc, char* argv[]) {
 	 << "set dgrid3d " << types::nb_speeds << ',' << types::nb_errors << std::endl
 	 << "splot 'rocket-discrete-controller.dat' using 1:2:3 with lines notitle" << std::endl;
 
-    std::cout << "File " << filename << " generated." << std::endl
-	      << std::endl
+    std::cout << std::endl
 	      << "Run : gnuplot -p " << filename << std::endl;
   }
   
