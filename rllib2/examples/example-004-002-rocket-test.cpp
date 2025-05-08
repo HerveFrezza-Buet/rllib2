@@ -19,6 +19,9 @@
 // Let us implement a moving target. It consists of changing a height
 // periodically (see ++). The hight is kept far from the floor and
 // ceiling, this is what margin means.
+
+// The training has been made with quite large timesteps. Let us use smaller ones here.
+#define DT_FACTOR .1
 struct target {
 private:
   std::mt19937& gen;
@@ -44,9 +47,9 @@ public:
   }
 };
 
-#define TARGET_PERIOD 50
-#define ORBIT_SIZE 1000
+#define TARGET_PERIOD 50 // seconds
 #define MARGIN 200
+#define EPISODE_DURATION 10*TARGET_PERIOD
 int main(int argc, char* argv[]) {
 
   if(argc != 2) {
@@ -57,6 +60,9 @@ int main(int argc, char* argv[]) {
   
   std::random_device rd;
   std::mt19937 gen(rd());
+
+  double dt = types::dt * DT_FACTOR;
+  std::size_t target_period = std::size_t(TARGET_PERIOD / dt);
 
   // This stores the thrusts associated to each (error, speed)
   // computed previously. We get them from a .dat file.
@@ -79,7 +85,7 @@ int main(int argc, char* argv[]) {
   
   // Let us build up the encapsulations of our rocket.
   auto params = make_params();
-  auto tgt = target(gen, MARGIN, TARGET_PERIOD, params);
+  auto tgt = target(gen, MARGIN, target_period, params);
   auto rocket = types::base_continuous_system(params);
 
   // The relative rocket reads the current target from tgt.
@@ -92,9 +98,9 @@ int main(int argc, char* argv[]) {
   // discrete states is tne indext of the thrust value in the
   // optimal_thrust array we have loaded from previous example.
   auto controller =
-    [&optimal_thrusts, &relative_rocket] (const types::base_continuous_system::observation_type& obs) -> types::base_continuous_system::command_type {
+    [&optimal_thrusts, &relative_rocket, dt] (const types::base_continuous_system::observation_type& obs) -> types::base_continuous_system::command_type {
       types::S current {relative_rocket.convert(obs)};
-      return {.value = optimal_thrusts[static_cast<std::size_t>(current)], .duration = types::dt};
+      return {.value = optimal_thrusts[static_cast<std::size_t>(current)], .duration = dt};
     };
 
   std::cout << std::endl;
@@ -105,13 +111,14 @@ int main(int argc, char* argv[]) {
     std::string filename {"rocket-orbit.dat"};
     std::ofstream datafile {filename};
     double t = 0;
+    std::size_t orbit_size = std::size_t((EPISODE_DURATION)/dt);
     for(auto [observation, action, report] 
 	  : gdyn::views::controller(rocket, controller) 
 	  | gdyn::views::orbit(rocket)                       
-	  | std::views::take(ORBIT_SIZE)) {
+	  | std::views::take(orbit_size)) {
       datafile << t << ' ' << observation.height << ' ' << tgt.height << std::endl;
       ++tgt;
-      if(action) t += action->duration;
+      if(action) t += dt;
     }
     std::cout << "File " << filename << " generated." << std::endl;
   }
