@@ -95,8 +95,8 @@ int main(int argc, char* argv[]) {
   // observations. To do so, it uses relative_rocket (that knows the
   // target) to convert (height, speed) into (error, speed). Then it
   // retrieves the corresponding discrete state. The index of that
-  // discrete states is tne indext of the thrust value in the
-  // optimal_thrust array we have loaded from previous example.
+  // discrete states is the index of the thrust value in the
+  // optimal_thrust array we have loaded from the previous example.
   auto controller =
     [&optimal_thrusts, &relative_rocket, dt] (const types::base_continuous_system::observation_type& obs) -> types::base_continuous_system::command_type {
       types::S current {relative_rocket.convert(obs)};
