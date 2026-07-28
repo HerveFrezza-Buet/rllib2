@@ -364,7 +364,7 @@ void test_system(RANDOM& gen, bool verbose=false) {
                   << " oldQ=" << Q(transition.s, transition.a);
       }
       
-      double deltaQ = rl2::critic::td::update(Q, transition.s, transition.a, learn_params.learning_rate, td_error);
+      [[maybe_unused]] double deltaQ = rl2::critic::td::update(Q, transition.s, transition.a, learn_params.learning_rate, td_error);
 
       if (verbose) {
         std::cout << " -> newQ=" << Q(transition.s, transition.a) << std::endl;

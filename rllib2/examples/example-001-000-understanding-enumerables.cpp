@@ -43,11 +43,11 @@ int main(int argc, char* argv[]) {
   std::cout << "State " << static_cast<weakest_link::S::base_type>(s2) << " has index " << static_cast<std::size_t>(s2) << std::endl;
 
   // Iterators enable to span all the enumerable state values.
-  auto it = weakest_link::S::begin(); // 'it' refers to the first value of S.
-  ++it;                                   // 'it' is now the second value of S.
-  ++it;                                   // 'it' is now the third value of S.
-  weakest_link::S::base_type value {*it}; // Here, we get the value "referenced" by the current iterator.
-  weakest_link::S s3 {it};                // Enumerables can be constructed from an iterator. Here, static_cast<weakest_link::S::base_type>(s3) == value.
+  auto it = weakest_link::S::begin();                      // 'it' refers to the first value of S.
+  ++it;                                                    // 'it' is now the second value of S.
+  ++it;                                                    // 'it' is now the third value of S.
+  [[maybe_unused]] weakest_link::S::base_type value {*it}; // Here, we get the value "referenced" by the current iterator.
+  weakest_link::S s3 {it};                                 // Enumerables can be constructed from an iterator. Here, static_cast<weakest_link::S::base_type>(s3) == value.
   std::cout << "State " << static_cast<weakest_link::S::base_type>(s3) << " has index " << static_cast<std::size_t>(s3) << std::endl;
   std::cout << "State " << *it                           << " has index " << static_cast<std::size_t>(it) << std::endl;
     

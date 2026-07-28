@@ -55,7 +55,7 @@ namespace rl2 {
      * @short reward function
      */
     template<typename REWARD, typename STATE, typename ACTION>
-    concept reward =
+    concept reward_func =
     requires (REWARD const cR, STATE s, STATE const cs, ACTION const ca) {
       {cR(cs, ca, cs)} -> std::same_as<double>;
     };

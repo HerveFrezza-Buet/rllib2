@@ -43,7 +43,7 @@ namespace rl2 {
   private:
     
     std::function<STATE  (const STATE&, const ACTION&)>               transition_func;
-    std::function<double (const STATE&, const ACTION&, const STATE&)> reward;
+    std::function<double (const STATE&, const ACTION&, const STATE&)> reward_func;
     std::function<bool   (const STATE&)>                              terminal;
     
     state_type current_state;
@@ -51,9 +51,9 @@ namespace rl2 {
   public:
 
 
-    template<concepts::transition_func<STATE, ACTION> TRANSITION_FUNC, concepts::reward<STATE, ACTION> REWARD, concepts::terminal<STATE> TERMINAL>
-    system(const TRANSITION_FUNC& T, const REWARD& R, const TERMINAL& terminal)
-      : transition_func(T), reward(R), terminal(terminal),
+    template<concepts::transition_func<STATE, ACTION> TRANSITION_FUNC, concepts::reward_func<STATE, ACTION> REWARD_FUNC, concepts::terminal<STATE> TERMINAL>
+    system(const TRANSITION_FUNC& T, const REWARD_FUNC& R, const TERMINAL& terminal)
+      : transition_func(T), reward_func(R), terminal(terminal),
 	current_state() {}
 
     void operator=(const state_type& s) {current_state = s;}
@@ -63,7 +63,7 @@ namespace rl2 {
     report_type operator()(command_type command) {
       if(*this) {
 	auto next_state = transition_func(current_state, command);
-	double rew = reward(current_state, command, next_state);
+	double rew = reward_func(current_state, command, next_state);
 	current_state = next_state;
 	return rew;
       }
@@ -73,8 +73,8 @@ namespace rl2 {
     state_type state() const {return current_state;}
   };
 
-  template<typename STATE, typename ACTION, concepts::transition_func<STATE, ACTION> TRANSITION_FUNC, concepts::reward<STATE, ACTION> REWARD, concepts::terminal<STATE> TERMINAL>
-  auto make_system(const TRANSITION_FUNC& T, const REWARD& R, const TERMINAL& terminal) {
+  template<typename STATE, typename ACTION, concepts::transition_func<STATE, ACTION> TRANSITION_FUNC, concepts::reward_func<STATE, ACTION> REWARD_FUNC, concepts::terminal<STATE> TERMINAL>
+  auto make_system(const TRANSITION_FUNC& T, const REWARD_FUNC& R, const TERMINAL& terminal) {
     return system<STATE, ACTION>(T, R, terminal);
   }
 }
