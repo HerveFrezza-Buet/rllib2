@@ -71,8 +71,33 @@ namespace weakest_link {
     // rl2::concepts::system<S, A> concept, so it is a gdyn::concepts::system
     // dynamical system.
 
-    // We need a transition function. Let us use a lambda here.
-    auto T = [&gen, p = correct_answer_probability](const S& s, const A& a) -> S {
+    // We need a transition function. As we deal with discrete space
+    // and action sets, we can make it directly from the transition
+    // distribution.
+    auto Tdistrib = [correct_answer_probability](const S& s, const A& a, const S& ss) {
+      char state          {s};
+      char next_state     {ss};
+      bool action_is_bank {a};
+      if(action_is_bank) // If we bank, go to first question
+	if(next_state == 'A') return 1.0;
+	else                  return 0.0;
+      else if(state == 'J')
+	if(next_state == 'A') return 1.0;
+	else                  return 0.0;
+      else {
+	char next_question = state + 1;
+	if(next_state == next_question)  return correct_answer_probability;
+	else if(next_state == 'A')       return 1.0 - correct_answer_probability;
+	else                             return 0;
+      }				   
+    };
+
+    // This is the transition function we need to build the system.
+    auto T = rl2::enumerable::make_transition_function<S, A>(gen, Tdistrib);
+
+    // It is often easier to write directly the transition function, as done below (but not used).
+    // However, the use of Tdistrib enables the implementation of dynamic programming algorithms.
+    [[maybe_unused]] auto T_unused = [&gen, p = correct_answer_probability](const S& s, const A& a) -> S {
       if(a) return 'A'; // If we bank (bank <=> true action), go to first question.
       if(std::bernoulli_distribution(p)(gen)) {             // If we answer correctly
 	if(static_cast<S::base_type>(s) == 'J') return 'A'; // We go back to first question if we were at last question.
@@ -81,9 +106,9 @@ namespace weakest_link {
       return 'A'; // A bad answer leads us back to first question.
     };
 
-    // This is the reward obtained for some s, a, s' transition. This is
-    // a lambda function as well, which copies the reward table in its
-    // lexical closure.
+    // This is the reward function, returning the reward obtained for
+    // some s, a, s' transition. This is a lambda function as well,
+    // which copies the reward table in its lexical closure.
     auto R = [rewards](const S& s, const A& a, const S& ss) -> double {
       if(a) return rewards[static_cast<std::size_t>(s)]; // We get a reward if we bank.
       return 0;                                          // or 0 reward otherwise.

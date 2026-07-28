@@ -82,7 +82,9 @@ namespace rl2 {
   }
 
   namespace enumerable {
-    template<concepts::enumerable::finite STATE, concepts::enumerable::finite ACTION, typename RANDOM_GENERATOR, concepts::transition_distrib<STATE, ACTION> TRANSITION_DISTRIB>
+    template<concepts::enumerable::finite STATE, concepts::enumerable::finite ACTION,
+	     typename RANDOM_GENERATOR,
+	     concepts::transition_distrib<STATE, ACTION> TRANSITION_DISTRIB>
     auto make_transition_function(RANDOM_GENERATOR& gen, const TRANSITION_DISTRIB& T) {
       std::array<std::array<std::array<double, STATE::size()>, ACTION::size()>, STATE::size()> p;
       std::array<std::array<std::discrete_distribution<std::size_t>, ACTION::size()>, STATE::size()> distribs;
