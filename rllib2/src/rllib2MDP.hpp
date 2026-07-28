@@ -25,6 +25,11 @@ limitations under the License.
 #include<rllib2Concepts.hpp>
 
 namespace rl2 {
+  namespace enumerable {
+    namespace mdp {
+      
+    }
+  }
 
   template<typename STATE, typename ACTION>
   struct MDP {

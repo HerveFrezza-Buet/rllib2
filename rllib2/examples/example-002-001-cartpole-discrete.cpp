@@ -304,10 +304,10 @@ void test_discrete(RANDOM& gen) {
 }
 
 template<typename RANDOM>
-void test_mdp(RANDOM& gen, bool verbose=false) {
+void test_system(RANDOM& gen, bool verbose=false) {
   using continuous_cartpole = gdyn::problem::cartpole::system;
 
-  std::cout << "__test_mdp **********************" << std::endl;
+  std::cout << "__test_system **********************" << std::endl;
   struct Params {
     // Few parameters
     double learning_rate = .05;
@@ -320,8 +320,8 @@ void test_mdp(RANDOM& gen, bool verbose=false) {
   };
   Params learn_params;
 
-  // gdyn::problem::cartpole is a rl2::concepts::mdp
-  static_assert(rl2::concepts::mdp<continuous_cartpole>);
+  // gdyn::problem::cartpole is a rl2::concepts::system
+  static_assert(rl2::concepts::system<continuous_cartpole>);
 
   // For using rl2::critic::td::update we need a tabular Q function.
   // So we have to use a discrete cartpole problem.
@@ -329,9 +329,9 @@ void test_mdp(RANDOM& gen, bool verbose=false) {
 
   
   gdyn::problem::cartpole::parameters sys_param;
-  auto continuous_mdp = continuous_cartpole(sys_param);
-  auto discrete_mdp = discrete_cartpole(continuous_mdp);
-  static_assert(rl2::concepts::mdp<decltype(discrete_mdp)>);
+  auto continuous_system = continuous_cartpole(sys_param);
+  auto discrete_system = discrete_cartpole(continuous_system);
+  static_assert(rl2::concepts::system<decltype(discrete_system)>);
 
   // Then a tabular Q
   std::array<double, SA::size()> values;
@@ -341,15 +341,15 @@ void test_mdp(RANDOM& gen, bool verbose=false) {
   auto greedy_policy         = rl2::enumerable::greedy_ify(Q);
   auto epsilon_greedy_policy = rl2::enumerable::epsilon_ify(greedy_policy, learn_params.epsilon, gen);
 
-  auto random_state = [param = continuous_mdp.param, &gen]() {return gdyn::problem::cartpole::random_state(gen, param);};
+  auto random_state = [param = continuous_system.param, &gen]() {return gdyn::problem::cartpole::random_state(gen, param);};
     
   for(unsigned int epoch=0; epoch < learn_params.nb_epochs; ++epoch) {
    
     std::cout << "  epoch #" << epoch << std::endl;
-    continuous_mdp = random_state(); // We implement exploring starts.
+    continuous_system = random_state(); // We implement exploring starts.
     for(auto transition
-	  : gdyn::views::controller(discrete_mdp, epsilon_greedy_policy)
-	  | gdyn::views::orbit(discrete_mdp)
+	  : gdyn::views::controller(discrete_system, epsilon_greedy_policy)
+	  | gdyn::views::orbit(discrete_system)
 	  | rl2::views::sarsa
 	  | std::views::take(learn_params.epoch_length)) {
 
@@ -381,7 +381,7 @@ int main(int argc, char *argv[]) {
 
 
   if(argc != 2) {
-    std::cout << "Usage: " << argv[0] << " [convertor | transition | discrete | mdp]" << std::endl;
+    std::cout << "Usage: " << argv[0] << " [convertor | transition | discrete | system]" << std::endl;
     return 0;
   }
 
@@ -390,7 +390,7 @@ int main(int argc, char *argv[]) {
   if(mode == "convertor")  test_convertor();
   if(mode == "transition") test_transition(gen);
   if(mode == "discrete")   test_discrete(gen);
-  if(mode == "mdp")        test_mdp(gen, true);
+  if(mode == "system")     test_system(gen, true);
   return 0;
 
 }

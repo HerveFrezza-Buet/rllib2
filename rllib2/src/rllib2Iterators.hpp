@@ -31,7 +31,7 @@ namespace rl2 {
     
     // sarsa
     
-    template<concepts::mdp_orbit_iterator ORBIT_ITERATOR,
+    template<concepts::orbit_iterator ORBIT_ITERATOR,
 	     typename ORBIT_SENTINEL>
     struct sarsa {
       

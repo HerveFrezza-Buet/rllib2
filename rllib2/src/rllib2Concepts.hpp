@@ -115,16 +115,16 @@ namespace rl2 {
     /**
      * @short A MDP system
      */
-    template<typename MDP>
-    concept mdp =
-    gdyn::concepts::system<MDP>
-      && std::same_as<typename MDP::report_type, double>;
+    template<typename SYSTEM>
+    concept system =
+    gdyn::concepts::system<SYSTEM>
+      && std::same_as<typename SYSTEM::report_type, double>;
 
     /**
      * @short orbit point when the system is a MDP 
      */
     template<typename ORBIT_VALUE>
-    concept mdp_orbit_point =
+    concept orbit_point =
     gdyn::concepts::orbit_point<ORBIT_VALUE>
       && std::same_as<typename ORBIT_VALUE::report_type, double>;
 
@@ -132,9 +132,9 @@ namespace rl2 {
      * @short orbit iterator when the system is a MDP
      */
     template<typename ORBIT_ITERATOR>
-    concept mdp_orbit_iterator =
+    concept orbit_iterator =
     gdyn::concepts::orbit_iterator<ORBIT_ITERATOR>
-      && mdp_orbit_point<std::iter_value_t<ORBIT_ITERATOR>>;
+      && orbit_point<std::iter_value_t<ORBIT_ITERATOR>>;
 
     /**
      * @short A RL policy

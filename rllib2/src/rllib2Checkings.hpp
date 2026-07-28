@@ -60,7 +60,7 @@ namespace rl2 {
     using process = MDP<char, int>;
     static_assert(gdyn::concepts::system<process>);
     static_assert(gdyn::concepts::transparent_system<process>);
-    static_assert(concepts::mdp<process>);
+    static_assert(concepts::system<process>);
 
     // Two_Args_Function
     // -----------------

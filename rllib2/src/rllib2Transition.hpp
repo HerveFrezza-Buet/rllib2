@@ -51,7 +51,7 @@ namespace rl2 {
 
     bool is_terminal() const {return !(aa.has_value());}
     
-    template<concepts::mdp_orbit_point ORBIT_POINT>
+    template<concepts::orbit_point ORBIT_POINT>
     void operator+=(const ORBIT_POINT& next) {
       s  = ss;
       a  = *aa;
@@ -68,7 +68,7 @@ namespace rl2 {
    * @param current An orbit point, that must not be a terminal one.
    * @param next    An orbit point.
    */
-  template<concepts::mdp_orbit_point ORBIT_POINT>
+  template<concepts::orbit_point ORBIT_POINT>
   auto make_sarsa(const ORBIT_POINT& current, const ORBIT_POINT& next) {
     return sarsa<typename ORBIT_POINT::observation_type, typename ORBIT_POINT::command_type>(current.current_observation, *(current.next_command), *(next.previous_report), next.current_observation, next.next_command);
   }

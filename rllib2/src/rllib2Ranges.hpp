@@ -35,7 +35,7 @@ namespace rl2 {
 
     template<std::ranges::input_range R>
     requires std::ranges::view<R> &&
-    concepts::mdp_orbit_iterator<std::ranges::iterator_t<R>>
+    concepts::orbit_iterator<std::ranges::iterator_t<R>>
     class sarsa_view : public std::ranges::view_interface<sarsa_view<R>> {
     private:
       R from {};
