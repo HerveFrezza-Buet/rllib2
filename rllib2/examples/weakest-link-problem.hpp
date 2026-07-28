@@ -51,7 +51,7 @@ namespace weakest_link {
 
 
   template <typename RANDOM_GENERATOR>
-  auto make_mdp(RANDOM_GENERATOR& gen, double correct_answer_probability, bool show_reward_table=false) {
+  auto make(RANDOM_GENERATOR& gen, double correct_answer_probability, bool show_reward_table=false) {
   
     // Let us define the reward table for the game. We can have arrays
     // since the state space size S::size() is known at compiling time.
@@ -88,7 +88,7 @@ namespace weakest_link {
 	char next_question = state + 1;
 	if(next_state == next_question)  return correct_answer_probability;
 	else if(next_state == 'A')       return 1.0 - correct_answer_probability;
-	else                             return 0;
+	else                             return 0.;
       }				   
     };
 

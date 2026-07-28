@@ -82,7 +82,25 @@ namespace rl2 {
   }
 
   namespace enumerable {
-    template<concepts::enumerable::finite STATE, concepts::enumerable::finite ACTION,
+    namespace details {
+      template<concepts::enumerable::finite STATE,
+	       concepts::enumerable::finite ACTION, 
+	       typename RANDOM_GENERATOR>
+      struct discrete_distributions {
+	mutable std::array<std::array<std::discrete_distribution<std::size_t>, ACTION::size()>, STATE::size()> distribs;
+	RANDOM_GENERATOR& gen;
+	discrete_distributions(std::array<std::array<std::discrete_distribution<std::size_t>, ACTION::size()>, STATE::size()> distribs,
+			       RANDOM_GENERATOR& gen)
+	  : distribs(distribs), gen(gen) {}
+	
+	STATE operator()(const STATE& s, const ACTION& a) const {
+	  return distribs[static_cast<std::size_t>(s)][static_cast<std::size_t>(a)](gen);
+	}
+      };
+    }
+    
+    template<concepts::enumerable::finite STATE,
+	     concepts::enumerable::finite ACTION,
 	     typename RANDOM_GENERATOR,
 	     concepts::transition_distrib<STATE, ACTION> TRANSITION_DISTRIB>
     auto make_transition_function(RANDOM_GENERATOR& gen, const TRANSITION_DISTRIB& T) {
@@ -92,15 +110,14 @@ namespace rl2 {
 	for(auto a = ACTION::begin(); a != ACTION::end(); ++a) {
 	  std::size_t s_index = *s;
 	  std::size_t a_index = *a;
-	  auto& probas = p[s_index][a_index];
-	  for(auto& [ss_index, ps] : probas | std::views::enumerate)
+	  auto& probas = (p[s_index])[a_index];
+	  for(auto&& [ss_index, ps] : probas | std::views::enumerate)
 	    ps = T(s_index, a_index, static_cast<std::size_t>(ss_index));
-	  distribs[s_index][a_index] = std::discrete_distribution<std::size_t>(probas.begin(), probas.end());
+	  (distribs[s_index])[a_index] = std::discrete_distribution<std::size_t>(probas.begin(), probas.end());
 	}
-      return [&gen, distribs](const STATE& s, const ACTION& a) -> STATE {
-	return distribs[static_cast<std::size_t>(s)][static_cast<std::size_t>(a)](gen);
-      };
+      return details::discrete_distributions<STATE, ACTION, RANDOM_GENERATOR>(distribs, gen);
     }
   }
   
 }
+

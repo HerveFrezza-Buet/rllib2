@@ -103,7 +103,7 @@ int main(int argc, char* argv[]) {
   // The policy is sensitive to further modifications of params.epsilon, thanks to the use of std::cref.
 
   // This is the environment
-  auto environment = weakest_link::make_mdp(gen, params.correct_proba);
+  auto environment = weakest_link::make(gen, params.correct_proba);
 
   std::cout << "Player skill : " << int(100 * params.correct_proba) << "% of correct answers." << std::endl;
 
