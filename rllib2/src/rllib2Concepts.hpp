@@ -61,6 +61,16 @@ namespace rl2 {
     };
       
     /**
+     * @short transition distribution
+     */
+    template<typename TRANSITION_DISTRIB, typename STATE, typename ACTION>
+    concept transition_distrib =
+    requires (TRANSITION_DISTRIB const cT, STATE const cs, ACTION const ca) {
+      {cT(cs, ca, cs)} -> std::same_as<double>; // Probability value in [0, 1].
+    };
+
+    
+    /**
      * @short terminal function
      */
     template<typename TERMINAL, typename STATE>
