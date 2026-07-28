@@ -88,8 +88,8 @@ namespace rl2 {
       std::array<std::array<std::discrete_distribution<std::size_t>, ACTION::size()>, STATE::size()> distribs;
       for(auto s = STATE::begin(); s != STATE::end(); ++s)
 	for(auto a = ACTION::begin(); a != ACTION::end(); ++a) {
-	  s_index = static_cast<std::size_t>(*s);
-	  a_index = static_cast<std::size_t>(*a);
+	  std::size_t s_index = *s;
+	  std::size_t a_index = *a;
 	  auto& probas = p[s_index][a_index];
 	  for(auto& [ss_index, ps] : probas | std::views::enumerate)
 	    ps = T(s_index, a_index, static_cast<std::size_t>(ss_index));
@@ -97,7 +97,7 @@ namespace rl2 {
 	}
       return [&gen, distribs](const STATE& s, const ACTION& a) -> STATE {
 	return distribs[static_cast<std::size_t>(s)][static_cast<std::size_t>(a)](gen);
-      }
+      };
     }
   }
   

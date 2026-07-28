@@ -7,7 +7,7 @@ SET(PACKAGE_VERSION "1.00")
 SET(PACKAGE_LICENSE "GPL")
 SET(PROJECT_DESCRIPTION_SUMMARY "RLlib2 is for generic C++ package for RL algorithms")
 SET(CMAKE_BUILD_TYPE Release)
-SET(PROJECT_CFLAGS "-std=c++20")
+SET(PROJECT_CFLAGS "-std=c++23")
 
 SET(INCLUDE_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/include/${CMAKE_PROJECT_NAME}/" CACHE PATH "The subdirectory to the header prefix")
 

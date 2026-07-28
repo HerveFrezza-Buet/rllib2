@@ -7,7 +7,7 @@ SET(PACKAGE_VERSION "1.00")
 SET(PACKAGE_LICENSE "GPL")
 SET(PROJECT_DESCRIPTION_SUMMARY "Extends rllib2 with algorithms based on Eigen")
 SET(CMAKE_BUILD_TYPE Debug)
-SET(PROJECT_CFLAGS "-std=c++20 -fconcepts-diagnostics-depth=2")
+SET(PROJECT_CFLAGS "-std=c++23 -fconcepts-diagnostics-depth=2")
 
 SET(INCLUDE_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/include/${CMAKE_PROJECT_NAME}/" CACHE PATH "The subdirectory to the header prefix")
 
