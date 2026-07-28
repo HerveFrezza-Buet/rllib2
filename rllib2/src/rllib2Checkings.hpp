@@ -54,10 +54,10 @@ namespace rl2 {
     using enumerable_char = enumerable::set<char, 10>;
     static_assert(concepts::enumerable::finite<enumerable_int>);
 
-    // MDP
-    // ---
+    // System
+    // ------
     
-    using process = MDP<char, int>;
+    using process = system<char, int>;
     static_assert(gdyn::concepts::system<process>);
     static_assert(gdyn::concepts::transparent_system<process>);
     static_assert(concepts::system<process>);

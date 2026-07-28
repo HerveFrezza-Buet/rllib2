@@ -68,7 +68,7 @@ namespace weakest_link {
     }
 
     // Let us build a Markov Decision Process. It fits the
-    // rl2::concepts::MDP<S, A> concept, so it is a gdyn::concepts::system
+    // rl2::concepts::system<S, A> concept, so it is a gdyn::concepts::system
     // dynamical system.
 
     // We need a transition function. Let us use a lambda here.
@@ -93,7 +93,7 @@ namespace weakest_link {
     auto is_terminal = [](const S& s) {return false;}; // No state is terminal.
 
     // This builds a dynamical system.
-    return rl2::make_mdp<S, A>(T, R, is_terminal);
+    return rl2::make_system<S, A>(T, R, is_terminal);
   }
 
 

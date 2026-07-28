@@ -25,29 +25,24 @@ limitations under the License.
 #include<rllib2Concepts.hpp>
 
 namespace rl2 {
-  namespace enumerable {
-    namespace mdp {
-      
-    }
-  }
 
   template<typename STATE, typename ACTION>
-  struct MDP {
+  struct system {
   public:
     using state_type       = STATE;
     using observation_type = STATE; 
     using command_type     = ACTION;
     using report_type      = double;
     
-    MDP()                      = delete;
-    MDP(const MDP&)            = default;
-    MDP(MDP&&)                 = default;
-    MDP& operator=(const MDP&) = default;
-    MDP& operator=(MDP&&)      = default;
+    system()                      = delete;
+    system(const system&)            = default;
+    system(system&&)                 = default;
+    system& operator=(const system&) = default;
+    system& operator=(system&&)      = default;
     
   private:
     
-    std::function<STATE  (const STATE&, const ACTION&)>               transition;
+    std::function<STATE  (const STATE&, const ACTION&)>               transition_func;
     std::function<double (const STATE&, const ACTION&, const STATE&)> reward;
     std::function<bool   (const STATE&)>                              terminal;
     
@@ -56,9 +51,9 @@ namespace rl2 {
   public:
 
 
-    template<concepts::transition<STATE, ACTION> TRANSITION, concepts::reward<STATE, ACTION> REWARD, concepts::terminal<STATE> TERMINAL>
-    MDP(const TRANSITION& T, const REWARD& R, const TERMINAL& terminal)
-      : transition(T), reward(R), terminal(terminal),
+    template<concepts::transition_func<STATE, ACTION> TRANSITION_FUNC, concepts::reward<STATE, ACTION> REWARD, concepts::terminal<STATE> TERMINAL>
+    system(const TRANSITION_FUNC& T, const REWARD& R, const TERMINAL& terminal)
+      : transition_func(T), reward(R), terminal(terminal),
 	current_state() {}
 
     void operator=(const state_type& s) {current_state = s;}
@@ -67,7 +62,7 @@ namespace rl2 {
     
     report_type operator()(command_type command) {
       if(*this) {
-	auto next_state = transition(current_state, command);
+	auto next_state = transition_func(current_state, command);
 	double rew = reward(current_state, command, next_state);
 	current_state = next_state;
 	return rew;
@@ -78,8 +73,8 @@ namespace rl2 {
     state_type state() const {return current_state;}
   };
 
-  template<typename STATE, typename ACTION, concepts::transition<STATE, ACTION> TRANSITION, concepts::reward<STATE, ACTION> REWARD, concepts::terminal<STATE> TERMINAL>
-  auto make_mdp(const TRANSITION& T, const REWARD& R, const TERMINAL& terminal) {
-    return MDP<STATE, ACTION>(T, R, terminal);
+  template<typename STATE, typename ACTION, concepts::transition_func<STATE, ACTION> TRANSITION_FUNC, concepts::reward<STATE, ACTION> REWARD, concepts::terminal<STATE> TERMINAL>
+  auto make_system(const TRANSITION_FUNC& T, const REWARD& R, const TERMINAL& terminal) {
+    return system<STATE, ACTION>(T, R, terminal);
   }
 }

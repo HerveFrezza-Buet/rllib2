@@ -45,9 +45,9 @@ namespace rl2 {
     /**
      * @short transition function
      */
-    template<typename TRANSITION, typename STATE, typename ACTION>
-    concept transition =
-    requires (TRANSITION const cT, STATE const cs, ACTION const ca) {
+    template<typename TRANSITION_FUNC, typename STATE, typename ACTION>
+    concept transition_func =
+    requires (TRANSITION_FUNC const cT, STATE const cs, ACTION const ca) {
       {cT(cs, ca)} -> std::same_as<STATE>;
     };
       
