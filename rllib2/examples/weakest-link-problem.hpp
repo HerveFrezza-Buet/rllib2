@@ -78,18 +78,21 @@ namespace weakest_link {
       char state          {s};
       char next_state     {ss};
       bool action_is_bank {a};
+      double res = -1;
       if(action_is_bank) // If we bank, go to first question
-	if(next_state == 'A') return 1.0;
-	else                  return 0.0;
+	if(next_state == 'A') res = 1.0;
+	else                  res = 0.0;
       else if(state == 'J')
-	if(next_state == 'A') return 1.0;
-	else                  return 0.0;
+	if(next_state == 'A') res = 1.0;
+	else                  res = 0.0;
       else {
 	char next_question = state + 1;
-	if(next_state == next_question)  return correct_answer_probability;
-	else if(next_state == 'A')       return 1.0 - correct_answer_probability;
-	else                             return 0.;
+	if(next_state == next_question)  res = correct_answer_probability;
+	else if(next_state == 'A')       res = 1.0 - correct_answer_probability;
+	else                             res = 0.;
       }				   
+      // std::cout << std::boolalpha << state << ", " << action_is_bank << " -> " << next_state << " : " << res << std::endl;
+      return res;
     };
 
     // This is the transition function we need to build the system.

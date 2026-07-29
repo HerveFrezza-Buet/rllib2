@@ -113,13 +113,11 @@ namespace rl2 {
       typename details::discrete_distributions<STATE, ACTION, GEN>::distribs_type distribs;
       distribs.reserve(STATE::size() * ACTION::size());
       std::array<double, STATE::size()> p;
-      for(auto s = STATE::begin(); s != STATE::end(); ++s)
-	for(auto a = ACTION::begin(); a != ACTION::end(); ++a) {
-	  std::size_t s_index = *s;
-	  std::size_t a_index = *a;
-	  auto pit = p.begin();
-	  for(auto ss = STATE::begin(); ss != STATE::end(); ++ss)
-	    *pit++ = T(s_index, a_index, ss);
+      for(auto s_it = STATE::begin(); s_it != STATE::end(); ++s_it)
+	for(auto a_it = ACTION::begin(); a_it != ACTION::end(); ++a_it) {
+	  auto p_it = p.begin();
+	  for(auto ss_it = STATE::begin(); ss_it != STATE::end(); ++ss_it)
+	    *p_it++ = T(*s_it, *a_it, *ss_it);
 	  distribs.emplace_back(p.begin(), p.end());
 	}
       return details::discrete_distributions<STATE, ACTION, GEN>(std::move(distribs), gen);
