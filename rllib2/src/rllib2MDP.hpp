@@ -23,7 +23,9 @@ limitations under the License.
 #include <iterator>
 #include <random>
 #include <array>
+#include <vector>
 #include <ranges>
+
 
 #include<rllib2Concepts.hpp>
 
@@ -81,41 +83,46 @@ namespace rl2 {
     return system<STATE, ACTION>(T, R, terminal);
   }
 
+  
   namespace enumerable {
     namespace details {
       template<concepts::enumerable::finite STATE,
 	       concepts::enumerable::finite ACTION, 
-	       typename RANDOM_GENERATOR>
+	       typename GEN>
       struct discrete_distributions {
-	mutable std::array<std::array<std::discrete_distribution<std::size_t>, ACTION::size()>, STATE::size()> distribs;
-	RANDOM_GENERATOR& gen;
-	discrete_distributions(std::array<std::array<std::discrete_distribution<std::size_t>, ACTION::size()>, STATE::size()> distribs,
-			       RANDOM_GENERATOR& gen)
-	  : distribs(distribs), gen(gen) {}
+	using distribs_type = std::vector<std::discrete_distribution<std::size_t>>;
+	mutable distribs_type distribs;
+	GEN& gen;
+	discrete_distributions(distribs_type&& distribs,
+			       GEN& gen)
+	  : distribs(std::forward<distribs_type>(distribs)), gen(gen) {}
 	
 	STATE operator()(const STATE& s, const ACTION& a) const {
-	  return distribs[static_cast<std::size_t>(s)][static_cast<std::size_t>(a)](gen);
+	  return distribs[static_cast<std::size_t>(s) * ACTION::size() + static_cast<std::size_t>(a)](gen);
 	}
       };
     }
+
+
     
     template<concepts::enumerable::finite STATE,
 	     concepts::enumerable::finite ACTION,
-	     typename RANDOM_GENERATOR,
+	     typename GEN,
 	     concepts::transition_distrib<STATE, ACTION> TRANSITION_DISTRIB>
-    auto make_transition_function(RANDOM_GENERATOR& gen, const TRANSITION_DISTRIB& T) {
-      std::array<std::array<std::array<double, STATE::size()>, ACTION::size()>, STATE::size()> p;
-      std::array<std::array<std::discrete_distribution<std::size_t>, ACTION::size()>, STATE::size()> distribs;
+    auto make_transition_function(GEN& gen, const TRANSITION_DISTRIB& T) {
+      typename details::discrete_distributions<STATE, ACTION, GEN>::distribs_type distribs;
+      distribs.reserve(STATE::size() * ACTION::size());
+      std::array<double, STATE::size()> p;
       for(auto s = STATE::begin(); s != STATE::end(); ++s)
 	for(auto a = ACTION::begin(); a != ACTION::end(); ++a) {
 	  std::size_t s_index = *s;
 	  std::size_t a_index = *a;
-	  auto& probas = (p[s_index])[a_index];
-	  for(auto&& [ss_index, ps] : probas | std::views::enumerate)
-	    ps = T(s_index, a_index, static_cast<std::size_t>(ss_index));
-	  (distribs[s_index])[a_index] = std::discrete_distribution<std::size_t>(probas.begin(), probas.end());
+	  auto pit = p.begin();
+	  for(auto ss = STATE::begin(); ss != STATE::end(); ++ss)
+	    *pit++ = T(s_index, a_index, ss);
+	  distribs.emplace_back(p.begin(), p.end());
 	}
-      return details::discrete_distributions<STATE, ACTION, RANDOM_GENERATOR>(distribs, gen);
+      return details::discrete_distributions<STATE, ACTION, GEN>(std::move(distribs), gen);
     }
   }
   
