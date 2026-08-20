@@ -45,7 +45,7 @@ int main(int argc, char* argv[]) {
   std::cout << std::endl << std::endl
 	    << "Computing Q-learning passes:" << std::endl;
   for(std::size_t pass = 0; pass < NB_PASSES; ++pass) {
-    std::cout << std::setw(5) << pass+1 << '/' << NB_PASSES << "\r     " << std::flush;
+    std::cout << std::setw(5) << pass+1 << '/' << NB_PASSES << "          \r" << std::flush;
     std::shuffle(permutation.begin(), permutation.end(), gen); // We change the visiting order.
     for(auto [init_state, command]
 	  : permutation
