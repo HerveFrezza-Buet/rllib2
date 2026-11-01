@@ -212,29 +212,31 @@ namespace rl2 {
 	  return value_min + size * (value_max - value_min) / nb_bins_in_range<AT_MIN, AT_MAX>(nb_bins);
 	}
 	
+	template<bool AT_MIN=false, bool AT_MAX=false>
 	std::size_t to_index(double value, std::size_t nb_bins) {
-	  return to_index(value, 0., 1., nb_bins);
+	  return to_index<AT_MIN, AT_MAX>(value, 0., 1., nb_bins);
 	}
 	
+	template<bool AT_MIN=false, bool AT_MAX=false>
 	double to_value(std::size_t index, std::size_t nb_bins) {
-	  return to_value(index, 0., 1., nb_bins);
+	  return to_value<AT_MIN, AT_MAX>(index, 0., 1., nb_bins);
 	}
 
 	/**
 	 * This builds a enumerable set for digitized scalar.
 	 */
-	template<std::size_t NB, double MIN, double MAX>
+	template<std::size_t NB, double MIN, double MAX, bool AT_MIN=false, bool AT_MAX=false>
 	struct scalar {
 	public:
 	  struct convertor {
 	    static constexpr size_t size() {return NB;}; 
 	    static double to(std::size_t index) {
-	      return to_value(index, MIN, MAX, NB);
+	      return to_value<AT_MIN, AT_MAX>(index, MIN, MAX, NB);
 	    }
 	    static std::size_t from(double value) {
 	      if(value < MIN) return 0;
 	      if(value >= MAX) return NB-1;
-	      return to_index(value, MIN, MAX, NB);
+	      return to_index<AT_MIN, AT_MAX>(value, MIN, MAX, NB);
 	    }
 	  };
 	public:

@@ -26,6 +26,25 @@ void basic_print() {
   std::cout << std::endl << std::endl;
 }
 
+template<bool AT_MIN, bool AT_MAX>
+void set_print() {
+  using set_type = rl2::enumerable::utils::digitize::scalar<nb_bins, min_bound, max_bound,
+							    AT_MIN, AT_MAX>::set;
+  std::cout << std::boolalpha << AT_MIN << ' ' << AT_MAX << std::endl;
+  for(double i = min_bound; i <= max_bound; ++i) {
+    set_type s {i};
+    auto idx = static_cast<std::size_t>(s);
+    auto val = static_cast<set_type::base_type>(s); // set_type::base_type is double.
+    char letter {'o'};
+    if(std::fabs(val-i) > .5) {
+      if(idx % 2 == 0) letter = '=';
+      else             letter = '-';
+    }
+    std::cout << letter;
+  }
+  std::cout << std::endl << std::endl;
+}
+
 int main(int argc, char* argv[]) {
 
   // Let us display the discretizing
@@ -33,6 +52,17 @@ int main(int argc, char* argv[]) {
   basic_print<false, true >();
   basic_print<true,  true >();
   basic_print<true,  false>();
+
+  std::cout << std::endl
+	    << "-------------------" << std::endl
+	    << std::endl;
+
+  // Let us display the discretizing
+  set_print<false, false>();
+  set_print<false, true >();
+  set_print<true,  true >();
+  set_print<true,  false>();
+  
 
   return 0;
 }
