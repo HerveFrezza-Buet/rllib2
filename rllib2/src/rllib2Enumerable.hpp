@@ -188,8 +188,7 @@ namespace rl2 {
       namespace digitize {
 	
 
-	// Partition in bins, upper bound in last bin
-	// Out of limits is not handled by this digitizer.
+	template<bool AT_MIN=false, bool AT_MAX=false>
 	std::size_t to_index(double value, double value_min, double value_max, std::size_t nb_bins)
 	{
 	  if (value == value_max) return nb_bins-1;
@@ -197,7 +196,7 @@ namespace rl2 {
 	  return static_cast<std::size_t>(reloc);
 	}
 
-	// When converting from bin, give the middle value of the bin
+	template<bool AT_MIN=false, bool AT_MAX=false>
 	double to_value(std::size_t index, double value_min, double value_max, std::size_t nb_bins)
 	{
 	  return value_min + (static_cast<double>(index) + 0.5)
