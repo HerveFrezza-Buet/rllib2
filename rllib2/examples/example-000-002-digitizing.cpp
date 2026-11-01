@@ -30,7 +30,9 @@ int main(int argc, char* argv[]) {
 
   // Let us display the discretizing
   basic_print<false, false>();
-  
+  basic_print<false, true >();
+  basic_print<true,  true >();
+  basic_print<true,  false>();
 
   return 0;
 }

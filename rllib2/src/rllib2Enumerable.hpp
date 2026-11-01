@@ -23,6 +23,7 @@ limitations under the License.
 #include <random>
 #include <utility>
 #include <iostream>
+#include <algorithm>
 
 #include <rllib2Concepts.hpp>
 
@@ -186,21 +187,29 @@ namespace rl2 {
 
     namespace utils {
       namespace digitize {
+
 	
+	template<bool AT_MIN, bool AT_MAX>
+	double nb_bins_in_range(std::size_t nb_bins) {
+	  if(AT_MIN and AT_MAX) return nb_bins - 1;
+	  if(AT_MIN  or AT_MAX) return nb_bins - .5;
+	  return nb_bins;
+	}
 
 	template<bool AT_MIN=false, bool AT_MAX=false>
 	std::size_t to_index(double value, double value_min, double value_max, std::size_t nb_bins)
 	{
-	  if (value == value_max) return nb_bins-1;
-	  double reloc = (value - value_min) / (value_max - value_min) * static_cast<double>(nb_bins);
-	  return static_cast<std::size_t>(reloc);
+	  double reloc = (value - value_min) / (value_max - value_min) * nb_bins_in_range<AT_MIN, AT_MAX>(nb_bins);
+	  if(AT_MIN) reloc += .5;
+	  return static_cast<std::size_t>(std::clamp(reloc, static_cast<double>(0),  static_cast<double>(nb_bins - 1)));
 	}
 
 	template<bool AT_MIN=false, bool AT_MAX=false>
 	double to_value(std::size_t index, double value_min, double value_max, std::size_t nb_bins)
 	{
-	  return value_min + (static_cast<double>(index) + 0.5)
-	    * (value_max - value_min) / static_cast<double>(nb_bins);
+	  double size {static_cast<double>(index)};
+	  if(not AT_MIN) size += .5;
+	  return value_min + size * (value_max - value_min) / nb_bins_in_range<AT_MIN, AT_MAX>(nb_bins);
 	}
 	
 	std::size_t to_index(double value, std::size_t nb_bins) {
