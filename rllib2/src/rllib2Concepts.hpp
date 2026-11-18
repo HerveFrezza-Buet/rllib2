@@ -130,6 +130,23 @@ namespace rl2 {
     gdyn::concepts::system<SYSTEM>
       && std::same_as<typename SYSTEM::report_type, double>;
 
+
+    /**
+     * @short A model (e.g. for dynamic programming)
+     */
+    template<typename MODEL, typename STATE, typename ACTION>
+    concept model =
+      requires {
+	typename MODEL::state_type;
+	typename MODEL::action_type;
+    }
+      && std::same_as<typename MODEL::state_type, STATE>
+      && std::same_as<typename MODEL::action_type, ACTION>
+      && requires (const MODEL m) {
+	{m.T} -> transition_distrib<STATE, ACTION>;
+	{m.R} -> reward_func<STATE, ACTION>;
+    };
+
     /**
      * @short orbit point when the system is a MDP 
      */
