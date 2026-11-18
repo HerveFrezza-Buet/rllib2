@@ -1,6 +1,7 @@
 // This is the definition of a Markovian Decision Process modelling
 // the weakest link game (with a single player).
 
+#include "rllib2Concepts.hpp"
 #include <iostream>
 #include <gdyn.hpp>
 #include <rllib2.hpp>
@@ -95,6 +96,9 @@ namespace weakest_link {
       return res;
     };
 
+    // Tdistrib type satisfies the following concept
+    static_assert(rl2::concepts::transition_distrib<decltype(Tdistrib), S, A>);
+
     // This is the transition function we need to build the system.
     auto T = rl2::enumerable::make_transition_function<S, A>(gen, Tdistrib);
 
@@ -116,6 +120,8 @@ namespace weakest_link {
       if(a) return rewards[static_cast<std::size_t>(s)]; // We get a reward if we bank.
       return 0;                                          // or 0 reward otherwise.
     };
+    // R type satisfies the following concept
+    static_assert(rl2::concepts::reward_func<decltype(R), S, A>);
 
     // In this problem, there are no terminal states.
     auto is_terminal = [](const S& s) {return false;}; // No state is terminal.
