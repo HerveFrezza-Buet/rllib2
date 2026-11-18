@@ -354,8 +354,8 @@ void test_system(RANDOM& gen, bool verbose=false) {
 	  | std::views::take(learn_params.epoch_length)) {
 
       // Q-Learning
-      auto bellman_op = rl2::critic::td::enumerable::action::bellman::optimality<S, A, decltype(Q)>;
-      double td_error = rl2::critic::td::error(Q, learn_params.gamma, transition, bellman_op);
+      auto bellman_updt = rl2::critic::td::enumerable::action::bellman::optimality<S, A, decltype(Q)>;
+      double td_error = rl2::critic::td::error(Q, learn_params.gamma, transition, bellman_updt);
       if (verbose) {
         std::cout << "    update s:" << static_cast<std::size_t>(transition.s)
                   << " a:" << static_cast<std::size_t>(transition.a)

@@ -51,7 +51,7 @@ namespace rl2 {
 	}
       }
 	
-      template<typename S, typename A, concepts::q_function<S, A> Q, concepts::bellman_operator<Q, S, A, sarsa<S, A>> BELLMAN_OP>
+      template<typename S, typename A, concepts::q_function<S, A> Q, concepts::bellman::q_update<Q, S, A, sarsa<S, A>> BELLMAN_OP>
       double error(const Q& q, double gamma, const sarsa<S, A>& transition, const BELLMAN_OP& bellman_op) {
 	return bellman_op(q, gamma, transition) - q(transition.s, transition.a);
       }

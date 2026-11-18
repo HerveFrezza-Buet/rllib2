@@ -47,14 +47,14 @@ void train(MDP& environment, QTABLE& q, const POLICY& exploration_policy, Params
 	  | rl2::views::sarsa     
 	  | std::views::take(params.epoch_length)) {
       if constexpr (is_sarsa) {
-	auto bellman_op = rl2::critic::td::bellman::evaluation<typename MDP::state_type, typename MDP::command_type, QTABLE>;
+	auto bellman_updt = rl2::critic::td::bellman::evaluation<typename MDP::state_type, typename MDP::command_type, QTABLE>;
 	rl2::critic::td::update(q, transition.s, transition.a, params.learning_rate,
-				rl2::critic::td::error(q, params.gamma, transition, bellman_op)); // SARSA
+				rl2::critic::td::error(q, params.gamma, transition, bellman_updt)); // SARSA
       }
       else {
-	auto bellman_op = rl2::critic::td::enumerable::action::bellman::optimality<typename MDP::state_type, typename MDP::command_type, QTABLE>;
+	auto bellman_updt = rl2::critic::td::enumerable::action::bellman::optimality<typename MDP::state_type, typename MDP::command_type, QTABLE>;
 	rl2::critic::td::update(q, transition.s, transition.a, params.learning_rate,
-				rl2::critic::td::error(q, params.gamma, transition, bellman_op)); // Q-Learning
+				rl2::critic::td::error(q, params.gamma, transition, bellman_updt)); // Q-Learning
       }
       display_greedy_policy(q); std::cout << '\r' << std::flush;
     }

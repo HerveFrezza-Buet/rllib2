@@ -1,18 +1,18 @@
 /*
 
-Copyright 2024 Herve FREZZA-BUET, Alain DUTECH
+  Copyright 2024 Herve FREZZA-BUET, Alain DUTECH
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+  http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
 
 */
 
@@ -32,14 +32,14 @@ namespace rl2 {
      */
     template<typename SARSA, typename STATE, typename ACTION>
     concept sarsa =
-    requires(SARSA& ct) {
-      {ct.s}              -> std::same_as<STATE&>;
-      {ct.a}              -> std::same_as<ACTION&>;
-      {ct.r}              -> std::same_as<double&>;
-      {ct.ss}             -> std::same_as<STATE&>;
-      {ct.aa.has_value()} -> std::convertible_to<bool>;
-      {*(ct.aa)}          -> std::same_as<ACTION&>;
-      {ct.is_terminal()}  -> std::same_as<bool>;
+      requires(SARSA& ct) {
+	{ct.s}              -> std::same_as<STATE&>;
+	{ct.a}              -> std::same_as<ACTION&>;
+	{ct.r}              -> std::same_as<double&>;
+	{ct.ss}             -> std::same_as<STATE&>;
+	{ct.aa.has_value()} -> std::convertible_to<bool>;
+	{*(ct.aa)}          -> std::same_as<ACTION&>;
+	{ct.is_terminal()}  -> std::same_as<bool>;
     };
     
     /**
@@ -47,8 +47,8 @@ namespace rl2 {
      */
     template<typename TRANSITION_FUNC, typename STATE, typename ACTION>
     concept transition_func =
-    requires (TRANSITION_FUNC const cT, STATE const cs, ACTION const ca) {
-      {cT(cs, ca)} -> std::same_as<STATE>;
+      requires (TRANSITION_FUNC const cT, STATE const cs, ACTION const ca) {
+	{cT(cs, ca)} -> std::same_as<STATE>;
     };
       
     /**
@@ -56,8 +56,8 @@ namespace rl2 {
      */
     template<typename REWARD, typename STATE, typename ACTION>
     concept reward_func =
-    requires (REWARD const cR, STATE s, STATE const cs, ACTION const ca) {
-      {cR(cs, ca, cs)} -> std::same_as<double>;
+      requires (REWARD const cR, STATE s, STATE const cs, ACTION const ca) {
+	{cR(cs, ca, cs)} -> std::same_as<double>;
     };
       
     /**
@@ -65,8 +65,8 @@ namespace rl2 {
      */
     template<typename TRANSITION_DISTRIB, typename STATE, typename ACTION>
     concept transition_distrib =
-    requires (TRANSITION_DISTRIB const cT, STATE const cs, ACTION const ca) {
-      {cT(cs, ca, cs)} -> std::same_as<double>; // Probability value in [0, 1].
+      requires (TRANSITION_DISTRIB const cT, STATE const cs, ACTION const ca) {
+	{cT(cs, ca, cs)} -> std::same_as<double>; // Probability value in [0, 1].
     };
 
     
@@ -75,8 +75,8 @@ namespace rl2 {
      */
     template<typename TERMINAL, typename STATE>
     concept terminal =
-    requires (TERMINAL const cT, STATE const cs) {
-      {cT(cs)} -> std::same_as<bool>;
+      requires (TERMINAL const cT, STATE const cs) {
+	{cT(cs)} -> std::same_as<bool>;
     };
 
     namespace enumerable {
@@ -85,8 +85,8 @@ namespace rl2 {
        */
       template<typename INDEXED>
       concept indexed =
-      requires (std::size_t idx) {
-	{idx} -> std::convertible_to<INDEXED>;
+	requires (std::size_t idx) {
+	  {idx} -> std::convertible_to<INDEXED>;
       };
 
       /** 
@@ -94,9 +94,9 @@ namespace rl2 {
        */
       template<typename CONVERTOR, typename BASE>
       concept static_index_conversion =
-      requires (BASE const cbase, std::size_t size){
-	{CONVERTOR::from(cbase)} -> std::same_as<std::size_t>;
-	{CONVERTOR::to(size)} -> std::same_as<BASE>;
+	requires (BASE const cbase, std::size_t size){
+	  {CONVERTOR::from(cbase)} -> std::same_as<std::size_t>;
+	  {CONVERTOR::to(size)} -> std::same_as<BASE>;
       };
 
       /**
@@ -104,21 +104,21 @@ namespace rl2 {
        */
       template<typename FINITE>
       concept finite =
-      requires {
-	typename FINITE::base_type;
-	typename FINITE::iterator;
-	{FINITE::begin()} -> std::convertible_to<typename FINITE::iterator>;
-	{FINITE::end()}   -> std::convertible_to<typename FINITE::iterator>;
-	{FINITE::size()}  -> std::convertible_to<std::size_t>;
+	requires {
+	  typename FINITE::base_type;
+	  typename FINITE::iterator;
+	  {FINITE::begin()} -> std::convertible_to<typename FINITE::iterator>;
+	  {FINITE::end()}   -> std::convertible_to<typename FINITE::iterator>;
+	  {FINITE::size()}  -> std::convertible_to<std::size_t>;
       } &&
-      requires (FINITE elem, FINITE::iterator it, std::size_t idx, FINITE::base_type value) {
-	++it;
-	{*it} -> std::same_as<typename FINITE::base_type>;
-	static_cast<std::size_t>(it);
-	FINITE(idx);
-	elem = idx;
-	FINITE(value);
-	elem = value;
+	requires (FINITE elem, FINITE::iterator it, std::size_t idx, FINITE::base_type value) {
+	  ++it;
+	  {*it} -> std::same_as<typename FINITE::base_type>;
+	  static_cast<std::size_t>(it);
+	  FINITE(idx);
+	  elem = idx;
+	  FINITE(value);
+	  elem = value;
       };
     }
 
@@ -127,7 +127,7 @@ namespace rl2 {
      */
     template<typename SYSTEM>
     concept system =
-    gdyn::concepts::system<SYSTEM>
+      gdyn::concepts::system<SYSTEM>
       && std::same_as<typename SYSTEM::report_type, double>;
 
 
@@ -152,7 +152,7 @@ namespace rl2 {
      */
     template<typename ORBIT_VALUE>
     concept orbit_point =
-    gdyn::concepts::orbit_point<ORBIT_VALUE>
+      gdyn::concepts::orbit_point<ORBIT_VALUE>
       && std::same_as<typename ORBIT_VALUE::report_type, double>;
 
     /**
@@ -160,7 +160,7 @@ namespace rl2 {
      */
     template<typename ORBIT_ITERATOR>
     concept orbit_iterator =
-    gdyn::concepts::orbit_iterator<ORBIT_ITERATOR>
+      gdyn::concepts::orbit_iterator<ORBIT_ITERATOR>
       && orbit_point<std::iter_value_t<ORBIT_ITERATOR>>;
 
     /**
@@ -247,18 +247,25 @@ namespace rl2 {
       && requires(Q const cq, S const cs, A const ca) {
       {cq(cs, ca)} -> std::convertible_to<double>;
     };
-    
-    /**
-     * @short A bellman operator
-     */
-    template<typename OP, typename Q, typename S, typename A, typename TRANS>
-    concept bellman_operator =
-    sarsa<TRANS, S, A>
-      && q_function<Q, S, A>
-      && requires(const OP cop, const Q cq, double gamma, const TRANS ct) {
-      {cop(cq, gamma, ct)} -> std::same_as<double>;
-    };
 
+
+    namespace bellman {
+      
+      /**
+       * @short A bellman update for Q
+       */
+      template<typename OP, typename Q, typename S, typename A, typename TRANS>
+      concept q_update =
+	sarsa<TRANS, S, A>
+	&& q_function<Q, S, A>
+	&& requires(const OP cop, const Q cq, double gamma, const TRANS ct) {
+	  {cop(cq, gamma, ct)} -> std::same_as<double>;
+      };
+
+      
+    }
+
+    
     /**
      * @short This is a range whose size is known at compiling time.
      */

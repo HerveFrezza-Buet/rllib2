@@ -98,8 +98,8 @@ namespace rl2 {
     // The Bellman operator
     // ---------------------
 
-    double bellman_op(const q_parametrized&, double, const q_transition&);
-    using bellman_op_type = decltype(bellman_op);
-    static_assert(concepts::bellman_operator<bellman_op_type, q_parametrized, q_state, q_action, q_transition>);
+    double bellman_update(const q_parametrized&, double, const q_transition&);
+    using bellman_update_type = decltype(bellman_update);
+    static_assert(concepts::bellman::q_update<bellman_update_type, q_parametrized, q_state, q_action, q_transition>);
   }
 }

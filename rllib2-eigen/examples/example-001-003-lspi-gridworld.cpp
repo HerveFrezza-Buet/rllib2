@@ -222,7 +222,7 @@ template<typename QTABLE>
 void q_learning(QTABLE& q, enum_system& simulator, int nb_epoch)
 {
   // using bellman optimality operator
-  auto bellman_op = rl2::critic::td::enumerable::action::bellman::optimality<enum_S, enum_A, QTABLE>;
+  auto bellman_updt = rl2::critic::td::enumerable::action::bellman::optimality<enum_S, enum_A, QTABLE>;
 
   for (int epoch=0; epoch < nb_epoch; ++epoch) {
     simulator = g_system::random_state(gen);
@@ -243,7 +243,7 @@ void q_learning(QTABLE& q, enum_system& simulator, int nb_epoch)
       std::cout << qval_in_line(q, transition.s);
       std::cout << std::endl;
       rl2::critic::td::update(q, transition.s, transition.a, ALPHA_QLEARNING,
-			      rl2::critic::td::error(q, GAMMA, transition, bellman_op));
+			      rl2::critic::td::error(q, GAMMA, transition, bellman_updt));
     }
   }
 }
