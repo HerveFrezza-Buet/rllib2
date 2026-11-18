@@ -136,6 +136,10 @@ namespace rl2 {
       result_type operator()(std::size_t idx)                const {return *(params_it + idx                         );}
       result_type operator()(const X& x)                     const {return *(params_it + static_cast<std::size_t>(x ));}
       result_type operator()(const typename X::iterator& it) const {return *(params_it + static_cast<std::size_t>(it));}
+      
+      result_type& operator()(std::size_t idx)                {return *(params_it + idx                         );}
+      result_type& operator()(const X& x)                     {return *(params_it + static_cast<std::size_t>(x ));}
+      result_type& operator()(const typename X::iterator& it) {return *(params_it + static_cast<std::size_t>(it));}
     };
 
     template<concepts::enumerable::finite X, std::random_access_iterator IT>
@@ -156,6 +160,7 @@ namespace rl2 {
       using tabular<enumerable::pair<X, Y>, IT>::operator();
 
       auto operator()(const X& x, const Y& y) const {return (*this)(arg_type(x, y));}
+      auto operator()(const X& x, const Y& y)       {return (*this)(arg_type(x, y));}
       auto operator()(const X& x)             const {return make_tabular<Y, IT>(this->params_it + Y::size() * static_cast<std::size_t>(x));}
     };
 
