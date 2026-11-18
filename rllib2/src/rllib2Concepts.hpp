@@ -142,7 +142,7 @@ namespace rl2 {
     }
       && std::same_as<typename MODEL::state_type, STATE>
       && std::same_as<typename MODEL::action_type, ACTION>
-      && requires (const MODEL m) {
+      && requires (MODEL const m) {
 	{m.T} -> transition_distrib<STATE, ACTION>;
 	{m.R} -> reward_func<STATE, ACTION>;
     };
@@ -228,6 +228,16 @@ namespace rl2 {
     }
 
 
+    /**
+     * @short A function such as v(s) is scalar.
+     */
+    template<typename V, typename S>
+    concept value_function = 
+    std::invocable<V, S>
+      && requires(V const cv, S const cs) {
+      {cv(cs)} -> std::convertible_to<double>;
+    };
+    
     /**
      * @short A function such as q(s, a) is scalar.
      */
