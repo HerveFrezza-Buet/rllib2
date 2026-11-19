@@ -137,11 +137,10 @@ namespace rl2 {
       result_type operator()(const X& x)                     const {return *(params_it + static_cast<std::size_t>(x ));}
       result_type operator()(const typename X::iterator& it) const {return *(params_it + static_cast<std::size_t>(it));}
       
-      result_type& operator()(std::size_t idx)                requires std::is_const_v<std::remove_reference_t<std::iter_reference_t<IT>>> {return *(params_it + idx                         );} // If IT is not a const iterator.
-      result_type& operator()(const X& x)                     requires std::is_const_v<std::remove_reference_t<std::iter_reference_t<IT>>> {return *(params_it + static_cast<std::size_t>(x ));}
-      result_type& operator()(const typename X::iterator& it) requires std::is_const_v<std::remove_reference_t<std::iter_reference_t<IT>>> {return *(params_it + static_cast<std::size_t>(it));}
+      result_type& operator()(std::size_t idx)                requires (!std::is_const_v<std::remove_reference_t<std::iter_reference_t<IT>>>) {return *(params_it + idx                         );}
+      result_type& operator()(const X& x)                     requires (!std::is_const_v<std::remove_reference_t<std::iter_reference_t<IT>>>) {return *(params_it + static_cast<std::size_t>(x ));}
+      result_type& operator()(const typename X::iterator& it) requires (!std::is_const_v<std::remove_reference_t<std::iter_reference_t<IT>>>) {return *(params_it + static_cast<std::size_t>(it));}
     };
-
     template<concepts::enumerable::finite X, std::random_access_iterator IT>
     auto make_tabular(IT params_it) {return tabular<X, IT>(params_it);}
 

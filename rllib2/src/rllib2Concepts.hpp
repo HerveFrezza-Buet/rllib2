@@ -181,12 +181,12 @@ namespace rl2 {
     }
       && std::invocable<TWO_ARGS_FUNCTION, typename TWO_ARGS_FUNCTION::first_entry_type, typename TWO_ARGS_FUNCTION::second_entry_type>
     && std::invocable<TWO_ARGS_FUNCTION, typename TWO_ARGS_FUNCTION::first_entry_type>
-    && requires(TWO_ARGS_FUNCTION t, TWO_ARGS_FUNCTION const ct, typename TWO_ARGS_FUNCTION::first_entry_type const cs) {
+    && requires(TWO_ARGS_FUNCTION const ct, typename TWO_ARGS_FUNCTION::first_entry_type const cs) {
       typename TWO_ARGS_FUNCTION::first_entry_type;
       typename TWO_ARGS_FUNCTION::second_entry_type;
       {ct(cs)} -> std::invocable<typename TWO_ARGS_FUNCTION::second_entry_type>;
-      {t(cs)}  -> std::invocable<typename TWO_ARGS_FUNCTION::second_entry_type>;
     };
+
 
     namespace enumerable {
       /**
