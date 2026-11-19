@@ -25,7 +25,6 @@ limitations under the License.
 namespace rl2 {
   namespace critic {
     namespace td {
-
       
       namespace bellman {
 	template<typename S, typename A, concepts::q_function<S, A> Q>
@@ -65,7 +64,72 @@ namespace rl2 {
 	*it += delta;
 	return delta;
       }
-      
     }
+
+    namespace dp {
+      namespace enumerable {
+
+	
+	template<concepts::enumerable::finite S,
+		 concepts::enumerable::finite A,
+		 concepts::transition_distribution<S, A> T,
+		 concepts::reward_function<S, A> R,
+		 concepts::value_function<S> V,
+		 concepts::assignable_function<S, A> POLICY>
+	void greedy_policy_from_values(POLICY& pi, const T& t, const R& r, const V& v, double gamma) {
+	  for(auto s_it = S::begin(); s_it != S::end(); ++s_it) {
+	    auto s = *s_it;
+	    A argmax_a;
+	    double max_sum = std::numeric_limits<double>::lowest();
+	    for(auto a_it = A::begin(); a_it !=  A::end(); ++a_it) {
+	      double sub_sum = 0;
+	      auto a = *a_it;
+	      for(auto ss_it = S::begin(); ss_it != S::end(); ++ss_it) {
+		auto ss = *ss_it;
+		sub_sum += t(s, a, ss) * (r(s, a, ss) + gamma * v(ss));
+	      }
+	      if(sub_sum > max_sum) {
+		max_sum = sub_sum;
+		argmax_a = a;
+	      }
+	    }
+	    pi(s) = argmax_a;
+	  }
+	}
+	
+
+	template<concepts::enumerable::finite S,
+		 concepts::enumerable::finite A,
+		 concepts::transition_distribution<S, A> T,
+		 concepts::reward_function<S, A> R,
+		 concepts::assignable_function<S, double> V>
+	void value_iteration(V& v, const T& t, const R& r, double gamma, double epsilon) {
+	  double delta;
+	  do {
+	    delta = 0;
+	    for(auto s_it = S::begin(); s_it != S::end(); ++s_it) {
+	      auto s = *s_it;
+	      double value = v(s);
+	      double new_value = std::numeric_limits<double>::lowest();
+	      for(auto a_it = A::begin(); a_it != A::end(); ++a_it) {
+		double sub_sum = 0;
+		auto a = *a_it;
+		for(auto ss_it = S::begin(); ss_it != S::end(); ++ss_it) {
+		  auto ss = *ss_it;
+		  sub_sum += t(s, a, ss) * (r(s, a, ss) + gamma * v(ss));
+		}
+		if(sub_sum > new_value) new_value = sub_sum;
+	      }
+	      v(s) = new_value;
+	      delta = std::max(delta, std::fabs(value - new_value));
+	    }
+	  } while(delta > epsilon);
+	}
+
+	
+      }
+    }
+    
+    
   }		  
 }

@@ -45,9 +45,9 @@ namespace rl2 {
     /**
      * @short transition function
      */
-    template<typename TRANSITION_FUNC, typename STATE, typename ACTION>
-    concept transition_func =
-      requires (TRANSITION_FUNC const cT, STATE const cs, ACTION const ca) {
+    template<typename TRANSITION_FUNCTION, typename STATE, typename ACTION>
+    concept transition_function =
+      requires (TRANSITION_FUNCTION const cT, STATE const cs, ACTION const ca) {
 	{cT(cs, ca)} -> std::same_as<STATE>;
     };
       
@@ -55,7 +55,7 @@ namespace rl2 {
      * @short reward function
      */
     template<typename REWARD, typename STATE, typename ACTION>
-    concept reward_func =
+    concept reward_function =
       requires (REWARD const cR, STATE s, STATE const cs, ACTION const ca) {
 	{cR(cs, ca, cs)} -> std::same_as<double>;
     };
@@ -64,7 +64,7 @@ namespace rl2 {
      * @short transition distribution
      */
     template<typename TRANSITION_DISTRIB, typename STATE, typename ACTION>
-    concept transition_distrib =
+    concept transition_distribution =
       requires (TRANSITION_DISTRIB const cT, STATE const cs, ACTION const ca) {
 	{cT(cs, ca, cs)} -> std::same_as<double>; // Probability value in [0, 1].
     };
@@ -77,6 +77,17 @@ namespace rl2 {
     concept terminal =
       requires (TERMINAL const cT, STATE const cs) {
 	{cT(cs)} -> std::same_as<bool>;
+    };
+
+    
+    /**
+     * @short a function such as f(x) = y is feasible.
+     */
+    template<typename F, typename ARG, typename RESULT>
+    concept assignable_function =
+      std::invocable<F, ARG>
+      && requires(F f, ARG arg, RESULT res) {
+	f(arg) = res;
     };
 
     namespace enumerable {
@@ -130,22 +141,6 @@ namespace rl2 {
       gdyn::concepts::system<SYSTEM>
       && std::same_as<typename SYSTEM::report_type, double>;
 
-
-    /**
-     * @short A model (e.g. for dynamic programming)
-     */
-    template<typename MODEL, typename STATE, typename ACTION>
-    concept model =
-      requires {
-	typename MODEL::state_type;
-	typename MODEL::action_type;
-    }
-      && std::same_as<typename MODEL::state_type, STATE>
-      && std::same_as<typename MODEL::action_type, ACTION>
-      && requires (MODEL const m) {
-	{m.T} -> transition_distrib<STATE, ACTION>;
-	{m.R} -> reward_func<STATE, ACTION>;
-    };
 
     /**
      * @short orbit point when the system is a MDP 

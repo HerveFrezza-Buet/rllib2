@@ -56,7 +56,7 @@ namespace rl2 {
   public:
 
 
-    template<concepts::transition_func<STATE, ACTION> TRANSITION_FUNC, concepts::reward_func<STATE, ACTION> REWARD_FUNC, concepts::terminal<STATE> TERMINAL>
+    template<concepts::transition_function<STATE, ACTION> TRANSITION_FUNC, concepts::reward_function<STATE, ACTION> REWARD_FUNC, concepts::terminal<STATE> TERMINAL>
     system(const TRANSITION_FUNC& T, const REWARD_FUNC& R, const TERMINAL& terminal)
       : transition_func(T), reward_func(R), terminal(terminal),
 	current_state() {}
@@ -78,7 +78,7 @@ namespace rl2 {
     state_type state() const {return current_state;}
   };
 
-  template<typename STATE, typename ACTION, concepts::transition_func<STATE, ACTION> TRANSITION_FUNC, concepts::reward_func<STATE, ACTION> REWARD_FUNC, concepts::terminal<STATE> TERMINAL>
+  template<typename STATE, typename ACTION, concepts::transition_function<STATE, ACTION> TRANSITION_FUNC, concepts::reward_function<STATE, ACTION> REWARD_FUNC, concepts::terminal<STATE> TERMINAL>
   auto make_system(const TRANSITION_FUNC& T, const REWARD_FUNC& R, const TERMINAL& terminal) {
     return system<STATE, ACTION>(T, R, terminal);
   }
@@ -108,7 +108,7 @@ namespace rl2 {
     template<concepts::enumerable::finite STATE,
 	     concepts::enumerable::finite ACTION,
 	     typename GEN,
-	     concepts::transition_distrib<STATE, ACTION> TRANSITION_DISTRIB>
+	     concepts::transition_distribution<STATE, ACTION> TRANSITION_DISTRIB>
     auto make_transition_function(GEN& gen, const TRANSITION_DISTRIB& T) {
       typename details::discrete_distributions<STATE, ACTION, GEN>::distribs_type distribs;
       distribs.reserve(STATE::size() * ACTION::size());

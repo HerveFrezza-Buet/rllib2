@@ -97,7 +97,7 @@ namespace weakest_link {
     };
 
     // Tdistrib type satisfies the following concept
-    static_assert(rl2::concepts::transition_distrib<decltype(Tdistrib), S, A>);
+    static_assert(rl2::concepts::transition_distribution<decltype(Tdistrib), S, A>);
 
     // This is the transition function we need to build the system.
     auto T = rl2::enumerable::make_transition_function<S, A>(gen, Tdistrib);
@@ -121,7 +121,7 @@ namespace weakest_link {
       return 0;                                          // or 0 reward otherwise.
     };
     // R type satisfies the following concept
-    static_assert(rl2::concepts::reward_func<decltype(R), S, A>);
+    static_assert(rl2::concepts::reward_function<decltype(R), S, A>);
 
     // In this problem, there are no terminal states.
     auto is_terminal = [](const S& s) {return false;}; // No state is terminal.
