@@ -76,7 +76,7 @@ namespace rl2 {
 		 concepts::reward_function<S, A> R,
 		 concepts::value_function<S> V,
 		 concepts::assignable_function<S, A> POLICY>
-	void greedy_policy_from_values(POLICY& pi, const T& t, const R& r, const V& v, double gamma) {
+	void policy_improvement(POLICY& pi, const T& t, const R& r, const V& v, double gamma) {
 	  for(auto s_it = S::begin(); s_it != S::end(); ++s_it) {
 	    auto s = *s_it;
 	    A argmax_a;
@@ -97,6 +97,30 @@ namespace rl2 {
 	  }
 	}
 	
+	template<concepts::enumerable::finite S,
+		 concepts::enumerable::finite A,
+		 concepts::transition_distribution<S, A> T,
+		 concepts::reward_function<S, A> R,
+		 concepts::policy<S, A> POLICY,
+		 concepts::assignable_function<S, double> V>
+	void policy_evaluation(V& v, const T& t, const R& r, const POLICY& pi, double gamma, double epsilon) {
+	  double delta;
+	  do {
+	    delta = 0;
+	    for(auto s_it = S::begin(); s_it != S::end(); ++s_it) {
+	      auto s = *s_it;
+	      double value = v(s);
+	      auto a = pi(s);
+	      double new_value = 0;
+	      for(auto ss_it = S::begin(); ss_it != S::end(); ++ss_it) {
+		auto ss = *ss_it;
+		new_value += t(s, a, ss) * (r(s, a, ss) + gamma * v(ss));
+	      }
+	      v(s) = new_value;
+	      delta = std::max(delta, std::fabs(value - new_value));
+	    }
+	  } while(delta > epsilon);
+	}
 
 	template<concepts::enumerable::finite S,
 		 concepts::enumerable::finite A,
