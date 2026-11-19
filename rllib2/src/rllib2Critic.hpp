@@ -151,6 +151,33 @@ namespace rl2 {
 	}
 
 	
+	template<concepts::enumerable::finite S,
+		 concepts::enumerable::finite A,
+		 concepts::transition_distribution<S, A> T,
+		 concepts::reward_function<S, A> R,
+		 concepts::assignable_function<S, A> POLICY,
+		 concepts::assignable_function<S, double> V>
+	void policy_iteration(POLICY& pi, V& v, const T& t, const R& r, double gamma, double epsilon) {
+	  
+	  std::array<A, S::size()> p_data;
+	  auto pit = p_data.begin();
+	  auto it = S::begin();
+	  while(it != S::end()) *pit++ = pi(*it++);
+
+	  bool pol_stable = false;
+	  while(not pol_stable) {
+	    policy_evaluation<S, A>(v, t, r, pi, gamma, epsilon);
+	    policy_improvement<S, A>(pi, t, r, v, gamma);
+
+	    pol_stable = true;
+	    for(it = S::begin(), pit = p_data.begin(); it != S::end(); ++it) {
+	      auto old_action = *pit;
+	      *pit = pi(it);
+	      if(pol_stable) pol_stable = (old_action == *pit);
+	    }
+	  }
+	}
+	
       }
     }
     
