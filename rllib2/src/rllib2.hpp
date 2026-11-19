@@ -24,6 +24,7 @@ limitations under the License.
  * @example my-rocket-config.hpp
  * @example example-000-001-understanding-enumerables.cpp
  * @example example-000-002-digitizing.cpp
+ * @example example-000-003-tabular-functions.cpp
  * @example example-001-001-getting-started.cpp
  * @example example-001-002-functionals.cpp
  * @example example-001-003-sarsa-qlearning.cpp

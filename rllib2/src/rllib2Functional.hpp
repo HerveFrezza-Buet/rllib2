@@ -114,33 +114,55 @@ namespace rl2 {
 	return res;
       }
     }
+
+    namespace details {
+      
+      template<concepts::enumerable::finite X, std::random_access_iterator IT>
+      struct const_tabular {
+      
+	IT params_it;
+      
+	using arg_type             = X;
+	using result_type          = std::iter_value_t<IT>;
+	using params_iterator_type = IT;
+      
+
+	const_tabular()                          = delete;
+	const_tabular(const const_tabular&)            = default;
+	const_tabular(const_tabular&&)                 = default;
+	const_tabular& operator=(const const_tabular&) = default;
+	const_tabular& operator=(const_tabular&&)      = default;
+	const_tabular(IT params_it) : params_it(params_it) {}
+      
+	result_type operator()(std::size_t idx)                const {return *(params_it + idx                         );}
+	result_type operator()(const X& x)                     const {return *(params_it + static_cast<std::size_t>(x ));}
+	result_type operator()(const typename X::iterator& it) const {return *(params_it + static_cast<std::size_t>(it));}
+      };
+    
+      template<concepts::enumerable::finite X, std::random_access_iterator IT>
+      auto make_const_tabular(IT params_it) {return const_tabular<X, IT>(params_it);}
+    }
     
     /**
      * @short Makes a tabular function from an array of values
      */
     template<concepts::enumerable::finite X, std::random_access_iterator IT>
-    struct tabular {
-      using arg_type    = X;
-      using result_type = std::iter_value_t<IT>;
-      using params_iterator_type = IT;
+    struct tabular : details::const_tabular<X, IT> {
       
-      IT params_it; 
+      
+      using arg_type             = details::const_tabular<X, IT>::arg_type;
+      using result_type          = details::const_tabular<X, IT>::result_type;
+      using params_iterator_type = details::const_tabular<X, IT>::params_iterator_type;
+      
 
-      tabular()                          = delete;
-      tabular(const tabular&)            = default;
-      tabular(tabular&&)                 = default;
-      tabular& operator=(const tabular&) = default;
-      tabular& operator=(tabular&&)      = default;
-      tabular(IT params_it) : params_it(params_it) {}
-      
-      result_type operator()(std::size_t idx)                const {return *(params_it + idx                         );}
-      result_type operator()(const X& x)                     const {return *(params_it + static_cast<std::size_t>(x ));}
-      result_type operator()(const typename X::iterator& it) const {return *(params_it + static_cast<std::size_t>(it));}
-      
-      result_type& operator()(std::size_t idx)                requires (!std::is_const_v<std::remove_reference_t<std::iter_reference_t<IT>>>) {return *(params_it + idx                         );}
-      result_type& operator()(const X& x)                     requires (!std::is_const_v<std::remove_reference_t<std::iter_reference_t<IT>>>) {return *(params_it + static_cast<std::size_t>(x ));}
-      result_type& operator()(const typename X::iterator& it) requires (!std::is_const_v<std::remove_reference_t<std::iter_reference_t<IT>>>) {return *(params_it + static_cast<std::size_t>(it));}
+      using details::const_tabular<X, IT>::const_tabular;
+      using details::const_tabular<X, IT>::operator();
+
+      result_type& operator()(std::size_t idx)                {return *(this->params_it + idx                         );}
+      result_type& operator()(const X& x)                     {return *(this->params_it + static_cast<std::size_t>(x ));}
+      result_type& operator()(const typename X::iterator& it) {return *(this->params_it + static_cast<std::size_t>(it));}
     };
+    
     template<concepts::enumerable::finite X, std::random_access_iterator IT>
     auto make_tabular(IT params_it) {return tabular<X, IT>(params_it);}
 
@@ -158,10 +180,10 @@ namespace rl2 {
       using tabular<enumerable::pair<X, Y>, IT>::operator=;
       using tabular<enumerable::pair<X, Y>, IT>::operator();
 
-      auto operator()(const X& x, const Y& y) const {return (*this)(arg_type(x, y));}
-      auto operator()(const X& x, const Y& y)       {return (*this)(arg_type(x, y));}
-      auto operator()(const X& x)             const {return make_tabular<Y, IT>(this->params_it + Y::size() * static_cast<std::size_t>(x));}
-      auto operator()(const X& x)                   {return make_tabular<Y, IT>(this->params_it + Y::size() * static_cast<std::size_t>(x));}
+      auto  operator()(const X& x, const Y& y) const {return (*this)(arg_type(x, y));}
+      auto& operator()(const X& x, const Y& y)       {return (*this)(arg_type(x, y));}
+      auto  operator()(const X& x)             const {return details::make_const_tabular<Y>(this->params_it + Y::size() * static_cast<std::size_t>(x));}
+      auto  operator()(const X& x)                   {return make_tabular<Y>(this->params_it + Y::size() * static_cast<std::size_t>(x));}
     };
 
     template<concepts::enumerable::finite X, concepts::enumerable::finite Y, std::random_access_iterator IT>
