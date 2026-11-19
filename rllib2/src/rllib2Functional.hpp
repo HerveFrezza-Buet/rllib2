@@ -27,6 +27,7 @@ limitations under the License.
 #include <type_traits>
 #include <utility>
 #include <type_traits>
+#include <utility>
 
 #include <rllib2Concepts.hpp>
 #include <rllib2Enumerable.hpp>
@@ -193,7 +194,7 @@ namespace rl2 {
     template<concepts::two_args_function TWO_ARGS_FUNCTION, typename COMP=std::less<typename TWO_ARGS_FUNCTION::result_type>>
     requires concepts::enumerable::finite<typename TWO_ARGS_FUNCTION::second_entry_type>
     auto argmax_ify(TWO_ARGS_FUNCTION taf) {
-      return [taf](const typename TWO_ARGS_FUNCTION::first_entry_type& arg) {return algo::argmax<typename TWO_ARGS_FUNCTION::second_entry_type, decltype(taf(std::declval<typename TWO_ARGS_FUNCTION::first_entry_type>())), COMP>(taf(arg));};
+      return [taf](const typename TWO_ARGS_FUNCTION::first_entry_type& arg) {return algo::argmax<typename TWO_ARGS_FUNCTION::second_entry_type, decltype(std::as_const(taf)(std::declval<typename TWO_ARGS_FUNCTION::first_entry_type>())), COMP>(taf(arg));};
     }
 	
     template<concepts::two_args_function TWO_ARGS_FUNCTION, typename COMP=std::less<typename TWO_ARGS_FUNCTION::result_type>>
