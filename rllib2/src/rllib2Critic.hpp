@@ -166,8 +166,8 @@ namespace rl2 {
 
 	  bool pol_stable = false;
 	  while(not pol_stable) {
-	    policy_evaluation<S, A>(v, t, r, pi, gamma, epsilon);
-	    policy_improvement<S, A>(pi, t, r, v, gamma);
+	    policy_evaluation <S, A>(v,  t, r, pi, gamma, epsilon);
+	    policy_improvement<S, A>(pi, t, r, v,  gamma);
 
 	    pol_stable = true;
 	    for(it = S::begin(), pit = p_data.begin(); it != S::end(); ++it) {
