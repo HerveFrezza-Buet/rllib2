@@ -34,8 +34,8 @@ namespace rl2 {
   namespace by_default {
     template<rl2::concepts::enumerable::obvious_index BASE>
     struct IndexConversion {
-      static rl2::enumerable::index from(const BASE& base)          {return {static_cast<std::size_t>(base)};}
-      static BASE                   to(rl2::enumerable::index idx)  {return {idx.value};                     }
+      static rl2::enumerable::index from(const BASE& base)          {return rl2::enumerable::index(static_cast<std::size_t>(base));}
+      static BASE                   to(rl2::enumerable::index idx)  {return static_cast<BASE>(idx.value);                          }
     };
   }
 
@@ -93,8 +93,8 @@ namespace rl2 {
       operator index () const {return INDEX_CONVERSION::from(this->value);}
       operator base_type   () const {return value;}
     
-      constexpr static iterator begin()   {return iterator(0);}
-      constexpr static iterator end()     {return iterator(NB);}
+      constexpr static iterator begin()   {return iterator(index(0));}
+      constexpr static iterator end()     {return iterator(index(NB));}
       constexpr static std::size_t size() {return NB;}
     };
 
@@ -107,12 +107,12 @@ namespace rl2 {
     template <concepts::enumerable::finite FIRST, concepts::enumerable::finite SECOND>
     struct pair_index_conversion {
       static index from(const std::pair<typename FIRST::base_type, typename SECOND::base_type>& base) {
-	return static_cast<index>(FIRST(base.first)) * SECOND::size() + static_cast<index>(SECOND(base.second));
+	return index(static_cast<index>(FIRST(base.first)).value * SECOND::size() + static_cast<index>(SECOND(base.second)).value);
       }
-      static std::pair<typename FIRST::base_type, typename SECOND::base_type>  to(index idx)  {
+      static std::pair<typename FIRST::base_type, typename SECOND::base_type> to(index idx)  {
 	return {
-	  static_cast<typename FIRST::base_type >(FIRST (idx / SECOND::size())),
-	  static_cast<typename SECOND::base_type>(SECOND(idx % SECOND::size()))
+	  static_cast<typename FIRST::base_type >(FIRST (index(idx.value / SECOND::size()))),
+	  static_cast<typename SECOND::base_type>(SECOND(index(idx.value % SECOND::size())))
 	};
       }
     };

@@ -43,8 +43,8 @@ namespace weakest_link {
   // implement the conversion, we have to define a index convertion
   // static functor.
   struct S_index_convertor {
-    static S_          to  (std::size_t index) {return static_cast<S_>(index + 65);         }
-    static std::size_t from(S_          value) {return static_cast<std::size_t>(value) - 65;}
+    static S_                     to  (rl2::enumerable::index index) {return static_cast<S_>(index + 65);                                 }
+    static rl2::enumerable::index from(S_                     value) {return rl2::enumerable::index(static_cast<std::size_t>(value) - 65);}
   };
   using S = rl2::enumerable::set<S_, 10, S_index_convertor>; // S::base_type is S_, i.e. char.
 

@@ -42,7 +42,7 @@ namespace rl2 {
      */
     template<concepts::enumerable::finite TYPE, typename RANDOM_GENERATOR>
     auto uniform_sampler(RANDOM_GENERATOR& gen) {
-      return [&gen]() -> TYPE {return std::uniform_int_distribution<std::size_t>(0, TYPE::size()-1)(gen);};
+      return [&gen]() -> TYPE {return index(std::uniform_int_distribution<std::size_t>(0, TYPE::size()-1)(gen));};
     }
 
 
@@ -135,9 +135,9 @@ namespace rl2 {
 	const_tabular& operator=(const_tabular&&)      = default;
 	const_tabular(IT params_it) : params_it(params_it) {}
       
-	result_type operator()(std::size_t idx)                const {return *(params_it + idx                         );}
-	result_type operator()(const X& x)                     const {return *(params_it + static_cast<std::size_t>(x ));}
-	result_type operator()(const typename X::iterator& it) const {return *(params_it + static_cast<std::size_t>(it));}
+	result_type operator()(rl2::enumerable::index idx)     const {return *(params_it + idx.value                                    );}
+	result_type operator()(const X& x)                     const {return *(params_it + static_cast<rl2::enumerable::index>(x ).value);}
+	result_type operator()(const typename X::iterator& it) const {return *(params_it + static_cast<rl2::enumerable::index>(it).value);}
       };
     
       template<concepts::enumerable::finite X, std::random_access_iterator IT>
@@ -159,9 +159,9 @@ namespace rl2 {
       using details::const_tabular<X, IT>::const_tabular;
       using details::const_tabular<X, IT>::operator();
 
-      result_type& operator()(std::size_t idx)                {return *(this->params_it + idx                         );}
-      result_type& operator()(const X& x)                     {return *(this->params_it + static_cast<std::size_t>(x ));}
-      result_type& operator()(const typename X::iterator& it) {return *(this->params_it + static_cast<std::size_t>(it));}
+      result_type& operator()(rl2::enumerable::index idx)     {return *(this->params_it + idx.value                                    );}
+      result_type& operator()(const X& x)                     {return *(this->params_it + static_cast<rl2::enumerable::index>(x ).value);}
+      result_type& operator()(const typename X::iterator& it) {return *(this->params_it + static_cast<rl2::enumerable::index>(it).value);}
     };
     
     template<concepts::enumerable::finite X, std::random_access_iterator IT>
@@ -183,8 +183,8 @@ namespace rl2 {
 
       auto  operator()(const X& x, const Y& y) const {return (*this)(arg_type(x, y));}
       auto& operator()(const X& x, const Y& y)       {return (*this)(arg_type(x, y));}
-      auto  operator()(const X& x)             const {return details::make_const_tabular<Y>(this->params_it + Y::size() * static_cast<std::size_t>(x));}
-      auto  operator()(const X& x)                   {return make_tabular<Y>(this->params_it + Y::size() * static_cast<std::size_t>(x));}
+      auto  operator()(const X& x)             const {return details::make_const_tabular<Y>(this->params_it + Y::size() * static_cast<rl2::enumerable::index>(x).value);}
+      auto  operator()(const X& x)                   {return make_tabular<Y>(this->params_it + Y::size() * static_cast<rl2::enumerable::index>(x).value);}
     };
 
     template<concepts::enumerable::finite X, concepts::enumerable::finite Y, std::random_access_iterator IT>

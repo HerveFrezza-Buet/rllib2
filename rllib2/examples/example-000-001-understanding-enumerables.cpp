@@ -32,7 +32,8 @@ int main(int argc, char* argv[]) {
   // size_t index value.
   weakest_link::S s1 {'C'};
   weakest_link::S s2 {std::size_t(5)};
-  
+
+  /*
   std::cout << "State " << static_cast<weakest_link::S::base_type>(s1) << " has index " << static_cast<std::size_t>(s1) << std::endl;
   std::cout << "State " << static_cast<weakest_link::S::base_type>(s2) << " has index " << static_cast<std::size_t>(s2) << std::endl;
 
@@ -120,7 +121,7 @@ int main(int argc, char* argv[]) {
 	    << std::endl;
 
   
-  
+  */
   
   return 0;
 }
