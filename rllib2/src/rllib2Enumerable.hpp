@@ -210,7 +210,7 @@ namespace rl2 {
 	{
 	  double reloc = (value - value_min) / (value_max - value_min) * nb_bins_in_range<AT_MIN, AT_MAX>(nb_bins);
 	  if(AT_MIN) reloc += .5;
-	  return {static_cast<std::size_t>(std::clamp(reloc, static_cast<double>(0),  static_cast<double>(nb_bins - 1)))};
+	  return index(static_cast<std::size_t>(std::clamp(reloc, static_cast<double>(0),  static_cast<double>(nb_bins - 1))));
 	}
 
 	template<bool AT_MIN=false, bool AT_MAX=false>
@@ -243,8 +243,8 @@ namespace rl2 {
 	      return to_value<AT_MIN, AT_MAX>(idx, MIN, MAX, NB);
 	    }
 	    static index from(double value) {
-	      if(value < MIN) return  {0};
-	      if(value >= MAX) return {NB-1};
+	      if(value <  MIN) return index(0);
+	      if(value >= MAX) return index(NB-1);
 	      return to_index<AT_MIN, AT_MAX>(value, MIN, MAX, NB);
 	    }
 	  };
