@@ -26,15 +26,16 @@ limitations under the License.
 #include <algorithm>
 
 #include <rllib2Concepts.hpp>
+#include <rllib2Index.hpp>
 
 namespace rl2 {
 
 
   namespace by_default {
-    template<concepts::enumerable::indexed BASE>
+    template<rl2::concepts::enumerable::obvious_index BASE>
     struct IndexConversion {
-      static std::size_t from(const BASE& base) {return static_cast<std::size_t>(base);}
-      static BASE        to(std::size_t index)  {return static_cast<BASE>(index);      }
+      static rl2::enumerable::index from(const BASE& base)          {return {static_cast<std::size_t>(base)};}
+      static BASE                   to(rl2::enumerable::index idx)  {return {idx.value};                     }
     };
   }
 
@@ -50,16 +51,16 @@ namespace rl2 {
       struct iterator {
 	using value_type = base_type;
 	using difference_type = std::ptrdiff_t;
-	std::size_t index;
+	index idx;
 	constexpr iterator()                              = default;
 	constexpr iterator(const iterator&)               = default;
 	constexpr iterator& operator=(const iterator&)    = default;
-	constexpr iterator(std::size_t index) : index(index) {}
-	constexpr base_type operator*() const {return INDEX_CONVERSION::to(index);}
+	constexpr iterator(index idx) : idx(idx) {}
+	constexpr base_type operator*() const {return INDEX_CONVERSION::to(idx);}
 	constexpr bool operator<=>(const iterator&) const = default;
-	constexpr operator std::size_t () const {return index;}
+	constexpr operator index () const {return idx;}
 
-	constexpr iterator& operator++() {++index; return *this;}
+	constexpr iterator& operator++() {++idx; return *this;}
 	constexpr iterator  operator++(int) {auto tmp = *this; ++(*this); return tmp;}
       };
 
@@ -82,14 +83,14 @@ namespace rl2 {
       set(const base_type& value) : value(quantize(value)) {}
       set& operator=(const base_type& value) {this->value = quantize(value); return *this;}
     
-      set(std::size_t index) : value(INDEX_CONVERSION::to(index)) {}
-      set& operator=(std::size_t index) {this->value = INDEX_CONVERSION::to(index); return *this;}
+      set(index idx) : value(INDEX_CONVERSION::to(idx)) {}
+      set& operator=(index idx) {this->value = INDEX_CONVERSION::to(idx); return *this;}
 
-      set(iterator it) : set(static_cast<std::size_t>(it)) {}
-      set& operator=(iterator it) {return (*this = static_cast<std::size_t>(it));}
+      set(iterator it) : set(static_cast<index>(it)) {}
+      set& operator=(iterator it) {return (*this = static_cast<index>(it));}
     
      
-      operator std::size_t () const {return INDEX_CONVERSION::from(this->value);}
+      operator index () const {return INDEX_CONVERSION::from(this->value);}
       operator base_type   () const {return value;}
     
       constexpr static iterator begin()   {return iterator(0);}
@@ -105,13 +106,13 @@ namespace rl2 {
     
     template <concepts::enumerable::finite FIRST, concepts::enumerable::finite SECOND>
     struct pair_index_conversion {
-      static std::size_t from(const std::pair<typename FIRST::base_type, typename SECOND::base_type>& base) {
-	return static_cast<std::size_t>(FIRST(base.first)) * SECOND::size() + static_cast<std::size_t>(SECOND(base.second));
+      static index from(const std::pair<typename FIRST::base_type, typename SECOND::base_type>& base) {
+	return static_cast<index>(FIRST(base.first)) * SECOND::size() + static_cast<index>(SECOND(base.second));
       }
-      static std::pair<typename FIRST::base_type, typename SECOND::base_type>  to(std::size_t index)  {
+      static std::pair<typename FIRST::base_type, typename SECOND::base_type>  to(index idx)  {
 	return {
-	  static_cast<typename FIRST::base_type >(FIRST (index / SECOND::size())),
-	  static_cast<typename SECOND::base_type>(SECOND(index % SECOND::size()))
+	  static_cast<typename FIRST::base_type >(FIRST (idx / SECOND::size())),
+	  static_cast<typename SECOND::base_type>(SECOND(idx % SECOND::size()))
 	};
       }
     };
@@ -129,12 +130,12 @@ namespace rl2 {
     };
 
     template<concepts::enumerable::finite SET>
-    std::ostream& operator<<(std::ostream& os, const SET& s) {return os << static_cast<std::size_t>(s);}
+    std::ostream& operator<<(std::ostream& os, const SET& s) {return os << static_cast<index>(s).value;}
     
     template<concepts::enumerable::finite SET>
     std::istream& operator>>(std::istream& is, SET& s) {
-      std::size_t idx;
-      is >> idx;
+      index idx;
+      is >> idx.value;
       s = idx;
       return is;
     }
@@ -205,29 +206,29 @@ namespace rl2 {
 	}
 
 	template<bool AT_MIN=false, bool AT_MAX=false>
-	std::size_t to_index(double value, double value_min, double value_max, std::size_t nb_bins)
+	index to_index(double value, double value_min, double value_max, std::size_t nb_bins)
 	{
 	  double reloc = (value - value_min) / (value_max - value_min) * nb_bins_in_range<AT_MIN, AT_MAX>(nb_bins);
 	  if(AT_MIN) reloc += .5;
-	  return static_cast<std::size_t>(std::clamp(reloc, static_cast<double>(0),  static_cast<double>(nb_bins - 1)));
+	  return {static_cast<std::size_t>(std::clamp(reloc, static_cast<double>(0),  static_cast<double>(nb_bins - 1)))};
 	}
 
 	template<bool AT_MIN=false, bool AT_MAX=false>
-	double to_value(std::size_t index, double value_min, double value_max, std::size_t nb_bins)
+	double to_value(index idx, double value_min, double value_max, std::size_t nb_bins)
 	{
-	  double size {static_cast<double>(index)};
+	  double size {static_cast<double>(idx.value)};
 	  if(not AT_MIN) size += .5;
 	  return value_min + size * (value_max - value_min) / nb_bins_in_range<AT_MIN, AT_MAX>(nb_bins);
 	}
 	
 	template<bool AT_MIN=false, bool AT_MAX=false>
-	std::size_t to_index(double value, std::size_t nb_bins) {
+	index to_index(double value, std::size_t nb_bins) {
 	  return to_index<AT_MIN, AT_MAX>(value, 0., 1., nb_bins);
 	}
 	
 	template<bool AT_MIN=false, bool AT_MAX=false>
-	double to_value(std::size_t index, std::size_t nb_bins) {
-	  return to_value<AT_MIN, AT_MAX>(index, 0., 1., nb_bins);
+	double to_value(index idx, std::size_t nb_bins) {
+	  return to_value<AT_MIN, AT_MAX>(idx, 0., 1., nb_bins);
 	}
 
 	/**
@@ -238,10 +239,10 @@ namespace rl2 {
 	public:
 	  struct convertor {
 	    static constexpr size_t size() {return NB;}; 
-	    static double to(std::size_t index) {
-	      return to_value<AT_MIN, AT_MAX>(index, MIN, MAX, NB);
+	    static double to(index idx) {
+	      return to_value<AT_MIN, AT_MAX>(idx, MIN, MAX, NB);
 	    }
-	    static std::size_t from(double value) {
+	    static index from(double value) {
 	      if(value < MIN) return 0;
 	      if(value >= MAX) return NB-1;
 	      return to_index<AT_MIN, AT_MAX>(value, MIN, MAX, NB);

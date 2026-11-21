@@ -43,6 +43,7 @@ limitations under the License.
 #include <rllib2Enumerable.hpp>
 #include <rllib2Features.hpp>
 #include <rllib2Functional.hpp>
+#include <rllib2Index.hpp>
 #include <rllib2Iterators.hpp>
 #include <rllib2MDP.hpp>
 #include <rllib2Nuplet.hpp>

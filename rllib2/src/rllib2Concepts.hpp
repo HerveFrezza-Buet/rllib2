@@ -24,6 +24,8 @@
 #include <type_traits>
 #include <memory>
 
+#include <rllib2Index.hpp>
+
 namespace rl2 {
   namespace concepts {
 
@@ -92,22 +94,21 @@ namespace rl2 {
 
     namespace enumerable {
       /**
-       * @short This is for type whose values can be indexed by a positive integer.
+       *
        */
-      template<typename INDEXED>
-      concept indexed =
-	requires (std::size_t idx) {
-	  {idx} -> std::convertible_to<INDEXED>;
-      };
-
+      template<typename BASE>
+      concept obvious_index =
+	std::convertible_to<BASE, std::size_t>
+	&& std::is_constructible<BASE, std::size_t>;
+      
       /** 
        * @short This provides a index conversion functions.
        */
       template<typename CONVERTOR, typename BASE>
       concept static_index_conversion =
-	requires (BASE const cbase, std::size_t size){
-	  {CONVERTOR::from(cbase)} -> std::same_as<std::size_t>;
-	  {CONVERTOR::to(size)} -> std::same_as<BASE>;
+	requires (BASE const cbase, rl2::enumerable::index idx){
+	  {CONVERTOR::from(cbase)} -> std::same_as<rl2::enumerable::index>;
+	  {CONVERTOR::to(idx)} -> std::same_as<BASE>;
       };
 
       /**
@@ -122,10 +123,10 @@ namespace rl2 {
 	  {FINITE::end()}   -> std::convertible_to<typename FINITE::iterator>;
 	  {FINITE::size()}  -> std::convertible_to<std::size_t>;
       } &&
-	requires (FINITE elem, FINITE::iterator it, std::size_t idx, FINITE::base_type value) {
+	requires (FINITE elem, FINITE::iterator it, rl2::enumerable::index idx, FINITE::base_type value) {
 	  ++it;
 	  {*it} -> std::same_as<typename FINITE::base_type>;
-	  static_cast<std::size_t>(it);
+	  static_cast<rl2::enumerable::index>(it);
 	  FINITE(idx);
 	  elem = idx;
 	  FINITE(value);
