@@ -40,6 +40,9 @@ namespace rl2 {
 
   
   namespace enumerable {
+
+
+    
     template<typename BASE, std::size_t NB,
 	     concepts::enumerable::static_index_conversion<BASE> INDEX_CONVERSION = by_default::IndexConversion<BASE>>
     struct set {
@@ -58,7 +61,6 @@ namespace rl2 {
 
 	constexpr iterator& operator++() {++index; return *this;}
 	constexpr iterator  operator++(int) {auto tmp = *this; ++(*this); return tmp;}
-	/* to be done : implement operator for random access iterator */
       };
 
     private:
@@ -68,7 +70,7 @@ namespace rl2 {
       }
       
     public:
-      set()              = default;
+      set()            = default;
       set(const set&)  = default;
       set(set&&)       = default;
     
@@ -94,7 +96,13 @@ namespace rl2 {
       constexpr static iterator end()     {return iterator(NB);}
       constexpr static std::size_t size() {return NB;}
     };
-  
+
+
+    
+
+
+
+    
     template <concepts::enumerable::finite FIRST, concepts::enumerable::finite SECOND>
     struct pair_index_conversion {
       static std::size_t from(const std::pair<typename FIRST::base_type, typename SECOND::base_type>& base) {

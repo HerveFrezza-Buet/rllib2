@@ -35,6 +35,7 @@ limitations under the License.
  * @example example-003-002-linear-q.cpp
  * @example example-004-001-rocket-learn.cpp
  * @example example-004-002-rocket-test.cpp
+ * @example example-005-001-dynamic-programming.cpp
  */
 
 #include <rllib2Checkings.hpp>

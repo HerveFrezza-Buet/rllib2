@@ -3,6 +3,7 @@
 
 #include "rllib2Concepts.hpp"
 #include <iostream>
+#include <iomanip>
 #include <gdyn.hpp>
 #include <rllib2.hpp>
 
@@ -50,32 +51,8 @@ namespace weakest_link {
   // We can also enumerate the Cartesian product of 2 enumerable sets.
   using SA = rl2::enumerable::pair<S, A>;
 
-
-  template <typename RANDOM_GENERATOR>
-  auto make(RANDOM_GENERATOR& gen, double correct_answer_probability, bool show_reward_table=false) {
-  
-    // Let us define the reward table for the game. We can have arrays
-    // since the state space size S::size() is known at compiling time.
-    std::array<double, S::size()> rewards = {0, 50, 100, 200, 400, 600, 1000, 1500, 3000, 5000};
-
-    // Let us display the reward table. The value of 'it' can be used
-    // for accessing the elements of a tabular storing related to S
-    // (here the rewards).
-    if(show_reward_table) {
-      std::cout  << "Rewards : " << std::endl;
-      for(auto it = S::begin(); it != S::end(); ++it)
-	std::cout << "  for state " << *it << " : " << rewards[it] << std::endl; 
-      std::cout << std::endl;
-    }
-
-    // Let us build a Markov Decision Process. It fits the
-    // rl2::concepts::system<S, A> concept, so it is a gdyn::concepts::system
-    // dynamical system.
-
-    // We need a transition function. As we deal with discrete space
-    // and action sets, we can make it directly from the transition
-    // distribution.
-    auto Tdistrib = [correct_answer_probability](const S& s, const A& a, const S& ss) {
+  auto make_Tdistrib(double correct_answer_probability) {
+    return [correct_answer_probability](const S& s, const A& a, const S& ss) {
       char state          {s};
       char next_state     {ss};
       bool action_is_bank {a};
@@ -95,6 +72,39 @@ namespace weakest_link {
       // std::cout << std::boolalpha << state << ", " << action_is_bank << " -> " << next_state << " : " << res << std::endl;
       return res;
     };
+  }
+
+  auto R(const S& s, const A& a, const S& ss) -> double {
+    std::array<double, S::size()> rewards = {0, 50, 100, 200, 400, 600, 1000, 1500, 3000, 5000};
+    if(a) return rewards[static_cast<std::size_t>(s)]; // We get a reward if we bank.
+    return 0;                                          // or 0 reward otherwise.
+  };
+
+  template <typename RANDOM_GENERATOR>
+  auto make(RANDOM_GENERATOR& gen, double correct_answer_probability, bool show_reward_table=false) {
+  
+    // Let us define the reward table for the game. We can have arrays
+    // since the state space size S::size() is known at compiling time.
+    
+
+    // Let us display the reward table. The value of 'it' can be used
+    // for accessing the elements of a tabular storing related to S
+    // (here the rewards).
+    if(show_reward_table) {
+      std::cout  << "Rewards : " << std::endl;
+      for(auto it = S::begin(); it != S::end(); ++it)
+	std::cout << "  for state " << *it << " : " << std::setw(4) << R(*it, true, *it) << std::endl; 
+      std::cout << std::endl;
+    }
+
+    // Let us build a Markov Decision Process. It fits the
+    // rl2::concepts::system<S, A> concept, so it is a gdyn::concepts::system
+    // dynamical system.
+
+    // We need a transition function. As we deal with discrete space
+    // and action sets, we can make it directly from the transition
+    // distribution.
+    auto Tdistrib = make_Tdistrib(correct_answer_probability);
 
     // Tdistrib type satisfies the following concept
     static_assert(rl2::concepts::transition_distribution<decltype(Tdistrib), S, A>);
@@ -113,13 +123,6 @@ namespace weakest_link {
       return 'A'; // A bad answer leads us back to first question.
     };
 
-    // This is the reward function, returning the reward obtained for
-    // some s, a, s' transition. This is a lambda function as well,
-    // which copies the reward table in its lexical closure.
-    auto R = [rewards](const S& s, const A& a, const S& ss) -> double {
-      if(a) return rewards[static_cast<std::size_t>(s)]; // We get a reward if we bank.
-      return 0;                                          // or 0 reward otherwise.
-    };
     // R type satisfies the following concept
     static_assert(rl2::concepts::reward_function<decltype(R), S, A>);
 
