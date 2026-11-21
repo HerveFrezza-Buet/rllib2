@@ -99,7 +99,7 @@ namespace rl2 {
       template<typename BASE>
       concept obvious_index =
 	std::convertible_to<BASE, std::size_t>
-	&& std::is_constructible<BASE, std::size_t>;
+	&& std::constructible_from<BASE, std::size_t>;
       
       /** 
        * @short This provides a index conversion functions.

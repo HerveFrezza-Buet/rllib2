@@ -33,12 +33,12 @@ namespace cartpole {
   // The action space is a enumerable version of gdyn::problem::cartpole::direction.
   struct A_convertor {
     static constexpr std::size_t size() {return 2;}
-    static gdyn::problem::cartpole::direction to(std::size_t index) {
-      if(index ==  0) return gdyn::problem::cartpole::direction::Left;
-      else            return gdyn::problem::cartpole::direction::Right;
+    static gdyn::problem::cartpole::direction to(rl2::enumerable::index index) {
+      if(index.value ==  0) return gdyn::problem::cartpole::direction::Left;
+      else                  return gdyn::problem::cartpole::direction::Right;
     }
-    static std::size_t from(const gdyn::problem::cartpole::direction& d)  {
-      return static_cast<std::size_t>(d);
+    static rl2::enumerable::index from(const gdyn::problem::cartpole::direction& d)  {
+      return rl2::enumerable::index(static_cast<std::size_t>(d));
     }
   };
   using A = rl2::enumerable::set<gdyn::problem::cartpole::direction, A_convertor::size(), A_convertor>;

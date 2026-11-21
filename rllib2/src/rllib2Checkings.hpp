@@ -22,6 +22,7 @@ limitations under the License.
 
 #include <gdyn.hpp>
 
+#include <rllib2Index.hpp>
 #include <rllib2Concepts.hpp>
 #include <rllib2Enumerable.hpp>
 #include <rllib2MDP.hpp>
@@ -42,8 +43,8 @@ namespace rl2 {
     // ----------------
     
     struct index_conversion {
-      static std::size_t from(char base)          {return static_cast<std::size_t>(base) - 65;}
-      static char        to  (std::size_t index)  {return static_cast<char>(index + 65);      }
+      static rl2::enumerable::index from(char                    base)  {return rl2::enumerable::index(static_cast<std::size_t>(base) - 65);}
+      static char                   to  (rl2::enumerable::index index)  {return static_cast<char>(index.value + 65);                        }
     };
     static_assert(concepts::enumerable::static_index_conversion<index_conversion, char>);
 

@@ -130,12 +130,12 @@ namespace rl2 {
     };
 
     template<concepts::enumerable::finite SET>
-    std::ostream& operator<<(std::ostream& os, const SET& s) {return os << static_cast<index>(s).value;}
+    std::ostream& operator<<(std::ostream& os, const SET& s) {return os << static_cast<index>(s);}
     
     template<concepts::enumerable::finite SET>
     std::istream& operator>>(std::istream& is, SET& s) {
       index idx;
-      is >> idx.value;
+      is >> idx;
       s = idx;
       return is;
     }
@@ -243,8 +243,8 @@ namespace rl2 {
 	      return to_value<AT_MIN, AT_MAX>(idx, MIN, MAX, NB);
 	    }
 	    static index from(double value) {
-	      if(value < MIN) return 0;
-	      if(value >= MAX) return NB-1;
+	      if(value < MIN) return  {0};
+	      if(value >= MAX) return {NB-1};
 	      return to_index<AT_MIN, AT_MAX>(value, MIN, MAX, NB);
 	    }
 	  };
