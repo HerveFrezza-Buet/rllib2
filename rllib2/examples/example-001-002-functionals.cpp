@@ -14,17 +14,17 @@
 
 // Let us define here some "quality" enumerable type.
 struct quality_index_convertor {
-  static std::string to(std::size_t index) {
-    switch(index) {
+  static std::string to(rl2::enumerable::index index) {
+    switch(index.value) {
     case 0:  return "bad"; 
     case 1:  return "neutral";
     default: return "good";
     }
   }
-  static std::size_t from(const std::string& value) {
-    if(value == "bad") return 0;
-    if(value == "neutral") return 1;
-    return 2;
+  static rl2::enumerable::index from(const std::string& value) {
+    if(value == "bad")     return rl2::enumerable::index(0);
+    if(value == "neutral") return rl2::enumerable::index(1);
+    return                        rl2::enumerable::index(2);
   }
 };
 
@@ -55,8 +55,7 @@ int main(int argc, char* argv[]) {
       std::cout << static_cast<weakest_link::A::base_type>(random_policy(s)) << ' ';
     std::cout << std::endl;
   }
-  
-  
+
   //////
   //
   // Tabular function and epsilon-ization.
@@ -75,7 +74,7 @@ int main(int argc, char* argv[]) {
 
     std::array<quality, weakest_link::S::size()> values;
     std::size_t quality_idx = 0;
-    for(auto& value : values) value = (quality_idx++ % quality::size());
+    for(auto& value : values) value = rl2::enumerable::index(quality_idx++ % quality::size());
     
     // We can make a tabular function (S -> quality) from the array of
     // values. The index of the state is the key, the content of the
@@ -90,7 +89,7 @@ int main(int argc, char* argv[]) {
 		<< ") = " << static_cast<quality::base_type>        (f(state))
 		<< std::endl;
     }
-      
+
     // We can make f epsilon-noisy (taking here epsilon as a reference
     // with std::cref, so that is can be changed afterwards). It means
     // that epsilon_f(x) = f(x) with a ration (1-epsilon) of the
@@ -98,6 +97,7 @@ int main(int argc, char* argv[]) {
     double epsilon; // The values will be set later in the loop.
     auto epsilon_f = rl2::enumerable::epsilon_ify(f, std::cref(epsilon), gen);
 
+    
     // Let us set how many times f and epsilon_f differ.
     
     std::size_t nb_trials = 100000;
@@ -113,8 +113,11 @@ int main(int argc, char* argv[]) {
 		<< "% (should be close to " << 100*epsilon * (quality::size() - 1) / (double)(quality::size())
 		<< "%)." << std::endl;
     }
+    
   }
 
+  /*
+  
   
   //////
   //
@@ -173,6 +176,7 @@ int main(int argc, char* argv[]) {
     
   }
 
+  */
   
   return 0;
 }

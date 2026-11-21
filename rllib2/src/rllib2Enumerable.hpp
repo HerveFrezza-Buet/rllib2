@@ -75,7 +75,12 @@ namespace rl2 {
       set(const set&)  = default;
       set(set&&)       = default;
     
-      bool operator<=>(const set&) const = default;
+      bool operator==(const set& other) const {return static_cast<index>(*this) == static_cast<index>(other);}
+      bool operator!=(const set& other) const {return static_cast<index>(*this) != static_cast<index>(other);}
+      bool operator<(const set& other)  const {return static_cast<index>(*this) <  static_cast<index>(other);}
+      bool operator>(const set& other)  const {return static_cast<index>(*this) >  static_cast<index>(other);}
+      bool operator<=(const set& other) const {return static_cast<index>(*this) <= static_cast<index>(other);}
+      bool operator>=(const set& other) const {return static_cast<index>(*this) >= static_cast<index>(other);}
     
       set& operator=(const set&) = default;
       set& operator=(set&&)      = default;

@@ -42,7 +42,7 @@ namespace rl2 {
      */
     template<concepts::enumerable::finite TYPE, typename RANDOM_GENERATOR>
     auto uniform_sampler(RANDOM_GENERATOR& gen) {
-      return [&gen]() -> TYPE {return index(std::uniform_int_distribution<std::size_t>(0, TYPE::size()-1)(gen));};
+      return [&gen]() -> TYPE {return index(std::uniform_int_distribution<std::size_t>(0, TYPE::size() - 1)(gen));};
     }
 
 
@@ -59,9 +59,9 @@ namespace rl2 {
     auto epsilon_ify(const F& f, const PARAM& p, RANDOM_GENERATOR& gen) {
       return [f, p, &gen](auto arg) -> concepts::enumerable::finite auto {
 	typename std::remove_const<typename std::remove_reference<decltype(f(arg))>::type>::type res;
-	if(std::bernoulli_distribution(p)(gen))
-	  res = std::uniform_int_distribution<std::size_t>(0, decltype(res)::size())(gen);
-	else
+	if(std::bernoulli_distribution(p)(gen)) 
+	  res = uniform_sampler<decltype(res)>(gen)();
+	else 
 	  res = f(arg);
 	return res;
       };
