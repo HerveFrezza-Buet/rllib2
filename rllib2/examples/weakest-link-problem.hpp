@@ -76,8 +76,8 @@ namespace weakest_link {
 
   auto R(const S& s, const A& a, const S& ss) -> double {
     std::array<double, S::size()> rewards = {0, 50, 100, 200, 400, 600, 1000, 1500, 3000, 5000};
-    if(a) return rewards[static_cast<std::size_t>(s)]; // We get a reward if we bank.
-    return 0;                                          // or 0 reward otherwise.
+    if(a) return rewards[static_cast<rl2::enumerable::index>(s)]; // We get a reward if we bank.
+    return 0;                                                     // or 0 reward otherwise.
   };
 
   template <typename RANDOM_GENERATOR>
@@ -118,11 +118,12 @@ namespace weakest_link {
       if(a) return 'A'; // If we bank (bank <=> true action), go to first question.
       if(std::bernoulli_distribution(p)(gen)) {             // If we answer correctly
 	if(static_cast<S::base_type>(s) == 'J') return 'A'; // We go back to first question if we were at last question.
-	return static_cast<std::size_t>(s) + 1;             // We go to next question otherwise.
+	return ++static_cast<rl2::enumerable::index>(s);    // We go to next question otherwise (we get the index, pre-increment it and return for initializing the state result).
       }
       return 'A'; // A bad answer leads us back to first question.
     };
 
+    
     // R type satisfies the following concept
     static_assert(rl2::concepts::reward_function<decltype(R), S, A>);
 

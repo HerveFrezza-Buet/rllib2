@@ -90,8 +90,8 @@ namespace rl2 {
       set& operator=(iterator it) {return (*this = static_cast<index>(it));}
     
      
-      operator index () const {return INDEX_CONVERSION::from(this->value);}
-      operator base_type   () const {return value;}
+      operator index     () const {return INDEX_CONVERSION::from(this->value);}
+      operator base_type () const {return value;}
     
       constexpr static iterator begin()   {return iterator(index(0));}
       constexpr static iterator end()     {return iterator(index(NB));}

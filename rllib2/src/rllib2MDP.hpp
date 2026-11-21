@@ -98,7 +98,7 @@ namespace rl2 {
 	  : distribs(std::forward<distribs_type>(distribs)), gen(gen) {}
 	
 	STATE operator()(const STATE& s, const ACTION& a) const {
-	  return distribs[static_cast<std::size_t>(s) * ACTION::size() + static_cast<std::size_t>(a)](gen);
+	  return rl2::enumerable::index(distribs[static_cast<rl2::enumerable::index>(s).value * ACTION::size() + static_cast<rl2::enumerable::index>(a).value](gen));
 	}
       };
     }

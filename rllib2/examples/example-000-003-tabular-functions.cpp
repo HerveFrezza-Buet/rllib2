@@ -36,7 +36,8 @@ int main(int argc, char* argv[]) {
     weakest_link::S sB {'B'};
     weakest_link::S sJ {'J'};
     weakest_link::S sD {'D'};
-    std::size_t sDidx {sD};
+    
+    rl2::enumerable::index sDidx {sD};
     
     V(sA)    = 1.;
     V(sB)    = 2.;
@@ -68,7 +69,7 @@ int main(int argc, char* argv[]) {
     weakest_link::S sD {'D'};
     weakest_link::A aT {true};
     
-    std::size_t sBtidx {sBT};
+    rl2::enumerable::index sBtidx {sBT};
 
     Q(sAF) = 1.;
     Q(sAT) = 2.;
