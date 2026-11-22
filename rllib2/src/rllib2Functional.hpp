@@ -232,7 +232,7 @@ namespace rl2 {
 
 	  double operator()(const S& s, const A& a) const { 
 	    auto it = params->begin();
-	    std::advance(it, static_cast<std::size_t>(a) * S_FEATURE::dim);
+	    std::advance(it, static_cast<rl2::enumerable::index>(a).value * S_FEATURE::dim);
 	    double res = 0;
 	    for(auto phi_coef : (*s_feature)(s)) res += phi_coef * *(it++);
 	    return res;

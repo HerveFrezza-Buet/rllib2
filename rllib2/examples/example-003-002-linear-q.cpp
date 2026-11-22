@@ -11,8 +11,8 @@
 
 // Enumeration converter for actions.
 struct A2char {
-  static char          to(std::size_t index) {return static_cast<char>(index + 60);       }
-  static std::size_t from(char        value) {return static_cast<std::size_t>(value) - 60;}
+  static char                   to  (rl2::enumerable::index index) {return static_cast<char>(index.value + 60);                         }
+  static rl2::enumerable::index from(char                   value) {return rl2::enumerable::index(static_cast<std::size_t>(value) - 60);}
 };
 
 // This shows how linear Q-function are implemented with rllib2.
@@ -52,10 +52,10 @@ void print(std::ostream& os,
   os << sep << std::endl;
   os << bar.str();
   for(std::size_t vid = 0; vid < nb_v; ++vid) {
-    auto v = rl2::enumerable::utils::digitize::to_value(vid, vmin, vmax, nb_v);
+    auto v = rl2::enumerable::utils::digitize::to_value(rl2::enumerable::index(vid), vmin, vmax, nb_v);
     for(auto a_it = A::begin(); a_it != A::end(); ++a_it) {
       for(std::size_t xid = 0; xid < nb_x; ++xid) {
-	auto x = rl2::enumerable::utils::digitize::to_value(xid, xmin, xmax, nb_x);
+	auto x = rl2::enumerable::utils::digitize::to_value(rl2::enumerable::index(xid), xmin, xmax, nb_x);
 	os << sep << std::setw(slot) << (unsigned int)(100 * q({x, v}, a_it) + .5); // Nota: q({x, v}, a_it)
       }
     }
@@ -83,9 +83,9 @@ int main(int argc, char* argv[]) {
   // Let us set the Gaussians
   auto out_it = phi.rbfs->begin();
   for(std::size_t vid = 0; vid < nb_gauss_v; ++vid) {
-    auto mu_v = rl2::enumerable::utils::digitize::to_value(vid, vmin, vmax, nb_gauss_v);
+    auto mu_v = rl2::enumerable::utils::digitize::to_value(rl2::enumerable::index(vid), vmin, vmax, nb_gauss_v);
     for(std::size_t xid = 0; xid < nb_gauss_x; ++xid) {
-      auto mu_x = rl2::enumerable::utils::digitize::to_value(xid, xmin, xmax, nb_gauss_x);
+      auto mu_x = rl2::enumerable::utils::digitize::to_value(rl2::enumerable::index(xid), xmin, xmax, nb_gauss_x);
       *(out_it++) = rbf {{mu_x, mu_v}, gammas_ptr}; // We set each gaussian rbf
     }
   }
@@ -130,11 +130,11 @@ int main(int argc, char* argv[]) {
   std::array<std::size_t, A::size()> hist;
   
   for(std::size_t i = 0; i < 50; ++i) // We build up an histogram with 50 samples.
-    ++hist[static_cast<std::size_t>(epsilon_greedy_on_q(s))];
+    ++hist[static_cast<rl2::enumerable::index>(epsilon_greedy_on_q(s)).value];
   
   for(auto a_it = A::begin(); a_it != A::end(); ++a_it) 
     std::cout << "a = " << *a_it
-	      << " |" << std::string(hist[static_cast<std::size_t>(a_it)], '#')
+	      << " |" << std::string(hist[static_cast<rl2::enumerable::index>(a_it).value], '#')
 	      << std::endl;
   std::cout << std::endl;
 

@@ -116,7 +116,7 @@ void test_1d_gaussian() {
     double gamma = rl2::functional::gaussian_gamma_of_sigma(.1); 
     for(auto& gaussian : *(phi.rbfs)) {
       // We set the means, spanned over [0, 1].
-      gaussian.mu = rl2::enumerable::utils::digitize::to_value(i++, 0., 1., rbf_feature::nb_rbfs); 
+      gaussian.mu = rl2::enumerable::utils::digitize::to_value(rl2::enumerable::index(i++), 0., 1., rbf_feature::nb_rbfs); 
       gaussian.gamma = gamma;
       std::cout << "rbf " << gaussian << " added." << std::endl;
     }
@@ -191,9 +191,9 @@ void test_nd_gaussian() {
     auto out_it = phi.rbfs->begin();
     // We span the X x V space
     for(std::size_t vid = 0; vid < nb_gauss_v; ++vid) {
-      auto mu_v = rl2::enumerable::utils::digitize::to_value(vid, vmin, vmax, nb_gauss_v);
+      auto mu_v = rl2::enumerable::utils::digitize::to_value(rl2::enumerable::index(vid), vmin, vmax, nb_gauss_v);
       for(std::size_t xid = 0; xid < nb_gauss_x; ++xid) {
-	auto mu_x = rl2::enumerable::utils::digitize::to_value(xid, xmin, xmax, nb_gauss_x);
+	auto mu_x = rl2::enumerable::utils::digitize::to_value(rl2::enumerable::index(xid), xmin, xmax, nb_gauss_x);
 	*(out_it++) = {{mu_x, mu_v}, gammas_ptr}; // We set each gaussian rbf
       }
     }
