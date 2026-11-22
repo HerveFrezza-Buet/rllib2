@@ -18,6 +18,7 @@ limitations under the License.
 
 #pragma once
 
+#include <rllib2Index.hpp>
 #include <rllib2Transition.hpp>
 #include <rllib2Functional.hpp>
 
@@ -60,7 +61,7 @@ namespace rl2 {
       requires concepts::enumerable::two_args_function<Q>
       double update(Q& q, const S& s, const A& a, double alpha, double td_error) {
 	auto delta = alpha * td_error;
-	auto it = q.params_it + static_cast<std::size_t>(typename Q::arg_type(typename Q::first_entry_type(s), typename Q::second_entry_type(a)));
+	auto it = q.params_it + static_cast<rl2::enumerable::index>(typename Q::arg_type(typename Q::first_entry_type(s), typename Q::second_entry_type(a))).value;
 	*it += delta;
 	return delta;
       }

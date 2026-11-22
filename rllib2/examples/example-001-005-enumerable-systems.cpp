@@ -42,35 +42,36 @@ struct decay_system {
 #define MAX_X 10.
 struct S_convertor {
   static constexpr std::size_t nb_bins {10};
-  static double to(std::size_t index)   {return rl2::enumerable::utils::digitize::to_value(index, 0., MAX_X, nb_bins);}
-  static std::size_t from(double value) {
+  static double to(rl2::enumerable::index index)   {return rl2::enumerable::utils::digitize::to_value(index, 0., MAX_X, nb_bins);}
+  static rl2::enumerable::index from(double value) {
     // Do not forget to test bounds, the
     // rl2::enumerable::utils::digitize do not handle this.
-    if(value < 0)      return 0;
-    if(value >= MAX_X) return nb_bins - 1;
+    if(value < 0)      return rl2::enumerable::index(0);
+    if(value >= MAX_X) return rl2::enumerable::index(nb_bins - 1);
     return rl2::enumerable::utils::digitize::to_index(value, 0., MAX_X, nb_bins);}
 };
 using S = rl2::enumerable::set<double, S_convertor::nb_bins, S_convertor>;
 
 
 struct A_convertor {
-  static double to(std::size_t index) {
-    if(index == 0) return 0.;
-    if(index == 1) return 1.;	 
+  static constexpr std::size_t nb_bins {3};
+  static double to(rl2::enumerable::index index) {
+    if(index.value == 0) return 0.;
+    if(index.value == 1) return 1.;	 
     return 10;	     
   }
-  static std::size_t from(double value) {
-    if(value > 1.) return 2;
-    if(value > 0.) return 1;
-    return 0;
+  static rl2::enumerable::index from(double value) {
+    if(value > 1.) return rl2::enumerable::index(2);
+    if(value > 0.) return rl2::enumerable::index(1);
+    return                rl2::enumerable::index(0);
   }
 };
 
-using A = rl2::enumerable::set<double, 3, A_convertor>;
+using A = rl2::enumerable::set<double, A_convertor::nb_bins, A_convertor>;
 // A is serializable already (into a integer, which is the index). Let
 // us provide a more informative serialization.
 std::string to_string(A a) {
-  switch(static_cast<std::size_t>(a)) {
+  switch(static_cast<rl2::enumerable::index>(a).value) {
   case 0: return "none";
   case 1: return "small-jump";
   default: return "big-jump";

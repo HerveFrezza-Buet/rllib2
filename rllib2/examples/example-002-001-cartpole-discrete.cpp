@@ -33,78 +33,79 @@ struct S_convertor {
     std::get<1>(limits[2]) + 1.,
     std::get<1>(limits[3]) + 1.};
   
-  static gdyn::problem::cartpole::state to(std::size_t index)
+  static gdyn::problem::cartpole::state to(rl2::enumerable::index index)
   {
-    if(index == size() - 1)
+    if(index.value == size() - 1)
       return out_of_limits_state;
     
     // indexes along each Obs dimensions
     std::array<std::size_t, nb_dims> indexes;
 
+    std::size_t idx = index.value;
     for (int idi=indexes.size()-1; idi >= 0; --idi) {
-      auto tmp_index = index % (nb_bins);
-      index = (index - tmp_index) / (nb_bins);
+      auto tmp_index = idx % (nb_bins);
+      idx = (idx - tmp_index) / (nb_bins);
       indexes[idi] = tmp_index;
     }
 
     std::size_t idi = 0;
     gdyn::problem::cartpole::state state;
-    state.x = rl2::enumerable::utils::digitize::to_value(indexes[idi], std::get<0>(limits[idi]), std::get<1>(limits[idi]), nb_bins);
+    state.x = rl2::enumerable::utils::digitize::to_value(rl2::enumerable::index(indexes[idi]), std::get<0>(limits[idi]), std::get<1>(limits[idi]), nb_bins);
     ++idi;
-    state.x_dot = rl2::enumerable::utils::digitize::to_value(indexes[idi], std::get<0>(limits[idi]), std::get<1>(limits[idi]), nb_bins);
+    state.x_dot = rl2::enumerable::utils::digitize::to_value(rl2::enumerable::index(indexes[idi]), std::get<0>(limits[idi]), std::get<1>(limits[idi]), nb_bins);
     ++idi;
-    state.theta = rl2::enumerable::utils::digitize::to_value(indexes[idi], std::get<0>(limits[idi]), std::get<1>(limits[idi]), nb_bins);
+    state.theta = rl2::enumerable::utils::digitize::to_value(rl2::enumerable::index(indexes[idi]), std::get<0>(limits[idi]), std::get<1>(limits[idi]), nb_bins);
     ++idi;
-    state.theta_dot = rl2::enumerable::utils::digitize::to_value(indexes[idi], std::get<0>(limits[idi]), std::get<1>(limits[idi]), nb_bins);
+    state.theta_dot = rl2::enumerable::utils::digitize::to_value(rl2::enumerable::index(indexes[idi]), std::get<0>(limits[idi]), std::get<1>(limits[idi]), nb_bins);
 
     return state;
   }
   
-  static std::size_t from(const gdyn::problem::cartpole::state& s)
+  static rl2::enumerable::index from(const gdyn::problem::cartpole::state& s)
   {
     // if out of limits, final state
     if ((s.x < std::get<0>(limits[0])) or (s.x > std::get<1>(limits[0]))
         or (s.x_dot < std::get<0>(limits[1])) or (s.x_dot > std::get<1>(limits[1]))
         or (s.theta < std::get<0>(limits[2])) or (s.theta > std::get<1>(limits[2]))
         or (s.theta_dot < std::get<0>(limits[3])) or (s.theta_dot > std::get<1>(limits[3]))) {
-      return size() - 1;
+      return rl2::enumerable::index(size() - 1);
     }
     
     // indexes along each Obs dimensions
-    std::array<std::size_t,4> indexes;
+    std::array<std::size_t, 4> indexes;
 
     std::size_t idi = 0;
-    indexes[idi] = rl2::enumerable::utils::digitize::to_index(s.x, std::get<0>(limits[idi]), std::get<1>(limits[idi]), nb_bins);
+    indexes[idi] = rl2::enumerable::utils::digitize::to_index(s.x, std::get<0>(limits[idi]), std::get<1>(limits[idi]), nb_bins).value;
     ++idi;
-    indexes[idi] = rl2::enumerable::utils::digitize::to_index(s.x_dot, std::get<0>(limits[idi]), std::get<1>(limits[idi]), nb_bins);
+    indexes[idi] = rl2::enumerable::utils::digitize::to_index(s.x_dot, std::get<0>(limits[idi]), std::get<1>(limits[idi]), nb_bins).value;
     ++idi;
-    indexes[idi] = rl2::enumerable::utils::digitize::to_index(s.theta, std::get<0>(limits[idi]), std::get<1>(limits[idi]), nb_bins);
+    indexes[idi] = rl2::enumerable::utils::digitize::to_index(s.theta, std::get<0>(limits[idi]), std::get<1>(limits[idi]), nb_bins).value;
     ++idi;
-    indexes[idi] = rl2::enumerable::utils::digitize::to_index(s.theta_dot, std::get<0>(limits[idi]), std::get<1>(limits[idi]), nb_bins);
+    indexes[idi] = rl2::enumerable::utils::digitize::to_index(s.theta_dot, std::get<0>(limits[idi]), std::get<1>(limits[idi]), nb_bins).value;
 
     // then convert array of indexes to one unique index
     std::size_t res = 0;
-    for( auto index : indexes ) {
-      res = res * (nb_bins) + index;
+    for(auto idx : indexes) {
+      res = res * (nb_bins) + idx;
     }
 
-    return res;
+    return rl2::enumerable::index(res);
   }
 }; // struct S_convertor
 
 struct A_convertor {
   static constexpr std::size_t size() {return 2;} 
-  static gdyn::problem::cartpole::direction to (std::size_t index)
+  static gdyn::problem::cartpole::direction to (rl2::enumerable::index index)
   {
-    switch(index) {
+    switch(index.value) {
     case 0:
-        return gdyn::problem::cartpole::direction::Left;
+      return gdyn::problem::cartpole::direction::Left;
     default:
       return gdyn::problem::cartpole::direction::Right;
     }
   }
-  static std::size_t from(const gdyn::problem::cartpole::direction& d)  {
-    return static_cast<std::size_t>(d);
+  static rl2::enumerable::index from(const gdyn::problem::cartpole::direction& d)  {
+    return rl2::enumerable::index(static_cast<std::size_t>(d));
   }
 }; // struct A_convertor
 
@@ -130,7 +131,7 @@ void test_convertor()
   }
   
   {
-    auto obs = S_convertor::to(0);
+    auto obs = S_convertor::to(rl2::enumerable::index(0));
     std::cout << "obs: " << obs << " is got from 0 index." << std::endl;
   }
 
@@ -149,7 +150,7 @@ void test_convertor()
   // state for the first indexes
   std::cout << std::endl << std::endl;
   for (std::size_t id=0; id < 50; ++id)
-    std::cout << std::setw(3) << id << ": " << S_convertor::to(id) << std::endl;
+    std::cout << std::setw(3) << id << ": " << S_convertor::to(rl2::enumerable::index(id)) << std::endl;
   std::cout << "..." << std::endl << std::endl;
 }
 template<typename RANDOM>
@@ -184,9 +185,9 @@ void test_transition(RANDOM& gen)
     S discrete_s      {obs};
     S discrete_next_s {T(obs, act)}; // obs and act are implicitly converted to a S and A discrete instances.
     std::cout << "Transition from random state (discrete):" << std::endl
-	      << "  s             : " << obs << " (discretized as " << static_cast<gdyn::problem::cartpole::state>(discrete_s) << ", index = " << static_cast<std::size_t>(discrete_s) << ')' << std::endl
+	      << "  s             : " << obs << " (discretized as " << static_cast<gdyn::problem::cartpole::state>(discrete_s) << ", index = " << static_cast<rl2::enumerable::index>(discrete_s) << ')' << std::endl
 	      << "  a             : " << act << std::endl
-	      << "  s' (discrete) : " << static_cast<gdyn::problem::cartpole::state>(discrete_next_s) << " (index = " << static_cast<std::size_t>(discrete_next_s) << ')'<< std::endl
+	      << "  s' (discrete) : " << static_cast<gdyn::problem::cartpole::state>(discrete_next_s) << " (index = " << static_cast<rl2::enumerable::index>(discrete_next_s) << ')'<< std::endl
 	      << std::endl;
   }
 
@@ -226,12 +227,12 @@ void test_discrete(RANDOM& gen) {
         | std::views::take(50)) {
     auto o = *sys;
     auto d_o = static_cast<discrete_cartpole::observation_type::base_type>(*dsys);
-    auto d_o_index = static_cast<std::size_t>(*dsys);
+    auto d_o_index = static_cast<rl2::enumerable::index>(*dsys);
     bool alive = sys;
     auto r = sys(cmd);
     auto next_o = *sys;
     auto d_next_o = static_cast<discrete_cartpole::observation_type::base_type>(*dsys);
-    auto d_next_o_index = static_cast<std::size_t>(*dsys);
+    auto d_next_o_index = static_cast<rl2::enumerable::index>(*dsys);
     bool next_alive = sys;
     if (not alive) {
       std::cout << "**WARN** : transition *FROM* a terminal state" << std::endl;
@@ -289,9 +290,9 @@ void test_discrete(RANDOM& gen) {
         | rl2::views::sarsa
         | std::views::take(50)) {
     auto d_o = static_cast<discrete_cartpole::observation_type::base_type>(o);
-    auto d_o_index = static_cast<std::size_t>(o);
+    auto d_o_index = static_cast<rl2::enumerable::index>(o);
     auto d_next_o = static_cast<discrete_cartpole::observation_type::base_type>(o);
-    auto d_next_o_index = static_cast<std::size_t>(o);
+    auto d_next_o_index = static_cast<rl2::enumerable::index>(o);
     bool next_alive = sys;
     std::cout << std::boolalpha
               << "[" << step++ << "]"
@@ -357,8 +358,8 @@ void test_system(RANDOM& gen, bool verbose=false) {
       auto bellman_updt = rl2::critic::td::enumerable::action::bellman::optimality<S, A, decltype(Q)>;
       double td_error = rl2::critic::td::error(Q, learn_params.gamma, transition, bellman_updt);
       if (verbose) {
-        std::cout << "    update s:" << static_cast<std::size_t>(transition.s)
-                  << " a:" << static_cast<std::size_t>(transition.a)
+        std::cout << "    update s:" << static_cast<rl2::enumerable::index>(transition.s)
+                  << " a:" << static_cast<rl2::enumerable::index>(transition.a)
                   << " r=" << transition.r
                   << " td=" << td_error
                   << " oldQ=" << Q(transition.s, transition.a);

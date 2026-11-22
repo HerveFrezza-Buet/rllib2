@@ -26,15 +26,15 @@ namespace discrete {
   
   struct interval_convertor {
     static constexpr std::size_t nb_bins {11};
-    static continuous::interval to(std::size_t index)   {return rl2::enumerable::utils::digitize::to_value(index, -1., 1., nb_bins);}
-    static std::size_t from(continuous::interval value) {return rl2::enumerable::utils::digitize::to_index(value, -1., 1., nb_bins);}
+    static continuous::interval to(rl2::enumerable::index index)   {return rl2::enumerable::utils::digitize::to_value(index, -1., 1., nb_bins);}
+    static rl2::enumerable::index from(continuous::interval value) {return rl2::enumerable::utils::digitize::to_index(value, -1., 1., nb_bins);}
   };
   using interval = rl2::enumerable::set<continuous::interval, interval_convertor::nb_bins, interval_convertor>;
   
   struct angle_convertor {
     static constexpr std::size_t nb_bins {24};
-    static continuous::angle to(std::size_t index)   {return rl2::enumerable::utils::digitize::to_value(index, 0., 360., nb_bins);}
-    static std::size_t from(continuous::angle value) {return rl2::enumerable::utils::digitize::to_index(value, 0., 360., nb_bins);}
+    static continuous::angle to(rl2::enumerable::index index)   {return rl2::enumerable::utils::digitize::to_value(index, 0., 360., nb_bins);}
+    static rl2::enumerable::index from(continuous::angle value) {return rl2::enumerable::utils::digitize::to_index(value, 0., 360., nb_bins);}
   };
   using angle = rl2::enumerable::set<continuous::angle, angle_convertor::nb_bins, angle_convertor>;
 
@@ -116,10 +116,10 @@ int main(int argc, char* argv[]) {
     system(cmd);
     auto [x,   y] = *system;
     auto [dx, dy] = static_cast<discrete_transparent_circle::observation_type::base_type>(*dsystem);
-    auto obs_idx  = static_cast<std::size_t>(*dsystem);
+    auto obs_idx  = static_cast<rl2::enumerable::index>(*dsystem);
     auto state    = system.state();
     auto dstate   = static_cast<discrete_transparent_circle::state_type::base_type>(dsystem.state());
-    auto sta_idx  = static_cast<std::size_t>(dsystem.state());
+    auto sta_idx  = static_cast<rl2::enumerable::index>(dsystem.state());
     std::cout << std::fixed << std::setprecision(4)
 	      <<  "| " << std::setw(WIDTH) << state
 	      << " | " << std::setw(WIDTH) << dstate
