@@ -100,7 +100,7 @@ int main(int argc, char* argv[]) {
   auto controller =
     [&optimal_thrusts, &relative_rocket, dt] (const types::base_continuous_system::observation_type& obs) -> types::base_continuous_system::command_type {
       types::S current {relative_rocket.convert(obs)};
-      return {.value = optimal_thrusts[static_cast<std::size_t>(current)], .duration = dt};
+      return {.value = optimal_thrusts[static_cast<rl2::enumerable::index>(current).value], .duration = dt};
     };
 
   std::cout << std::endl;

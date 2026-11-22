@@ -38,9 +38,9 @@ int main(int argc, char* argv[]) {
   // The idea here is to explore discrete initial SxA situations
   // systematically. Just for fun, we explore them several times with
   // a random permutation.
-  std::array<std::size_t, types::SA::size()> permutation;
+  std::array<rl2::enumerable::index, types::SA::size()> permutation;
   std::size_t idx = 0;
-  for(auto& i : permutation) i = idx++;
+  for(auto& i : permutation) i = rl2::enumerable::index(idx++);
 
   std::cout << std::endl << std::endl
 	    << "Computing Q-learning passes:" << std::endl;
@@ -113,7 +113,7 @@ int main(int argc, char* argv[]) {
   
   for(auto a_it = types::A::begin(); a_it != types::A::end(); ++a_it) {
     std::ostringstream filename;
-    filename << "rocket-discrete-Q-A" << static_cast<std::size_t>(a_it) << ".plot";
+    filename << "rocket-discrete-Q-A" << static_cast<rl2::enumerable::index>(a_it) << ".plot";
     std::ofstream file {filename.str()};
     auto a = *a_it;
 
@@ -123,7 +123,7 @@ int main(int argc, char* argv[]) {
 	 << "set title  'Q(s, a = " << a.value << ")'" << std::endl
 	 << "set hidden3d" << std::endl
 	 << "set dgrid3d " << types::nb_speeds << ',' << types::nb_errors << std::endl
-	 << "splot 'rocket-discrete-controller.dat' using 1:2:" << static_cast<std::size_t>(a_it)+4 << " with lines notitle" << std::endl;
+	 << "splot 'rocket-discrete-controller.dat' using 1:2:" << static_cast<rl2::enumerable::index>(a_it).value + 4 << " with lines notitle" << std::endl;
 
     std::cout << "Run : gnuplot -p " << filename.str() << std::endl;
   }

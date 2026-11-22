@@ -36,15 +36,15 @@ namespace rocket {
       struct S_convertor {
 	static constexpr std::size_t size() {return error_speed::size();}
 	
-	static rocket_phase to(std::size_t index) {
+	static rocket_phase to(rl2::enumerable::index index) {
 	  error_speed es {index};
 	  auto [e, s] = static_cast<error_speed::base_type>(es);
 	  return {e, s};
 	}
 	
-	static std::size_t from(rocket_phase value) {
+	static rl2::enumerable::index from(rocket_phase value) {
 	  error_speed es {std::make_pair(value.error, value.speed)};
-	  return static_cast<std::size_t>(es);
+	  return rl2::enumerable::index(es);
 	}
       };
       
@@ -54,13 +54,13 @@ namespace rocket {
       struct A_convertor {
 	static constexpr std::size_t size() {return 2;}
 	
-	static rocket_command to (std::size_t index) {
-	  if(index == 0) return {.value = 0., .duration = COMMAND_DURATION};
+	static rocket_command to (rl2::enumerable::index index) {
+	  if(index.value == 0) return {.value = 0., .duration = COMMAND_DURATION};
 	  return {.value = COMMAND_VALUE, .duration = COMMAND_DURATION};   
 	}
-	static std::size_t from(const rocket_command d)  {
-	  if(d.value > 0) return 1;
-	  return 0; 
+	static rl2::enumerable::index from(const rocket_command d)  {
+	  if(d.value > 0) return rl2::enumerable::index(1);
+	  return                 rl2::enumerable::index(0); 
 	}
       };
       
