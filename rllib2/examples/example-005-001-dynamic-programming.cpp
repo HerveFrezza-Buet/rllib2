@@ -18,6 +18,22 @@
 // stored in an array.
 
 
+template<rl2::concepts::value_function<weakest_link::S> VALUE_FUNC>
+void print(const std::string& title, const VALUE_FUNC& V) {
+  std::cout << title << std::endl
+	    << std::string(title.size(), '-') << std::endl;
+  for(auto it = weakest_link::S::begin(); it != weakest_link::S::end(); ++it)
+    std::cout << "  V(" << *it << ") = " << V(it) << std::endl;
+}
+
+template<rl2::concepts::policy<weakest_link::S, weakest_link::A> POLICY>
+void print(const std::string& title, const POLICY& pi) {
+  std::cout << title << std::endl
+	    << std::string(title.size(), '-') << std::endl;
+  for(auto it = weakest_link::S::begin(); it != weakest_link::S::end(); ++it)
+    std::cout << "  pi(" << *it << ") = " << static_cast<weakest_link::A::base_type>(pi(it)) << std::endl;
+}
+
 int main(int argc, char* argv[]) {
   std::random_device rd;
   std::mt19937 gen(rd());
@@ -41,7 +57,7 @@ int main(int argc, char* argv[]) {
   // We set parameters
   double epsilon                     = 1e-3; // The threshold for considering variations of V as tiny.
   double gamma                       = .9;   // The gamma parameter of the MDP.
-  double correct_answer_probability  = .75;  // The ability of the player to provide good answers.
+  double correct_answer_probability  = .60;  // The ability of the player to provide good answers.
 
   // This is the model (T = transition probabilities, R = rewards)
   auto  T = weakest_link::make_Tdistrib(correct_answer_probability);
@@ -52,12 +68,45 @@ int main(int argc, char* argv[]) {
     //
     // Value iteration
     //
+
+    std::cout << std::endl << std::endl << std::endl << std::endl;
     
     // This sets V to V*.
     rl2::critic::dp::enumerable::value_iteration<weakest_link::S, weakest_link::A>(V, T, R, gamma, epsilon);
+    // This sets pi* by computing the policy greedy on V.
+    rl2::critic::dp::enumerable::policy_improvement<weakest_link::S, weakest_link::A>(pi, T, R, V, gamma);
+
+    
+    print("Value iteration : V*", V);
+    std::cout << std::endl;
+    print("Value iteration : pi*", pi);
+    std::cout << std::endl;
+
+    // Let us reset V.
+    for(auto& v : v_data) v = 0;
+    // We can evaluate pi* in order to get it back.
+    rl2::critic::dp::enumerable::policy_evaluation<weakest_link::S, weakest_link::A>(V, T, R, pi, gamma, epsilon);
+    
+    print("Value iteration : V* from pi*", V);
   }
 
   {
+    //
+    // Policy iteration
+    //
+
+    std::cout << std::endl << std::endl << std::endl << std::endl;
+
+    // Let us reset V and pi
+    for(auto& v : v_data) v = 0;
+    for(auto& a : p_data) a = random_action_generator();
+
+    rl2::critic::dp::enumerable::policy_iteration<weakest_link::S, weakest_link::A>(pi, V, T, R, gamma, epsilon);
+    
+    print("Policy iteration : V*", V);
+    std::cout << std::endl;
+    print("Policy iteration : pi*", pi);
+    std::cout << std::endl;
   }
 
 

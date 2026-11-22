@@ -163,7 +163,10 @@ namespace rl2 {
      * @short A RL policy
      */
     template<typename POLICY, typename S, typename A>
-    concept policy = gdyn::concepts::controller<POLICY, S, A>;
+    concept policy = gdyn::concepts::controller<POLICY, S, A>
+      && requires(POLICY const cpi, S const cs) {
+	{cpi(cs)} -> std::same_as<A>;
+    };
 
     /**
      * @short A function f(a, b), for which f(a) is a function : f(a,b) = f(a)(b).
@@ -232,7 +235,7 @@ namespace rl2 {
     concept value_function = 
     std::invocable<V, S>
       && requires(V const cv, S const cs) {
-      {cv(cs)} -> std::convertible_to<double>;
+      {cv(cs)} -> std::same_as<double>;
     };
     
     /**
