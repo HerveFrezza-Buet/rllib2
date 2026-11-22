@@ -29,22 +29,22 @@ using g_system = gdyn::problem::grid_world::system<SIMU_W, SIMU_H, SIMU_GOAL>;
 using enum_S = rl2::enumerable::set<typename g_system::state_type, 10>;
 
 struct A_convertor {
-  static g_system::command_type to (std::size_t index)
+  static g_system::command_type to (rl2::enumerable::index index)
   {
-    switch(index) {
+    switch(index.value) {
     case  0: return gdyn::problem::grid_world::dir::North; break;
     case  1: return gdyn::problem::grid_world::dir::South; break;
     case  2: return gdyn::problem::grid_world::dir::West; break;
     default: return gdyn::problem::grid_world::dir::East; break;
     }
   }
-  static std::size_t from (g_system::command_type a)
+  static rl2::enumerable::index from (g_system::command_type a)
   {
     switch(a) {
-    case  gdyn::problem::grid_world::dir::North: return 0; break;
-    case  gdyn::problem::grid_world::dir::South: return 1; break;
-    case  gdyn::problem::grid_world::dir::West: return 2; break;
-    default: return 3; break;
+    case  gdyn::problem::grid_world::dir::North: return rl2::enumerable::index(0); break;
+    case  gdyn::problem::grid_world::dir::South: return rl2::enumerable::index(1); break;
+    case  gdyn::problem::grid_world::dir::West:  return rl2::enumerable::index(2); break;
+    default:                                     return rl2::enumerable::index(3); break;
     }
   }
 }; // struct A_convertor
@@ -143,7 +143,7 @@ struct s_features {
 
   auto operator()( const g_system::state_type& state ) const
   {
-    unsigned int id_state = static_cast<unsigned int>(state);
+    auto id_state = static_cast<rl2::enumerable::index>(state).value;
 
     auto it = data->begin();
     for (unsigned int i=0; i < g_system::NB_STATES; ++i) {
@@ -162,7 +162,7 @@ struct enum_s_features {
 
   auto operator()( const enum_S& state ) const
   {
-    unsigned int id_state = static_cast<unsigned int>(state);
+    auto id_state = static_cast<rl2::enumerable::index>(state).value;
 
     auto it = data->begin();
     for (unsigned int i=0; i < g_system::NB_STATES; ++i) {
@@ -232,14 +232,14 @@ void q_learning(QTABLE& q, enum_system& simulator, int nb_epoch)
            | gdyn::views::orbit(simulator)
            | rl2::views::sarsa
            | std::views::take(MAX_EPOCH_LENGTH)) {
-      std::cout << ": s=" << static_cast<unsigned int>(transition.s) << " a=" << static_cast<int>(transition.a);
+      std::cout << ": s=" << static_cast<rl2::enumerable::index>(transition.s) << " a=" << static_cast<rl2::enumerable::index>(transition.a);
       std::cout << " --> [" << transition.r << "]";
-      std::cout << " ns=" << static_cast<unsigned int>(transition.ss);
+      std::cout << " ns=" << static_cast<rl2::enumerable::index>(transition.ss);
       if (transition.aa)
-	std::cout << " na=" << static_cast<unsigned int>(transition.aa.value());
+	std::cout << " na=" << static_cast<rl2::enumerable::index>(transition.aa.value());
       else
 	std::cout << " na=NULL";
-      std::cout << " => Q(" << static_cast<unsigned int>(transition.s) << ", UDLR)=";
+      std::cout << " => Q(" << static_cast<rl2::enumerable::index>(transition.s) << ", UDLR)=";
       std::cout << qval_in_line(q, transition.s);
       std::cout << std::endl;
       rl2::critic::td::update(q, transition.s, transition.a, ALPHA_QLEARNING,

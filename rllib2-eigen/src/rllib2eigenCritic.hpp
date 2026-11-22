@@ -42,7 +42,7 @@ namespace rl2 {
 	Eigen::Vector<double, N::dim*A::size()> vec;
 	vec.setZero(); // eigen vectors are not initialized by the default constructor.
 
-	int idv = static_cast<std::size_t>(a) * N::dim;
+	auto idv = static_cast<rl2::enumerable::index>(a).value * N::dim;
 
 	std::ranges::copy(ns, vec.begin() + idv);
 	return vec;

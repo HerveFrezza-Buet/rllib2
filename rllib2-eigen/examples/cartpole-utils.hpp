@@ -32,13 +32,13 @@ namespace utils {
   
       rl2::problem::defs::cartpole::mu_type mu;
       for(unsigned int i = 0; i < nb_x_bins; ++i) {
-	mu[0] = rl2::enumerable::utils::digitize::to_value(i, x_min, x_max, nb_x_bins);
+	mu[0] = rl2::enumerable::utils::digitize::to_value(rl2::enumerable::index(i), x_min, x_max, nb_x_bins);
 	for(unsigned int j = 0; j < nb_x_dot_bins; ++j) {
-	  mu[1] = rl2::enumerable::utils::digitize::to_value(j, x_dot_min, x_dot_max, nb_x_dot_bins);
+	  mu[1] = rl2::enumerable::utils::digitize::to_value(rl2::enumerable::index(j), x_dot_min, x_dot_max, nb_x_dot_bins);
 	  for(unsigned int k = 0; k < nb_theta_bins; ++k) {
-	    mu[2] = rl2::enumerable::utils::digitize::to_value(k, theta_min, theta_max, nb_theta_bins);
+	    mu[2] = rl2::enumerable::utils::digitize::to_value(rl2::enumerable::index(k), theta_min, theta_max, nb_theta_bins);
 	    for(unsigned int l = 0; l < nb_theta_dot_bins; ++l) {
-	      mu[3] = rl2::enumerable::utils::digitize::to_value(l, theta_dot_min, theta_dot_max, nb_theta_dot_bins);
+	      mu[3] = rl2::enumerable::utils::digitize::to_value(rl2::enumerable::index(l), theta_dot_min, theta_dot_max, nb_theta_dot_bins);
 	      *(rbf_out++) = {mu, gammas_ptr};
 	    }
 	  }
@@ -64,6 +64,8 @@ namespace utils {
 						   rl2::problem::defs::cartpole::S,
 						   rl2::problem::defs::cartpole::A,
 						   gdyn::problem::cartpole::system>;
+
+    double to_double(rl2::problem::defs::cartpole::A a) {return static_cast<rl2::enumerable::index>(a).value;}
 
   } // namespace cartpole
 } // namespace utils

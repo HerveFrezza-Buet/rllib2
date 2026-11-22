@@ -204,7 +204,7 @@ void test_policy(RANDOM_DEVICE& gen,
 				     static_cast<double>(length),
 				     s.x, s.x_dot,
 				     s.theta, s.theta_dot,
-				     static_cast<double>(a),
+				     utils::cartpole::to_double(a),
 				     next_s.x, next_s.x_dot,
 				     next_s.theta, next_s.theta_dot,
 				     r };
@@ -244,7 +244,7 @@ void store_transitions(const std::vector<rl2::sarsa<c_S, c_A>>& transitions,
     std::array<double, 9> line {
       t.s.x, t.s.x_dot,
       t.s.theta, t.s.theta_dot,
-      static_cast<double>(t.a),
+      utils::cartpole::to_double(t.a),
       t.ss.x, t.ss.x_dot,
       t.ss.theta, t.ss.theta_dot };
 

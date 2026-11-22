@@ -342,7 +342,7 @@ void test_policy(RANDOM_DEVICE& gen,
                                     static_cast<double>(length),
                                     s.position,
                                     s.velocity,
-                                    static_cast<double>(a),
+                                    utils::mountain_car::to_double(a),
                                     next_s.position,
                                     next_s.velocity,
                                     r };
@@ -388,14 +388,14 @@ void sample_V_and_pi(const Q& q,
   double pos = 0.0;
   double vel = 0.0;
   for(int i = 0; i < nb_bins; ++i) {
-    pos = rl2::enumerable::utils::digitize::to_value(i, pos_min, pos_max, nb_bins);
+    pos = rl2::enumerable::utils::digitize::to_value(rl2::enumerable::index(i), pos_min, pos_max, nb_bins);
     for(int j = 0; j < nb_bins; ++j) {
-      vel = rl2::enumerable::utils::digitize::to_value(j, vel_min, vel_max, nb_bins);
+      vel = rl2::enumerable::utils::digitize::to_value(rl2::enumerable::index(j), vel_min, vel_max, nb_bins);
 
       // Get value of best action, and best action as int
       mc_S s{pos, vel};
       auto qval = q( s, greedy_on_q(s));
-      int id_best_a = static_cast<std::size_t>(greedy_on_q(s));
+      auto id_best_a = static_cast<rl2::enumerable::index>(greedy_on_q(s)).value;
 
       std::array<double, 4> line {
         pos,
@@ -423,7 +423,7 @@ void store_transitions(const std::vector<rl2::sarsa<mc_S, mc_A>>& transitions,
     std::array<double, 5> line {
       t.s.position,
       t.s.velocity,
-      static_cast<double>(t.a),
+      utils::mountain_car::to_double(t.a),
       t.ss.position,
       t.ss.velocity };
     trace += line;

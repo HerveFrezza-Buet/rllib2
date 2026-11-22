@@ -27,10 +27,10 @@ namespace utils {
 
       rl2::problem::defs::mountain_car::mu_type mu;
       for (unsigned int i = 0; i < nb_pos_bins; ++i) {
-	mu[0] = rl2::enumerable::utils::digitize::to_value(i, pos_min, pos_max,
+	mu[0] = rl2::enumerable::utils::digitize::to_value(rl2::enumerable::index(i), pos_min, pos_max,
 							   nb_pos_bins);
 	for (unsigned int j = 0; j < nb_vel_bins; ++j) {
-	  mu[1] = rl2::enumerable::utils::digitize::to_value(j, vel_min, vel_max,
+	  mu[1] = rl2::enumerable::utils::digitize::to_value(rl2::enumerable::index(j), vel_min, vel_max,
 							     nb_vel_bins);
 	  *(rbf_out++) = {mu, gammas_ptr};
 	}
@@ -57,5 +57,7 @@ namespace utils {
 				      rl2::problem::defs::mountain_car::S,
 				      rl2::problem::defs::mountain_car::A,
 				      gdyn::problem::mountain_car::system>;
+    
+    double to_double(rl2::problem::defs::mountain_car::A a) {return static_cast<rl2::enumerable::index>(a).value;}
   } // namespace mountain_car
 } // namespace utils
